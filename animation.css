@@ -1,0 +1,339 @@
+/* ============================================================
+   Outfit.AI — Brand Animation System
+   The "67" reveal sequence: meme-inspired open, then split,
+   then the full OutfiT wordmark assembles.
+   ============================================================ */
+
+:root {
+  --loader-bg-top:    #7A4E2D;
+  --loader-bg-bottom: #3D2210;
+  --loader-text:      #f8f5ee;
+  --loader-muted:     rgba(248, 245, 238, 0.52);
+  --loader-stroke:    rgba(248, 245, 238, 0.14);
+  --loader-glow:      rgba(200, 149, 108, 0.35);
+  --brand-metallic-1: #d4956a;
+  --brand-metallic-2: #f0c080;
+  --brand-metallic-3: #c8825a;
+  --brand-metallic-4: #e8a870;
+  --brand-metallic-5: #b87050;
+}
+
+/* ─── Keyframes ─────────────────────────────────────────────── */
+
+/* Loading screen ambient float */
+@keyframes loaderFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%       { transform: translate3d(0, -16px, 0) scale(1.03); }
+}
+
+/* "6" bobs UP like the raised left hand in the 67 meme */
+@keyframes digit6Bob {
+  0%   { transform: translateY(0)     scaleX(1); }
+  18%  { transform: translateY(-0.28em) scaleX(1.04); }
+  36%  { transform: translateY(0.04em)  scaleX(1); }
+  55%  { transform: translateY(-0.16em) scaleX(1.02); }
+  75%  { transform: translateY(0.02em)  scaleX(1); }
+  88%  { transform: translateY(-0.08em) scaleX(1.01); }
+  100% { transform: translateY(0)     scaleX(1); }
+}
+
+/* "7" bobs DOWN like the lowered right hand */
+@keyframes digit7Bob {
+  0%   { transform: translateY(0)    scaleX(1); }
+  18%  { transform: translateY(0.28em) scaleX(1.04); }
+  36%  { transform: translateY(-0.04em) scaleX(1); }
+  55%  { transform: translateY(0.16em)  scaleX(1.02); }
+  75%  { transform: translateY(-0.02em) scaleX(1); }
+  88%  { transform: translateY(0.08em)  scaleX(1.01); }
+  100% { transform: translateY(0)    scaleX(1); }
+}
+
+/* "6" spreads left after the bounce, simultaneously revealing "utfi" */
+@keyframes digit6Spread {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-0.05em); }
+}
+
+/* "7" spreads right */
+@keyframes digit7Spread {
+  from { transform: translateX(0); }
+  to   { transform: translateX(0.05em); }
+}
+
+/* Auth bar loading sweep */
+@keyframes authBar {
+  0%   { transform: translateX(-65%) scaleX(0.65); }
+  50%  { transform: translateX(10%)  scaleX(1); }
+  100% { transform: translateX(145%) scaleX(0.7); }
+}
+
+/* Shimmer sweep across metallic text */
+@keyframes shimmerSweep {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* Subtle pulse for the hanger */
+@keyframes hangerSway {
+  0%, 100% { transform: rotate(0deg); }
+  25%       { transform: rotate(1.5deg); }
+  75%       { transform: rotate(-1.5deg); }
+}
+
+/* ─── Brand wordmark (navbar small state) ───────────────────── */
+.brand-wordmark {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  white-space: nowrap;
+  font-family: var(--font-script);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  position: relative;
+  overflow: visible;
+}
+
+.brand-digit,
+.brand-core,
+.brand-suffix {
+  display: block;
+  transition:
+    transform 1.9s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 1.25s ease,
+    max-width 1.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.brand-digit         { flex: 0 0 auto; transform-origin: center 78%; }
+.brand-digit-left    { transform: translateX(0.31em) scaleX(1.04); }
+.brand-digit-right   { transform: translateX(-0.24em); }
+
+.brand-core,
+.brand-suffix {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.brand-core {
+  transform: translateY(0.08em) scale(0.92);
+  letter-spacing: -0.05em;
+}
+
+.brand-suffix {
+  transform: translateX(-0.12em) translateY(0.1em) scale(0.9);
+}
+
+/* Revealed state (navbar / after animation) */
+.brand-wordmark.is-revealed .brand-digit-left  { transform: translateX(0); }
+.brand-wordmark.is-revealed .brand-digit-right { transform: translateX(0); }
+
+.brand-wordmark.is-revealed .brand-core {
+  max-width: 4.2ch;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.brand-wordmark.is-revealed .brand-suffix {
+  max-width: 2.3ch;
+  opacity: 1;
+  transform: translateX(0) translateY(0) scale(1);
+}
+
+/* ─── Metallic text effect ──────────────────────────────────── */
+.brand-metallic {
+  background: linear-gradient(
+    135deg,
+    var(--brand-metallic-1) 0%,
+    var(--brand-metallic-2) 28%,
+    var(--brand-metallic-3) 50%,
+    var(--brand-metallic-4) 68%,
+    var(--brand-metallic-5) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animated shimmer variant */
+.brand-metallic-shimmer {
+  background: linear-gradient(
+    105deg,
+    var(--brand-metallic-5) 0%,
+    var(--brand-metallic-3) 20%,
+    var(--brand-metallic-2) 40%,
+    #fff8ee 50%,
+    var(--brand-metallic-2) 60%,
+    var(--brand-metallic-3) 80%,
+    var(--brand-metallic-1) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmerSweep 3s linear infinite;
+}
+
+/* ─── Loading screen shell ──────────────────────────────────── */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(151, 221, 207, 0.18), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.10), transparent 24%),
+    linear-gradient(145deg, var(--loader-bg-top) 0%, var(--loader-bg-bottom) 100%);
+  color: var(--loader-text);
+}
+
+.loading-screen::before,
+.loading-screen::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(16px);
+  opacity: 0.48;
+  animation: loaderFloat 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.loading-screen::before {
+  top: 8%;
+  left: -6%;
+  width: clamp(12rem, 22vw, 18rem);
+  height: clamp(12rem, 22vw, 18rem);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.loading-screen::after {
+  right: -5%;
+  bottom: 10%;
+  width: clamp(14rem, 28vw, 22rem);
+  height: clamp(14rem, 28vw, 22rem);
+  background: rgba(200, 149, 108, 0.13);
+  animation-delay: -2.5s;
+}
+
+/* ─── Loading screen inner ──────────────────────────────────── */
+.loading-screen__label {
+  position: absolute;
+  top: clamp(1.5rem, 3vw, 2.5rem);
+  left: clamp(1.5rem, 3vw, 2.5rem);
+  font-size: clamp(0.65rem, 0.9vw, 0.78rem);
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--loader-muted);
+  z-index: 1;
+}
+
+.loading-screen__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* The large splash wordmark */
+.splash-wordmark {
+  font-family: var(--font-script);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(5rem, 18vw, 13rem);
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0;
+  position: relative;
+}
+
+.splash-digit-6 {
+  display: inline-block;
+  transform-origin: center bottom;
+}
+
+.splash-digit-7 {
+  display: inline-block;
+  transform-origin: center bottom;
+}
+
+.splash-core {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition: max-width 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.1s,
+              opacity   0.4s  ease 0.15s;
+}
+
+.splash-core.is-visible {
+  max-width: 6ch;
+  opacity: 1;
+}
+
+/* Hanger above the wordmark */
+.splash-hanger {
+  position: absolute;
+  top: -0.65em;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: top center;
+}
+
+.splash-hanger.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  animation: hangerSway 4s ease-in-out 0.6s infinite;
+}
+
+.loading-screen__tagline {
+  margin-top: 2rem;
+  font-size: clamp(0.75rem, 1.2vw, 0.92rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--loader-muted);
+  opacity: 0;
+  transition: opacity 0.5s ease 0.2s;
+}
+
+.loading-screen__tagline.is-visible {
+  opacity: 1;
+}
+
+/* ─── Seesaw animation for newly unlocked nav tabs ─────────────────────────── */
+@keyframes seeSaw {
+  0%   { transform: rotate(0deg) scale(1); }
+  15%  { transform: rotate(-18deg) scale(1.15); }
+  30%  { transform: rotate(18deg)  scale(1.15); }
+  45%  { transform: rotate(-12deg) scale(1.10); }
+  60%  { transform: rotate(12deg)  scale(1.10); }
+  75%  { transform: rotate(-6deg)  scale(1.05); }
+  90%  { transform: rotate(6deg)   scale(1.05); }
+  100% { transform: rotate(0deg)   scale(1); }
+}
+
+.nav-seesaw svg {
+  animation: seeSaw 0.85s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  animation-iteration-count: 99;
+  transform-origin: center;
+}
+
+/* Auth loading bar */
+.auth-loading-bar {
+  width: 55%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #c8956c 0%, #f0c080 100%);
+  box-shadow: 0 0 12px rgba(200, 149, 108, 0.28);
+  animation: authBar 1.4s ease-in-out infinite;
+}
