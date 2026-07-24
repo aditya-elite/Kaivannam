@@ -136,7 +136,7 @@ export function SiteHeader({ user }: Props) {
           {user ? (
             <>
               <Link
-                href={user.role === "CONSUMER" ? "/shop" : "/my-items"}
+                href={user.role === "CONSUMER" ? "/collection" : "/my-items"}
                 className="hidden min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 px-3 text-ink lg:inline-flex"
                 aria-label={user.displayName}
                 title={user.displayName}

@@ -102,7 +102,7 @@ export function OrderConfirmationView({
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
-          href="/shop"
+          href="/collection"
           className="press inline-flex min-h-tap items-center gap-2 rounded-xl border-2 border-ink/15 px-5 py-3 font-semibold text-indigo"
         >
           {t("order.keepShopping")} <IconArrowRight width={18} height={18} />

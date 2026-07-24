@@ -101,7 +101,7 @@ export function CheckoutView({ defaultBuyer }: { defaultBuyer: Partial<Buyer> })
         <div className="rounded-2xl bg-surface p-10 text-center shadow-card">
           <IconBag width={40} height={40} className="mx-auto text-muted" />
           <p className="mt-3 text-base text-muted">{t("cart.empty")}</p>
-          <Link href="/shop" className="mt-4 inline-flex min-h-tap items-center gap-2 font-semibold text-indigo hover:underline">
+          <Link href="/collection" className="mt-4 inline-flex min-h-tap items-center gap-2 font-semibold text-indigo hover:underline">
             {t("shop.title")} <IconArrowRight width={16} height={16} />
           </Link>
         </div>

@@ -44,6 +44,31 @@
   clip-path: polygon(22px 0, 100% 0, 100% 100%, 0 100%);
 }
 
+/* A clip-path clips box-shadow, so a sheared card painted with `shadow-card`
+   loses its shadow entirely and reads flat — and on hover the lift shadow is
+   sliced along the sheared edge. Put the shadow on the PARENT wrapper as a
+   drop-shadow filter instead: the filter is computed from the child's already
+   clipped silhouette, so the sheared corner keeps a real, correctly-shaped
+   shadow that lifts cleanly on hover. Pair `.shear-shadow` on the wrapper with
+   `.row-shear` on the card, and drop the box-shadow utilities from the card. */
+.shear-shadow {
+  filter: drop-shadow(0 4px 6px rgba(43, 29, 20, 0.1));
+  transition: filter var(--dur-base, 260ms) var(--ease-out, ease);
+}
+@media (hover: hover) {
+  .shear-shadow:hover {
+    filter: drop-shadow(0 10px 16px rgba(43, 29, 20, 0.18));
+  }
+}
+
+/* Rest-only variant for cards that already own their hover choreography (the
+   §10 `.stand` lifts on its own and draws its own contact shadow). This just
+   restores the base depth the clip-path would otherwise eat, without a second,
+   competing hover shadow. */
+.shear-shadow-rest {
+  filter: drop-shadow(0 4px 6px rgba(43, 29, 20, 0.1));
+}
+
 /* §2.1 Sheared bar. Parallelogram, never a rectangle.
    The inner counter-skew keeps glyphs upright — skewed Tamil and
    Devanagari degrade far worse than Latin, so this is not optional. */

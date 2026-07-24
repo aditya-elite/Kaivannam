@@ -13,6 +13,7 @@ import { formatDate } from "@/lib/format";
 import type { VerificationResult } from "@/lib/verify";
 import type { Provenance } from "@/lib/provenance";
 import { ProvenancePanels } from "@/components/provenance/ProvenancePanels";
+import { AttestationContact } from "@/components/provenance/AttestationContact";
 import { IconCheck, IconClose, IconClock, IconQr, IconAlert, IconArrowRight } from "@/components/icons";
 
 /**
@@ -217,6 +218,14 @@ function VerifiedResult({
       {/* The two provenance layers — independent consensus (permanent) and
           custody (changeable), styled as distinct things. See ProvenancePanels. */}
       {provenance ? <ProvenancePanels productId={p.id} provenance={provenance} /> : null}
+
+      {/* The channel a cooperative or NGO uses to reach the maker and arrange an
+          independent attestation. Just the contact details — no form. */}
+      <AttestationContact
+        makerName={a.fullName}
+        email={a.contactEmail}
+        phone={a.contactPhone}
+      />
 
       <Rule className="my-8" />
 

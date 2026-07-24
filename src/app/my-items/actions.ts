@@ -33,5 +33,5 @@ export async function updateListing(formData: FormData): Promise<void> {
     },
   });
   revalidatePath("/my-items");
-  revalidatePath("/shop");
+  revalidatePath("/collection");
 }

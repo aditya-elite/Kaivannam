@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useT } from "@/lib/i18n/provider";
 import { TierBadge, type Tier } from "@/components/TierBadge";
 import { FavoriteButton } from "./FavoriteButton";
+import { AddToCartButton } from "@/components/shop/AddToCartButton";
 import { dyeLotColor } from "@/lib/dyelot";
-import { IconThread, IconShield } from "@/components/icons";
+import { IconThread, IconShield, IconQr } from "@/components/icons";
 
 export type Piece = {
   id: string;
@@ -63,11 +64,18 @@ export function CraftCard({
   const preview =
     story && story.length > 92 ? story.slice(0, story.lastIndexOf(" ", 92)) + "…" : story;
 
+  // The collection is now the single browse-and-buy surface (the standalone shop
+  // was folded in). A buyable piece opens the buy detail; a documented-only piece
+  // opens its provenance record.
+  const detailHref = piece.forSale ? `/shop/${piece.id}` : `/product/${piece.id}`;
+
   return (
-    <article className="stand relative h-full">
+    <article className="stand shear-shadow-rest relative h-full">
       {/* Warm plate. `row-shear` gives the sheared bottom-right corner from
-          §2.1 so a row of these never reads as identical stamped units. */}
-      <div className="row-shear flex h-full flex-col bg-surface shadow-card">
+          §2.1 so a row of these never reads as identical stamped units.
+          The card's own shadow lives on `.stand` as a drop-shadow (shear-shadow-rest)
+          because a clip-path would clip a box-shadow to nothing. */}
+      <div className="row-shear flex h-full flex-col bg-surface">
         {/* Both variants are ratio-driven with a hard pixel ceiling. Letting
             the featured image flex to fill its grid cell looked right in
             principle and was wrong in practice: the cell next to it holds two
@@ -80,7 +88,7 @@ export function CraftCard({
           }`}
         >
           <Link
-            href={`/product/${piece.id}`}
+            href={detailHref}
             className="block h-full w-full"
             tabIndex={-1}
             aria-hidden="true"
@@ -160,7 +168,7 @@ export function CraftCard({
 
           <h3 className="text-lg font-bold leading-snug">
             <Link
-              href={`/product/${piece.id}`}
+              href={detailHref}
               className="text-ink hover:text-indigo hover:underline"
             >
               {piece.title}
@@ -210,6 +218,20 @@ export function CraftCard({
               </p>
             ) : null}
           </div>
+
+          {/* Buy from the collection directly — the shop's add-to-cart, folded in.
+              A documented-only piece shows a quiet "see the full record" link
+              instead, so every card still leads somewhere. */}
+          {piece.forSale ? (
+            <AddToCartButton productId={piece.id} full className="mt-3" />
+          ) : (
+            <Link
+              href={`/product/${piece.id}`}
+              className="press mt-3 inline-flex min-h-tap items-center justify-center gap-2 rounded-xl border-2 border-ink/20 px-4 py-2.5 text-base font-semibold text-ink hover:border-ink/40"
+            >
+              <IconQr width={18} height={18} /> {t("shop.viewRecord")}
+            </Link>
+          )}
         </div>
       </div>
     </article>

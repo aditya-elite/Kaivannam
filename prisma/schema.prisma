@@ -61,6 +61,13 @@ model Artisan {
   bio      String?
   photoUrl String? // object-storage URL, not binary
 
+  // Public contact channel for ATTESTATION. A cooperative or NGO that can vouch
+  // for this maker's work reaches out here to arrange verification off-platform.
+  // Optional and maker-supplied; shown on the product's provenance so the door
+  // to independent attestation is always visible. Not identity-verified.
+  contactEmail String?
+  contactPhone String?
+
   // Tiered verification (never a binary gate). Higher tier = stronger provenance.
   tier VerificationTier @default(SELF_DECLARED)
 

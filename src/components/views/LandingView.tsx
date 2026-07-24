@@ -101,7 +101,7 @@ export function LandingView({
           {/* §2.2 — the spine. Baselines stay horizontal; only the alignment
               axis slants. Drift is capped so nothing escapes at 360px. */}
           <Spine className="mt-8 space-y-3">
-            <ButtonLink href="/shop" variant="primary">
+            <ButtonLink href="/collection" variant="primary">
               <IconBag width={20} height={20} /> {t("home.ctaShop")}
             </ButtonLink>
             <ButtonLink href="/lookup" variant="secondary">

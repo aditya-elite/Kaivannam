@@ -1,11 +1,9 @@
-import type { Metadata } from "next";
-import { listShopProducts } from "@/lib/shop";
-import { ShopView } from "@/components/views/ShopView";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Shop — Kaivannam" };
-
-// Public storefront. No account needed to browse or add to cart.
-export default async function ShopPage() {
-  const products = await listShopProducts();
-  return <ShopView products={products} />;
+// The standalone shop listing has been folded into the collection — that is now
+// the single place to browse AND buy. This route redirects so any old links,
+// bookmarks or "continue shopping" buttons still land somewhere sensible. The
+// per-product buy page (/shop/[id]) stays, reachable from the collection cards.
+export default function ShopPage() {
+  redirect("/collection");
 }

@@ -53,15 +53,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ── GATE 1 — artisan identity. Listing a product requires a Pehchan-verified
-  // artisan. The two gates are independent: verifying yourself as an artisan does
-  // NOT verify a product, and vice-versa.
+  // ── GATE (product authenticity) — a valid GI tag is what authorises a listing.
+  // A registered artisan PROFILE is still required (so the piece has a named
+  // maker and a signing key), but Pehchan verification is NOT forced: a maker
+  // with a genuine GI certificate can sell without first clearing the national
+  // artisan-ID check. Pehchan, when present, still raises the maker's tier and
+  // the "maker identity checked" signal — it is an enhancement, not a gate.
   const artisan = await db.artisan.findUnique({ where: { userId: user.id } });
-  if (!artisan || !artisan.pehchanVerified) {
+  if (!artisan) {
     return NextResponse.json({ error: "artisan_unverified" }, { status: 403 });
   }
 
-  // ── GATE 2 — product authenticity. The GI certificate number must match an
+  // ── GATE — product authenticity. The GI certificate number must match an
   // entry in the ingested GI register.
   if (!body.giNumber?.trim() || !body.giCertImage) {
     return NextResponse.json({ error: "gi_required" }, { status: 400 });

@@ -125,12 +125,15 @@ export function ArtisansView({ artisans }: { artisans: Artisan[] }) {
           {filtered.map((a, i) => (
             /* cols=3 matches the widest breakpoint, so the reveal runs as a
                wave along the diagonal rather than as a queue down the DOM. */
-            <Reveal as="li" key={a.id} index={i} cols={3}>
+            /* shear-shadow on the WRAPPER: the card's clip-path would clip a
+               box-shadow to nothing, so the depth lives here as a drop-shadow
+               filter that follows the sheared silhouette and lifts on hover. */
+            <Reveal as="li" key={a.id} index={i} cols={3} className="shear-shadow">
               <Link
                 href={`/artisans/${a.id}`}
                 /* §2.1 sheared corner instead of a uniform radius — the card
                    stops reading as a stamped unit. */
-                className="group row-shear flex h-full flex-col bg-surface shadow-card transition-shadow hover:shadow-lift"
+                className="group row-shear flex h-full flex-col bg-surface"
               >
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -43,6 +43,10 @@ export type VerificationResult = {
     state: string;
     tier: string;
     photoUrl: string | null;
+    // Public attestation contact — shown so a cooperative/NGO can reach the
+    // maker to arrange independent verification.
+    contactEmail: string | null;
+    contactPhone: string | null;
   };
   timeline?: VerifiedTimelineStage[];
 };
@@ -155,6 +159,8 @@ export async function verifyProduct(productId: string): Promise<VerificationResu
       state: product.artisan.state,
       tier: product.artisan.tier,
       photoUrl: product.artisan.photoUrl,
+      contactEmail: product.artisan.contactEmail,
+      contactPhone: product.artisan.contactPhone,
     },
     timeline,
   };
