@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧵 Kalāsūtra — Artisan Craft Provenance Platform
+# 🧵 Kaivanam — Artisan Craft Provenance Platform
 
 **कलासूत्र · கலாசூத்ரா · "the thread of art"**
 
@@ -14,16 +14,19 @@
 
 | Field | Detail |
 |-------|--------|
-| **Team name** | _`<fill in>`_ |
-| **Event / Hackathon** | _`<fill in>`_ |
-| **Track / Theme** | Craft authenticity · Rural artisan empowerment · Cultural heritage |
-| **Contact** | hackbytes.25@gmail.com |
+| **Team name** | Hack Forge |
+| **Event / Hackathon** | Rush Hour |
+| **Track / Theme** | Decentralization |
+| **Contact** | 9445426847 |
 
 | Member | Role | GitHub / Contact |
 |--------|------|------------------|
-| Jeevan Sai V | _`<role>`_ | _`<fill in>`_ |
-| _`<member>`_ | _`<role>`_ | _`<fill in>`_ |
-| _`<member>`_ | _`<role>`_ | _`<fill in>`_ |
+| Jeevan Sai V | UI designer | 9445426847 |
+| I Aditya Annamalai | Frontend Dev | 8861671352 |
+| Harish Rahul P | Blockchain | 9361279947 |
+| Kaviya E | Backend Dev | 7092725215 |
+| Jyoshitha D | Database | 9363256003 |
+| Aakash B | Authentication | 9159005008 |
 
 > _Replace the placeholders above with your actual team information before submission._
 
