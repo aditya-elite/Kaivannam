@@ -216,11 +216,7 @@ model Product {
   storyVoiceUrl String?
   category      String // craft cluster
 
-<<<<<<< HEAD
   status ProductStatus @default(DRAFT)
-=======
-  status      ProductStatus @default(DRAFT)
->>>>>>> aea3072 (Complete UI changes)
 
   // ── Storefront listing (consumer sales) ──
   // Shoppable when: status=SEALED && listedForSale && stock > 0 && priceInPaise != null.
