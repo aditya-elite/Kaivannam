@@ -18,6 +18,9 @@ export type Draft = {
   storyText: string;
   hiddenSignature: string;
   hiddenSignatureHint: string;
+  // Gate 2 — the product's GI certificate (image + OCR-read/confirmed number).
+  giNumber: string;
+  giCertImage: string; // compressed image data URL, "" until captured
   stages: Record<StageKey, DraftStage>;
   updatedAt: string;
 };
@@ -38,6 +41,8 @@ export function newDraft(): Draft {
     storyText: "",
     hiddenSignature: "",
     hiddenSignatureHint: "",
+    giNumber: "",
+    giCertImage: "",
     stages: {
       RAW_MATERIALS: emptyStage(),
       CRAFTING: emptyStage(),

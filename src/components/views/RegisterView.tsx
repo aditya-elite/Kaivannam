@@ -8,6 +8,7 @@ import { Button, Card, SectionHeading } from "@/components/ui";
 import { ProgressSteps } from "@/components/form/ProgressSteps";
 import { TextField, TextAreaField } from "@/components/form/fields";
 import { PhotoCapture } from "@/components/form/PhotoCapture";
+import { compressImage } from "@/lib/client/image";
 import { Charkha } from "@/components/craft/Charkha";
 import {
   IconArrowRight,
@@ -51,6 +52,8 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<string | null>(null);
+  const [giReading, setGiReading] = useState(false);
+  const giInputRef = useRef<HTMLInputElement>(null);
   const firstLoad = useRef(true);
 
   // Load or create the working draft. Survives the sign-in round-trip because it
@@ -99,6 +102,31 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
     );
   }, []);
 
+  // Gate 2 — read the GI certificate: OCR the image, extract the GI number for
+  // the artisan to confirm, and keep a compressed copy in the draft.
+  const handleGiCert = useCallback(
+    async (file: File | null) => {
+      if (!file) return;
+      setGiReading(true);
+      try {
+        let giNumber = "";
+        try {
+          const { default: Tesseract } = await import("tesseract.js");
+          const { data } = await Tesseract.recognize(file, "eng");
+          const m = /GI[\s-]?0*\d{1,5}/i.exec(data.text.replace(/\n/g, " "));
+          if (m) giNumber = m[0].toUpperCase().replace(/\s+/g, "");
+        } catch {
+          /* OCR failed — the artisan can type the number */
+        }
+        const img = await compressImage(file);
+        update(giNumber ? { giCertImage: img, giNumber } : { giCertImage: img });
+      } finally {
+        setGiReading(false);
+      }
+    },
+    [update],
+  );
+
   const seal = useCallback(async () => {
     if (!draft) return;
     // Auth gate: exactly here, and not before.
@@ -121,6 +149,8 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
           storyText: draft.storyText,
           hiddenSignature: draft.hiddenSignature,
           hiddenSignatureHint: draft.hiddenSignatureHint,
+          giNumber: draft.giNumber,
+          giCertImage: draft.giCertImage,
           stages: Object.fromEntries(
             STAGE_KEYS.map((k) => [k, { photos: draft.stages[k].photos, note: draft.stages[k].note }]),
           ),
@@ -133,7 +163,14 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
       }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setSubmitError(data.error === "stage_incomplete" ? "reg.sealBlocked" : "auth.error");
+        const map: Record<string, string> = {
+          stage_incomplete: "reg.sealBlocked",
+          artisan_unverified: "reg.artisanUnverified",
+          gi_required: "reg.giRequired",
+          gi_unverified: "reg.giUnverified",
+          bad_gi_image: "reg.giRequired",
+        };
+        setSubmitError(map[data.error as string] ?? "auth.error");
         return;
       }
       const { id } = (await res.json()) as { id: string };
@@ -155,7 +192,8 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
 
   const stepLabels = [t("reg.step.details"), t("reg.step.story"), t("reg.step.stages"), t("reg.step.review")];
   const done = stagesDone(draft);
-  const detailsValid = draft.title.trim() && draft.category.trim();
+  const giValid = draft.giNumber.trim() && draft.giCertImage;
+  const detailsValid = draft.title.trim() && draft.category.trim() && giValid;
   const storyValid = draft.materials.trim();
   const allStagesDone = done === 4;
   const canSeal = detailsValid && storyValid && allStagesDone;
@@ -221,6 +259,49 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
                   <option key={c} value={c} />
                 ))}
               </datalist>
+            </div>
+
+            {/* Gate 2 — GI certificate for THIS product (separate from artisan ID). */}
+            <div className="rounded-xl border-2 border-teal/30 bg-teal/5 p-4">
+              <p className="flex items-center gap-2 text-base font-bold text-teal-700">
+                <IconShield width={18} height={18} /> {t("reg.giTitle")}
+              </p>
+              <p className="mt-1 text-sm text-muted">{t("reg.giHelp")}</p>
+              <input
+                ref={giInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => handleGiCert(e.target.files?.[0] ?? null)}
+              />
+              {draft.giCertImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={draft.giCertImage}
+                  alt={t("reg.giTitle")}
+                  className="mt-3 max-h-40 w-full rounded-lg object-contain"
+                />
+              ) : null}
+              <button
+                type="button"
+                onClick={() => giInputRef.current?.click()}
+                disabled={giReading}
+                className="press mt-3 inline-flex min-h-tap items-center gap-2 rounded-lg border-2 border-teal/40 bg-surface px-4 py-2 text-base font-semibold text-teal-700 disabled:opacity-60"
+              >
+                <IconCloud width={18} height={18} />
+                {giReading ? t("reg.giReading") : draft.giCertImage ? t("reg.giReplace") : t("reg.giUpload")}
+              </button>
+              <div className="mt-3">
+                <TextField
+                  label={t("reg.giNumber")}
+                  value={draft.giNumber}
+                  onChange={(v) => update({ giNumber: v.toUpperCase() })}
+                  placeholder="GI-0146"
+                  required
+                  requiredLabel={t("common.required")}
+                />
+              </div>
             </div>
           </>
         ) : null}
@@ -319,6 +400,7 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
           <div className="space-y-4">
             <ReviewRow label={t("reg.itemTitle")} value={draft.title} />
             <ReviewRow label={t("reg.category")} value={draft.category} />
+            <ReviewRow label={t("reg.giNumber")} value={draft.giNumber} />
             <ReviewRow label={t("reg.materials")} value={draft.materials} />
             {draft.storyText ? <ReviewRow label={t("reg.story")} value={draft.storyText} /> : null}
             <div className="rounded-xl bg-cream p-4">

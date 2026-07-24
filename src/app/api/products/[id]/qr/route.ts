@@ -6,12 +6,18 @@ import { generateProductQrPng } from "@/lib/qr";
 // verification URL, so scanning it in a shop opens the record with no account.
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await db.product.findUnique({ where: { id }, select: { id: true, status: true } });
-  if (!product || product.status !== "SEALED") {
+  const product = await db.product.findUnique({
+    where: { id },
+    select: { id: true, status: true, signature: true, qrIssuedAt: true },
+  });
+  if (!product || product.status !== "SEALED" || !product.signature || !product.qrIssuedAt) {
     return new Response("Not found", { status: 404 });
   }
   const origin = req.nextUrl.origin;
-  const png = await generateProductQrPng(product.id, origin);
+  const png = await generateProductQrPng(product.id, origin, {
+    timestampIso: product.qrIssuedAt.toISOString(),
+    signatureB64: product.signature,
+  });
   return new Response(new Uint8Array(png), {
     headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" },
   });

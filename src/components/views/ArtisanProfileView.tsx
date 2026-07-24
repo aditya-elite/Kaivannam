@@ -5,7 +5,7 @@ import { useT } from "@/lib/i18n/provider";
 import { Card } from "@/components/ui";
 import { TierBadge, TierExplanation, type Tier } from "@/components/TierBadge";
 import { formatDate } from "@/lib/format";
-import { IconThread, IconArrowRight } from "@/components/icons";
+import { IconThread, IconArrowRight, IconShield, IconCheck } from "@/components/icons";
 
 type Props = {
   artisan: {
@@ -17,9 +17,17 @@ type Props = {
     bio: string | null;
     photoUrl: string | null;
     tier: string;
+    pehchan: { masked: string; docUrl: string | null } | null;
   };
   gi: { giNumber: string; giName: string; datasetVersion: number; checkedAt: string } | null;
-  products: { id: string; title: string; category: string; photoUrl: string | null; sealedAt: string | null }[];
+  products: {
+    id: string;
+    title: string;
+    category: string;
+    photoUrl: string | null;
+    sealedAt: string | null;
+    giNumber: string | null;
+  }[];
 };
 
 export function ArtisanProfileView({ artisan, gi, products }: Props) {
@@ -60,6 +68,29 @@ export function ArtisanProfileView({ artisan, gi, products }: Props) {
           {t("profile.verification")}
         </h2>
         <TierExplanation tier={artisan.tier as Tier} />
+        {artisan.pehchan ? (
+          <Card className="border-l-4 border-teal">
+            <div className="flex items-start gap-3">
+              <IconShield width={22} height={22} className="mt-1 text-teal-700" />
+              <div>
+                <p className="font-semibold">
+                  {t("profile.pehchan")}: <span className="font-mono">{artisan.pehchan.masked}</span>
+                </p>
+                <p className="mt-1 flex items-center gap-1 text-sm text-teal-700">
+                  <IconCheck width={15} height={15} /> {t("profile.pehchanVerified")}
+                </p>
+              </div>
+              {artisan.pehchan.docUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={artisan.pehchan.docUrl}
+                  alt={t("profile.pehchan")}
+                  className="ml-auto h-16 w-24 rounded-md object-cover shadow-card"
+                />
+              ) : null}
+            </div>
+          </Card>
+        ) : null}
         {gi ? (
           <Card className="border-l-4 border-indigo">
             <div className="flex items-start gap-3">
@@ -107,6 +138,11 @@ export function ArtisanProfileView({ artisan, gi, products }: Props) {
                   <div className="flex flex-1 flex-col gap-1 p-4">
                     <h3 className="font-bold group-hover:text-indigo">{p.title}</h3>
                     <p className="text-sm text-muted">{p.category}</p>
+                    {p.giNumber ? (
+                      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-teal/10 px-2 py-0.5 text-xs font-semibold text-teal-700">
+                        <IconThread width={13} height={13} /> {t("profile.giVerified")} · {p.giNumber}
+                      </span>
+                    ) : null}
                     {p.sealedAt ? (
                       <p className="text-sm text-muted">
                         {t("verify.recordedOn")}: {formatDate(p.sealedAt)}

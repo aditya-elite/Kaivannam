@@ -6,6 +6,8 @@ import { getLedger } from "@/lib/ledger";
 import { newProductId } from "@/lib/ids";
 import { sha256 } from "@/lib/hash";
 import { computeProductHash, STAGE_ORDER } from "@/lib/product-record";
+import { lookupGiByNumber } from "@/lib/gi";
+import { generateArtisanKeyPair, signScanPayload } from "@/lib/crypto-keys";
 import type { Stage } from "@prisma/client";
 
 type StageInput = { photos: string[]; note?: string };
@@ -17,6 +19,10 @@ type Body = {
   hiddenSignature?: string;
   hiddenSignatureHint?: string;
   stages: Record<string, StageInput>;
+  // Gate 2 — the product's GI certificate: image + the (OCR-read, user-confirmed)
+  // GI number to match against the ingested register.
+  giCertImage?: string;
+  giNumber?: string;
 };
 
 export async function POST(req: NextRequest) {
@@ -40,19 +46,26 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Ensure the user has an artisan profile (self-declared by default).
-  let artisan = await db.artisan.findUnique({ where: { userId: user.id } });
-  if (!artisan) {
-    artisan = await db.artisan.create({
-      data: {
-        userId: user.id,
-        fullName: user.displayName,
-        craft: body.category.trim(),
-        region: "Not specified",
-        state: "Not specified",
-        tier: "SELF_DECLARED",
-      },
-    });
+  // ── GATE 1 — artisan identity. Listing a product requires a Pehchan-verified
+  // artisan. The two gates are independent: verifying yourself as an artisan does
+  // NOT verify a product, and vice-versa.
+  const artisan = await db.artisan.findUnique({ where: { userId: user.id } });
+  if (!artisan || !artisan.pehchanVerified) {
+    return NextResponse.json({ error: "artisan_unverified" }, { status: 403 });
+  }
+
+  // ── GATE 2 — product authenticity. The GI certificate number must match an
+  // entry in the ingested GI register.
+  if (!body.giNumber?.trim() || !body.giCertImage) {
+    return NextResponse.json({ error: "gi_required" }, { status: 400 });
+  }
+  const giLookup = await lookupGiByNumber(body.giNumber.trim());
+  if (!giLookup.entry) {
+    return NextResponse.json({ error: "gi_unverified", giNumber: body.giNumber.trim() }, { status: 422 });
+  }
+  const giCert = decodeDataUrl(body.giCertImage);
+  if (!giCert) {
+    return NextResponse.json({ error: "bad_gi_image" }, { status: 400 });
   }
 
   // Store the hidden signature HASHED on the artisan (never stored in the clear,
@@ -70,6 +83,12 @@ export async function POST(req: NextRequest) {
 
   const storage = getStorage();
   const productId = newProductId();
+
+  // Persist the GI certificate image (Gate 2 evidence, shown on the profile).
+  const storedGiCert = await storage.put(giCert.bytes, {
+    ext: giCert.ext,
+    prefix: `gi-certs/${artisan.id}`,
+  });
 
   // Upload every stage photo, collecting stable URLs. Server stamps timestamps.
   const stagesForRecord: {
@@ -101,7 +120,8 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Create product (DRAFT first), then its stage entries.
+  // Create product (DRAFT first), then its stage entries. Record the verified GI
+  // certificate on the product (Gate 2).
   await db.product.create({
     data: {
       id: productId,
@@ -111,6 +131,10 @@ export async function POST(req: NextRequest) {
       storyText: body.storyText?.trim() || null,
       category: body.category.trim(),
       status: "DRAFT",
+      giNumber: giLookup.entry.giNumber,
+      giCertUrl: storedGiCert.url,
+      giVerified: true,
+      giEntryId: giLookup.entry.id,
     },
   });
   for (const s of stagesForRecord) {
@@ -145,13 +169,30 @@ export async function POST(req: NextRequest) {
 
   await getLedger().append(productId, contentHash);
 
+  // KEY 1 — make sure the artisan has a signing keypair, then sign the dynamic QR
+  // payload `${productId}|${sealedAt}` with their private key.
+  let privateKeyPem = artisan.signingPrivateKey;
+  if (!privateKeyPem || !artisan.signingPublicKey) {
+    const pair = generateArtisanKeyPair();
+    await db.artisan.update({
+      where: { id: artisan.id },
+      data: { signingPublicKey: pair.publicKeyPem, signingPrivateKey: pair.privateKeyPem },
+    });
+    privateKeyPem = pair.privateKeyPem;
+  }
+
+  const sealedAt = new Date();
+  const signature = signScanPayload(productId, sealedAt.toISOString(), privateKeyPem);
+
   await db.product.update({
     where: { id: productId },
     data: {
       status: "SEALED",
       contentHash,
+      signature,
+      qrIssuedAt: sealedAt,
       qrPngUrl: `/api/products/${productId}/qr`,
-      sealedAt: new Date(),
+      sealedAt,
     },
   });
 

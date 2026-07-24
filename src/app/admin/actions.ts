@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { crossCheckGi } from "@/lib/gi";
+import { finalizeArtisanVerification } from "@/lib/verify-artisan";
 
 async function requireAdmin() {
   const user = await getCurrentUser();
@@ -24,23 +24,15 @@ export async function decideVerification(formData: FormData): Promise<void> {
   if (!request) return;
 
   if (decision === "approve") {
-    // ID confirmed → ID_VERIFIED. If the name also matches the GI Part B
-    // register, upgrade to GI_AUTHORISED and record the match with its version.
-    const gi = await crossCheckGi(request.ocrName ?? request.artisan.fullName, request.claimedGi);
-    let tier: "ID_VERIFIED" | "GI_AUTHORISED" = "ID_VERIFIED";
-    if (gi.match && gi.dataset) {
-      tier = "GI_AUTHORISED";
-      await db.giMatch.upsert({
-        where: { artisanId: request.artisanId },
-        create: {
-          artisanId: request.artisanId,
-          giEntryId: gi.match.id,
-          datasetVersion: gi.dataset.version,
-        },
-        update: { giEntryId: gi.match.id, datasetVersion: gi.dataset.version },
-      });
-    }
-    await db.artisan.update({ where: { id: request.artisanId }, data: { tier } });
+    // Confirm Gate 1: set the Pehchan on the profile, cross-check the GI Part-B
+    // register for a possible GI_AUTHORISED upgrade, and ensure a signing keypair.
+    const { tier, giMatched } = await finalizeArtisanVerification({
+      artisanId: request.artisanId,
+      name: request.ocrName ?? request.artisan.fullName,
+      claimedGi: request.claimedGi,
+      pehchanNumber: request.idNumber,
+      pehchanDocUrl: request.docImageUrl,
+    });
     await db.verificationRequest.update({
       where: { id: requestId },
       data: { status: "APPROVED", reviewNote: reason || null, reviewedBy: admin.id, reviewedAt: new Date() },
@@ -50,7 +42,7 @@ export async function decideVerification(formData: FormData): Promise<void> {
         actorId: admin.id,
         action: "VERIFICATION_APPROVED",
         target: request.artisanId,
-        detail: JSON.stringify({ tier, giMatched: !!gi.match, reason }),
+        detail: JSON.stringify({ tier, giMatched, reason }),
       },
     });
   } else {
@@ -59,7 +51,10 @@ export async function decideVerification(formData: FormData): Promise<void> {
       data: { status: "REJECTED", reviewNote: reason || null, reviewedBy: admin.id, reviewedAt: new Date() },
     });
     // Roll back to self-declared if they have no other approved verification.
-    await db.artisan.update({ where: { id: request.artisanId }, data: { tier: "SELF_DECLARED" } });
+    await db.artisan.update({
+      where: { id: request.artisanId },
+      data: { tier: "SELF_DECLARED", pehchanVerified: false },
+    });
     await db.auditLog.create({
       data: {
         actorId: admin.id,
@@ -113,6 +108,53 @@ export async function ingestGiDataset(formData: FormData): Promise<void> {
     data: {
       actorId: admin.id,
       action: "GI_DATASET_INGESTED",
+      target: dataset.id,
+      detail: JSON.stringify({ version, rows: valid.length }),
+    },
+  });
+  revalidatePath("/admin");
+}
+
+/**
+ * Pehchan register ingest (Gate-1 whitelist). Admin pastes rows (pipe-separated):
+ *   pehchan_number | holder_name | craft | region
+ * Creates a NEW dataset version. Numbers are stored normalised (no spaces/dashes).
+ */
+export async function ingestPehchanDataset(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  const raw = String(formData.get("rows") ?? "");
+  const note = String(formData.get("note") ?? "").trim() || "Manual Pehchan ingest";
+
+  const rows = raw
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"))
+    .map((l) => l.split("|").map((c) => c.trim()));
+
+  const valid = rows.filter((c) => c.length >= 2 && c[0] && c[1]);
+  if (valid.length === 0) return;
+
+  const last = await db.pehchanDataset.findFirst({ orderBy: { version: "desc" } });
+  const version = (last?.version ?? 0) + 1;
+
+  const dataset = await db.pehchanDataset.create({
+    data: {
+      version,
+      sourceNote: note,
+      entries: {
+        create: valid.map((c) => ({
+          pehchanNumber: c[0].replace(/[\s-]/g, ""),
+          holderName: c[1],
+          craft: c[2] || null,
+          region: c[3] || null,
+        })),
+      },
+    },
+  });
+  await db.auditLog.create({
+    data: {
+      actorId: admin.id,
+      action: "PEHCHAN_DATASET_INGESTED",
       target: dataset.id,
       detail: JSON.stringify({ version, rows: valid.length }),
     },

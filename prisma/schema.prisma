@@ -62,6 +62,19 @@ model Artisan {
   // Tiered verification (never a binary gate). Higher tier = stronger provenance.
   tier      VerificationTier @default(SELF_DECLARED)
 
+  // Gate 1 — artisan identity. Confirmed Pehchan (national artisan ID) shown on
+  // the profile. `pehchanNumber` stored in full but rendered MASKED publicly.
+  pehchanNumber   String?
+  pehchanVerified Boolean @default(false)
+  pehchanDocUrl   String? // uploaded Pehchan card image (object storage)
+
+  // KEY 1 — the artisan's ECDSA signing keypair (P-256). The public key verifies
+  // scan signatures; the private key signs a product's QR payload at seal time.
+  // NOTE: the private key is server-held for this demo only. In production it
+  // belongs in an HSM/secure enclave and must never be stored in the clear.
+  signingPublicKey  String? // SPKI PEM
+  signingPrivateKey String? // PKCS8 PEM (server-held — see note above)
+
   // Hidden signature: a private embedded mark. STORED HASHED, never rendered publicly.
   hiddenSignatureHash String?
   hiddenSignatureHint String? // e.g. "Motif in bottom-right corner" — shown only to owner/coop
@@ -90,7 +103,7 @@ model VerificationRequest {
   artisanId  String
   artisan    Artisan  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
 
-  docImageUrl String // uploaded ID card image (object storage)
+  docImageUrl String? // uploaded ID card image (object storage) — optional for number-only entry
 
   // OCR-extracted structured fields + per-field confidence (0..1). Shown to the
   // user for correction before submit — never silently trusted.
@@ -118,6 +131,33 @@ enum ReviewStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+// ─────────────────────────────────────────────────────────────
+// Pehchan register (national artisan ID whitelist — manual admin ingest)
+// The Gate-1 validity check is format+checksum AND membership in this register.
+// ─────────────────────────────────────────────────────────────
+model PehchanDataset {
+  id           String   @id @default(cuid())
+  version      Int // monotonically increasing ingest version
+  lastSyncedAt DateTime @default(now())
+  sourceNote   String?
+  entries      PehchanEntry[]
+
+  @@index([version])
+}
+
+model PehchanEntry {
+  id             String         @id @default(cuid())
+  datasetId      String
+  dataset        PehchanDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+
+  pehchanNumber  String
+  holderName     String
+  craft          String?
+  region         String?
+
+  @@index([pehchanNumber])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -176,8 +216,19 @@ model Product {
 
   status      ProductStatus @default(DRAFT)
 
+  // Gate 2 — product authenticity. A GI (Geographical Indication) certificate is
+  // OCR-read at registration and matched against the ingested GI register.
+  giNumber    String? // GI number extracted from the artisan's certificate
+  giCertUrl   String? // uploaded GI certificate image (object storage)
+  giVerified  Boolean @default(false) // matched an ingested GiEntry
+  giEntryId   String? // the matched GiEntry id (nullable)
+
   // Set only once all 4 stages have photos and the record is sealed.
   contentHash String? // SHA-256 over stable content + content-ids (survives storage migration)
+  // KEY 1 — ECDSA signature over `${id}|${qrIssuedAt}` with the artisan private key.
+  // Embedded in the dynamic QR and verified at scan time.
+  signature   String?
+  qrIssuedAt  DateTime?
   qrPngUrl    String?
   sealedAt    DateTime?
 

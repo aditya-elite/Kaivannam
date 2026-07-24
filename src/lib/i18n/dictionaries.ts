@@ -241,6 +241,7 @@ const en: Dict = {
 
   "admin.queue": "Verification queue",
   "admin.giIngest": "GI dataset ingest",
+  "admin.pehchanIngest": "Pehchan register ingest",
   "admin.approve": "Approve",
   "admin.reject": "Reject",
   "admin.reason": "Reason (shown in the record)",
@@ -248,6 +249,70 @@ const en: Dict = {
   "admin.ocrSide": "Read details",
   "admin.giSide": "GI register match",
   "admin.noPending": "No pending verifications.",
+  "admin.noDoc": "No photo — number entered directly.",
+
+  // ── Gate 1: artisan Pehchan identity ──
+  "pehchan.title": "Verify your artisan identity",
+  "pehchan.intro":
+    "Confirm you are a registered artisan with your Pehchan ID. This is separate from verifying a product — it authenticates you as a maker.",
+  "pehchan.modeNumber": "Enter number",
+  "pehchan.modePhoto": "Upload photo",
+  "pehchan.numberLabel": "Pehchan number (12 digits)",
+  "pehchan.checkFormat": "Valid number format",
+  "pehchan.reason.length": "Must be 12 digits",
+  "pehchan.reason.digits": "Digits only",
+  "pehchan.reason.leading": "Cannot start with 0 or 1",
+  "pehchan.reason.checksum": "Number fails its checksum",
+  "pehchan.checkingRegister": "Checking the register…",
+  "pehchan.inRegister": "Found in the Pehchan register",
+  "pehchan.registerMatch": "Registered to {name}",
+  "pehchan.notInRegister": "Not found in the Pehchan register",
+  "pehchan.submit": "Verify identity",
+  "pehchan.verifiedTitle": "You are a verified artisan",
+  "pehchan.verifiedBody": "Your Pehchan matched the register. You can now list verified products.",
+  "pehchan.pendingBody": "We could not auto-verify this number, so it is queued for review.",
+
+  // ── Gate 2: product GI certificate ──
+  "reg.giTitle": "GI certificate for this product",
+  "reg.giHelp":
+    "Upload the product's Geographical Indication certificate. Its number is matched against the GI register. This authenticates the product — separately from you.",
+  "reg.giUpload": "Upload GI certificate",
+  "reg.giReplace": "Replace certificate",
+  "reg.giReading": "Reading certificate…",
+  "reg.giNumber": "GI number",
+  "reg.artisanUnverified": "Verify your artisan identity (Pehchan) before listing a product.",
+  "reg.giRequired": "A GI certificate and number are required.",
+  "reg.giUnverified": "That GI number was not found in the register.",
+
+  // ── Profile verification detail ──
+  "profile.pehchan": "Pehchan ID",
+  "profile.pehchanVerified": "Verified artisan identity",
+  "profile.giVerified": "GI verified",
+
+  // ── 3-Key scan / Jury Panel ──
+  "scan.eyebrow": "3-Key verification",
+  "scan.title": "Scan to verify authenticity",
+  "scan.intro":
+    "This runs three independent checks — cryptographic signature, live presence, and the provenance record — and shows the combined verdict.",
+  "scan.productId": "Product number",
+  "scan.noSignatureNote":
+    "No signature in this link. Open it by scanning the product's QR tag for the full check.",
+  "scan.simulateLiveness": "No motion sensor (desktop) — simulate liveness for testing",
+  "scan.start": "Start verification",
+  "scan.measuring": "Checking live presence — tilt your device…",
+  "scan.locating": "Checking location…",
+  "scan.verifying": "Verifying the three keys…",
+  "scan.tiltHint": "Gently tilt and move the device so we can confirm a real object is being scanned.",
+  "scan.networkError": "Could not reach the verification service.",
+  "scan.verdictTitle": "Verdict",
+  "scan.keyN": "Key {n}",
+  "scan.key1": "Cryptographic signature",
+  "scan.key2": "Liveness & replay",
+  "scan.key3": "Provenance record",
+  "scan.keyPass": "Passed",
+  "scan.keyFail": "Failed",
+  "scan.viewRecord": "View full record",
+  "scan.again": "Scan another",
 
   "footer.rights": "A demonstration platform for craft provenance.",
   "footer.testnet": "Records shown are on a test system, clearly labelled.",

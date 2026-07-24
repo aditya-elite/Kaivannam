@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { maskPehchan } from "@/lib/pehchan-format";
 import { ArtisanProfileView } from "@/components/views/ArtisanProfileView";
 
 // Public artisan profile. The hidden signature is never queried for display.
@@ -34,6 +35,10 @@ export default async function ArtisanProfilePage({
         bio: artisan.bio,
         photoUrl: artisan.photoUrl,
         tier: artisan.tier,
+        pehchan:
+          artisan.pehchanVerified && artisan.pehchanNumber
+            ? { masked: maskPehchan(artisan.pehchanNumber), docUrl: artisan.pehchanDocUrl }
+            : null,
       }}
       gi={
         artisan.giMatch
@@ -51,6 +56,7 @@ export default async function ArtisanProfilePage({
         category: p.category,
         photoUrl: p.stages[0] ? (JSON.parse(p.stages[0].photoUrls)[0] as string) : null,
         sealedAt: p.sealedAt ? p.sealedAt.toISOString() : null,
+        giNumber: p.giVerified ? p.giNumber : null,
       }))}
     />
   );

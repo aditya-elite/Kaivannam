@@ -10,13 +10,14 @@ export default async function AdminPage() {
   if (!user) redirect("/login?next=/admin");
   if (user.role !== "ADMIN") redirect("/");
 
-  const [pending, dataset, recentAudit] = await Promise.all([
+  const [pending, dataset, pehchanDs, recentAudit] = await Promise.all([
     db.verificationRequest.findMany({
       where: { status: "PENDING" },
       orderBy: { createdAt: "asc" },
       include: { artisan: true },
     }),
     db.giDataset.findFirst({ orderBy: { version: "desc" }, include: { _count: { select: { entries: true } } } }),
+    db.pehchanDataset.findFirst({ orderBy: { version: "desc" }, include: { _count: { select: { entries: true } } } }),
     db.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 8 }),
   ]);
 
@@ -55,6 +56,16 @@ export default async function AdminPage() {
               entries: dataset._count.entries,
               lastSyncedAt: dataset.lastSyncedAt.toISOString(),
               sourceNote: dataset.sourceNote,
+            }
+          : null
+      }
+      pehchanDataset={
+        pehchanDs
+          ? {
+              version: pehchanDs.version,
+              entries: pehchanDs._count.entries,
+              lastSyncedAt: pehchanDs.lastSyncedAt.toISOString(),
+              sourceNote: pehchanDs.sourceNote,
             }
           : null
       }

@@ -1,12 +1,47 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { createHash } from "crypto";
+import { createHash, generateKeyPairSync, createSign } from "crypto";
 
-// Seed uses its own Prisma client + local copies of the hash helpers so it has
-// no dependency on Next's module graph (path aliases, "server-only", etc.).
+// Seed uses its own Prisma client + local copies of the helpers so it has no
+// dependency on Next's module graph (path aliases, "server-only", etc.).
 const db = new PrismaClient();
 
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
+
+// ── Local copies of the crypto/Pehchan helpers (kept dependency-free) ──
+function newKeyPair() {
+  const { publicKey, privateKey } = generateKeyPairSync("ec", {
+    namedCurve: "P-256",
+    publicKeyEncoding: { type: "spki", format: "pem" },
+    privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  });
+  return { publicKeyPem: publicKey as string, privateKeyPem: privateKey as string };
+}
+function signPayload(productId: string, tsIso: string, privateKeyPem: string) {
+  const s = createSign("SHA256");
+  s.update(`${productId}|${tsIso}`);
+  s.end();
+  return s.sign(privateKeyPem).toString("base64");
+}
+// Verhoeff check digit → build valid 12-digit demo Pehchan numbers.
+const VD = [
+  [0,1,2,3,4,5,6,7,8,9],[1,2,3,4,0,6,7,8,9,5],[2,3,4,0,1,7,8,9,5,6],[3,4,0,1,2,8,9,5,6,7],
+  [4,0,1,2,3,9,5,6,7,8],[5,9,8,7,6,0,4,3,2,1],[6,5,9,8,7,1,0,4,3,2],[7,6,5,9,8,2,1,0,4,3],
+  [8,7,6,5,9,3,2,1,0,4],[9,8,7,6,5,4,3,2,1,0],
+];
+const VP = [
+  [0,1,2,3,4,5,6,7,8,9],[1,5,7,6,2,8,3,0,9,4],[5,8,0,3,7,9,6,1,4,2],[8,9,1,6,0,4,3,5,2,7],
+  [9,4,5,3,1,2,6,8,7,0],[4,2,8,6,5,7,3,9,0,1],[2,7,9,3,8,0,6,4,1,5],[7,0,4,6,9,1,3,2,5,8],
+];
+const VINV = [0,4,3,2,1,5,6,7,8,9];
+// Check digit for `base11`: the check digit sits at units (permutation index 0),
+// so payload digits are offset by one — P[(i+1)%8]. Consistent with the validator.
+function pehchan(base11: string): string {
+  let c = 0;
+  const rev = base11.split("").reverse();
+  for (let i = 0; i < rev.length; i++) c = VD[c][VP[(i + 1) % 8][Number(rev[i])]];
+  return base11 + VINV[c];
+}
 function canonical(v: unknown): string {
   const sort = (x: unknown): unknown =>
     Array.isArray(x)
@@ -29,10 +64,18 @@ async function main() {
   await db.verificationRequest.deleteMany();
   await db.giEntry.deleteMany();
   await db.giDataset.deleteMany();
+  await db.pehchanEntry.deleteMany();
+  await db.pehchanDataset.deleteMany();
   await db.auditLog.deleteMany();
   await db.session.deleteMany();
   await db.artisan.deleteMany();
   await db.user.deleteMany();
+
+  // Valid demo Pehchan numbers (first digit ≠ 0/1, valid Verhoeff checksum).
+  const lakshmiPehchan = pehchan("23417658901");
+  const ramaPehchan = pehchan("74821903651");
+  const lakshmiKeys = newKeyPair();
+  const ramaKeys = newKeyPair();
 
   const pw = await bcrypt.hash("password", 10);
   const adminPw = await bcrypt.hash("admin123", 10);
@@ -56,6 +99,10 @@ async function main() {
       bio: "Third-generation silk weaver working on a traditional pit loom. Known for temple-border sarees in natural dyes.",
       photoUrl: "/samples/artisan-lakshmi.svg",
       tier: "GI_AUTHORISED",
+      pehchanNumber: lakshmiPehchan,
+      pehchanVerified: true,
+      signingPublicKey: lakshmiKeys.publicKeyPem,
+      signingPrivateKey: lakshmiKeys.privateKeyPem,
       hiddenSignatureHash: sha256("peacock-motif-inner-pallu-3threads"),
       hiddenSignatureHint: "Peacock motif woven into the inner pallu",
     },
@@ -69,6 +116,10 @@ async function main() {
       bio: "Lost-wax metal caster making tribal figurines and lamps using the centuries-old Dokra technique.",
       photoUrl: "/samples/artisan-rama.svg",
       tier: "ID_VERIFIED",
+      pehchanNumber: ramaPehchan,
+      pehchanVerified: true,
+      signingPublicKey: ramaKeys.publicKeyPem,
+      signingPrivateKey: ramaKeys.privateKeyPem,
       hiddenSignatureHash: sha256("filework-signature-base-RR"),
       hiddenSignatureHint: "Initials filed under the base",
     },
@@ -127,6 +178,17 @@ async function main() {
     });
   }
 
+  // ── Pehchan register (Gate-1 whitelist, as if ingested by an admin) ──
+  const pehchanDs = await db.pehchanDataset.create({
+    data: { version: 1, sourceNote: "Pehchan artisan register — manual ingest (demo)" },
+  });
+  await db.pehchanEntry.createMany({
+    data: [
+      { datasetId: pehchanDs.id, pehchanNumber: lakshmiPehchan, holderName: "Lakshmi Devi", craft: "Kanchipuram silk weaving", region: "Kanchipuram" },
+      { datasetId: pehchanDs.id, pehchanNumber: ramaPehchan, holderName: "Rama Rao", craft: "Dokra metal art", region: "Bastar" },
+    ],
+  });
+
   // ── A pending verification request (for the admin queue demo) ──
   await db.verificationRequest.create({
     data: {
@@ -165,6 +227,10 @@ async function main() {
         "This saree took three weeks on my pit loom. The temple border is a pattern my grandmother taught me. The peacock in the pallu is my family's mark.",
       category: "Kanchipuram silk weaving",
       status: "SEALED",
+      giNumber: "GI-0146",
+      giCertUrl: "/samples/silk-completed.svg",
+      giVerified: true,
+      giEntryId: lakshmiGi?.id ?? null,
       sealedAt: now,
     },
   });
@@ -211,16 +277,24 @@ async function main() {
   await db.ledgerEntry.create({
     data: { seq, productId: product.id, contentHash, prevHash, entryHash, backend: "local", isTestnet: true },
   });
+  // KEY 1 — sign the dynamic QR payload with Lakshmi's private key.
+  const signature = signPayload(product.id, now.toISOString(), lakshmiKeys.privateKeyPem);
   await db.product.update({
     where: { id: product.id },
-    data: { contentHash, qrPngUrl: `/api/products/${product.id}/qr` },
+    data: {
+      contentHash,
+      signature,
+      qrIssuedAt: now,
+      qrPngUrl: `/api/products/${product.id}/qr`,
+    },
   });
 
   console.log("Seeded:");
   console.log("  • 5 artisans across all verification tiers");
-  console.log("  • GI dataset v1 with 5 entries");
+  console.log("  • GI dataset v1 with 5 entries · Pehchan register v1 with 2 entries");
   console.log("  • 1 pending verification (admin queue)");
-  console.log(`  • 1 sealed product: ${productId} (ledger seq 1)`);
+  console.log(`  • 1 sealed + signed product: ${productId} (ledger seq 1)`);
+  console.log(`  • Demo Pehchan → Lakshmi: ${lakshmiPehchan}  Rama: ${ramaPehchan}`);
   console.log("Login demo → artisan: 9840012345 / password   admin: admin / admin123");
 }
 

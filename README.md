@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🧵 Kaivannam — Artisan Craft Provenance Platform
+# 🧵 Kaivanam — Artisan Craft Provenance Platform
 
-**कैवण्णम् · கைவண்ணம் · "the colour of the hand"**
+**कलासूत्र · கலாசூத்ரா · "the thread of art"**
 
 *Linking every handcrafted item to a secure, tamper-evident record of the hand that made it.*
 
@@ -21,9 +21,9 @@
 
 | Member | Role | GitHub / Contact |
 |--------|------|------------------|
-| Jeevan Sai V | UI designer | 9445426847 |
+| Jeevan Sai V | Blockchain | 9445426847 |
 | I Aditya Annamalai | Frontend Dev | 8861671352 |
-| Harish Rahul P | Blockchain | 9361279947 |
+| Harish Rahul P | UI designer | 9361279947 |
 | Kaviya E | Backend Dev | 7092725215 |
 | Jyoshitha D | Database | 9363256003 |
 | Aakash B | Authentication | 9159005008 |
@@ -42,7 +42,7 @@ theirs. The result: falling artisan income, erosion of cultural heritage, and de
 of traditional craftsmanship.
 
 ### The solution
-**Kaivannam** links a physical craft object to a **tamper-evident digital record** of
+**Kalāsūtra** links a physical craft object to a **tamper-evident digital record** of
 its origin and authenticity, using low-cost tags (QR now, NFC-ready later):
 
 - Artisans document their work **photo-by-photo at each stage of creation** — not
@@ -348,7 +348,7 @@ content hashes + metadata.
 
 ## 🤖 AI/ML Workflow (OCR)
 
-Kaivannam uses **on-device OCR** — chosen deliberately for the rural context: it works
+Kalāsūtra uses **on-device OCR** — chosen deliberately for the rural context: it works
 **offline**, needs **no API key**, and **no personal ID data leaves the phone**.
 
 ```mermaid
@@ -375,7 +375,7 @@ flowchart LR
 
 ## 🔌 Hardware Components, Circuit / Wiring Diagrams
 
-**Not applicable** — Kaivannam is a software platform. The only physical component is the
+**Not applicable** — Kalāsūtra is a software platform. The only physical component is the
 **low-cost printed QR tag** attached to each item (NFC-ready as a future upgrade). No
 microcontrollers, sensors, or wiring are involved; it runs on the artisan's existing
 Android phone.
@@ -482,6 +482,6 @@ _Local demo entry points:_ `/` · `/artisans` · `/product/KS-4F7Q-9XB2-M3KP` ·
 
 _This is a demonstration build. Records shown are on a clearly-labelled test system._
 
-**Kaivannam — proof of the hand that made it.**
+**Kalāsūtra — proof of the hand that made it.**
 
 </div>

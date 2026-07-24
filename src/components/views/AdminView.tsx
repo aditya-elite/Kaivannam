@@ -3,14 +3,16 @@
 import { useT } from "@/lib/i18n/provider";
 import { Card, SectionHeading } from "@/components/ui";
 import { formatDate } from "@/lib/format";
-import { decideVerification, ingestGiDataset } from "@/app/admin/actions";
-import { IconShield, IconCheck, IconClose, IconAlert, IconThread, IconUpload } from "@/components/icons";
+import { decideVerification, ingestGiDataset, ingestPehchanDataset } from "@/app/admin/actions";
+import { IconShield, IconCheck, IconClose, IconAlert, IconThread, IconUpload, IconUser } from "@/components/icons";
+
+type Dataset = { version: number; entries: number; lastSyncedAt: string; sourceNote: string | null };
 
 type QueueItem = {
   id: string;
   artisanName: string;
   artisanTier: string;
-  docImageUrl: string;
+  docImageUrl: string | null;
   ocr: {
     idNumber: string | null;
     name: string | null;
@@ -28,10 +30,12 @@ type QueueItem = {
 export function AdminView({
   queue,
   dataset,
+  pehchanDataset,
   audit,
 }: {
   queue: QueueItem[];
-  dataset: { version: number; entries: number; lastSyncedAt: string; sourceNote: string | null } | null;
+  dataset: Dataset | null;
+  pehchanDataset: Dataset | null;
   audit: { action: string; target: string; createdAt: string }[];
 }) {
   const t = useT();
@@ -39,6 +43,49 @@ export function AdminView({
   return (
     <div className="space-y-10">
       <SectionHeading>{t("nav.admin")}</SectionHeading>
+
+      {/* Pehchan register ingest (Gate 1 whitelist) */}
+      <section aria-labelledby="pehchan-heading">
+        <h2 id="pehchan-heading" className="mb-3 flex items-center gap-2 text-xl font-bold">
+          <IconUser width={22} height={22} className="text-teal" /> {t("admin.pehchanIngest")}
+        </h2>
+        <Card className="space-y-4">
+          {pehchanDataset ? (
+            <p className="text-base text-muted">
+              Current: register <strong>v{pehchanDataset.version}</strong> · {pehchanDataset.entries}{" "}
+              entries · {t("ocr.giProvenance", { date: formatDate(pehchanDataset.lastSyncedAt) })}
+            </p>
+          ) : (
+            <p className="text-base text-muted">No Pehchan register ingested yet.</p>
+          )}
+          <form action={ingestPehchanDataset} className="space-y-3">
+            <label htmlFor="pehchan-rows" className="block text-base font-semibold">
+              Pehchan register rows —{" "}
+              <span className="font-normal text-muted">
+                pehchan_number | holder_name | craft | region
+              </span>
+            </label>
+            <textarea
+              id="pehchan-rows"
+              name="rows"
+              rows={5}
+              placeholder={"2341 7658 9012 | Lakshmi Devi | Kanchipuram silk weaving | Kanchipuram"}
+              className="w-full rounded-xl border-2 border-ink/15 bg-surface px-4 py-3 font-mono text-sm focus:border-teal"
+            />
+            <input
+              name="note"
+              placeholder="Source note (e.g. Pehchan artisan register, July 2026)"
+              className="min-h-tap w-full rounded-xl border-2 border-ink/15 bg-surface px-4 text-base focus:border-teal"
+            />
+            <button
+              type="submit"
+              className="inline-flex min-h-tap items-center gap-2 rounded-xl bg-teal px-5 py-3 font-semibold text-white hover:bg-teal-700"
+            >
+              <IconUpload width={20} height={20} /> Ingest new version
+            </button>
+          </form>
+        </Card>
+      </section>
 
       {/* GI dataset ingest */}
       <section aria-labelledby="gi-heading">
@@ -102,12 +149,16 @@ export function AdminView({
                     {/* Document */}
                     <div>
                       <p className="mb-1 text-sm font-semibold text-muted">{t("admin.docSide")}</p>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={item.docImageUrl}
-                        alt={`ID document for ${item.artisanName}`}
-                        className="w-full rounded-xl border border-ink/10 object-contain"
-                      />
+                      {item.docImageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.docImageUrl}
+                          alt={`ID document for ${item.artisanName}`}
+                          className="w-full rounded-xl border border-ink/10 object-contain"
+                        />
+                      ) : (
+                        <p className="rounded-xl bg-ink/5 p-3 text-sm text-muted">{t("admin.noDoc")}</p>
+                      )}
                     </div>
                     {/* OCR fields */}
                     <div>
