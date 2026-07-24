@@ -1,0 +1,257 @@
+// Kalāsūtra data model.
+// IMPORTANT: no image binaries are stored here — only URLs, hashes, and metadata.
+// Files live in object storage (src/lib/storage.ts). Swap `provider` to postgresql
+// in production; the app code does not depend on the DB engine.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Accounts (only needed to REGISTER a product; browsing needs none)
+// ─────────────────────────────────────────────────────────────
+model User {
+  id           String   @id @default(cuid())
+  // Login handle: phone (rural-friendly) or email.
+  handle       String   @unique
+  passwordHash String
+  displayName  String
+  role         Role     @default(ARTISAN)
+  createdAt    DateTime @default(now())
+
+  artisan  Artisan?
+  sessions Session[]
+  auditLogs AuditLog[]
+}
+
+enum Role {
+  ARTISAN
+  COORDINATOR // cooperative field worker registering on behalf of artisans
+  ADMIN
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// Artisan public profile + verification state
+// ─────────────────────────────────────────────────────────────
+model Artisan {
+  id        String  @id @default(cuid())
+  userId    String? @unique
+  user      User?   @relation(fields: [userId], references: [id])
+
+  fullName  String
+  craft     String // e.g. "Handloom weaving", "Dokra metal art"
+  region    String // village / cluster
+  state     String
+  bio       String?
+  photoUrl  String? // object-storage URL, not binary
+
+  // Tiered verification (never a binary gate). Higher tier = stronger provenance.
+  tier      VerificationTier @default(SELF_DECLARED)
+
+  // Hidden signature: a private embedded mark. STORED HASHED, never rendered publicly.
+  hiddenSignatureHash String?
+  hiddenSignatureHint String? // e.g. "Motif in bottom-right corner" — shown only to owner/coop
+
+  createdAt DateTime @default(now())
+
+  products      Product[]
+  verifications VerificationRequest[]
+  giMatch       GiMatch?
+
+  @@index([craft])
+  @@index([state])
+}
+
+enum VerificationTier {
+  SELF_DECLARED // registered, no docs
+  DOCS_PENDING // uploaded, awaiting review
+  ID_VERIFIED // Pehchan ID OCR-extracted + admin confirmed
+  GI_AUTHORISED // name matched against ingested GI Part B register
+  COOP_VOUCHED // manually confirmed by partner cooperative/NGO
+}
+
+// Pehchan ID upload + OCR extraction, reviewed in the admin queue.
+model VerificationRequest {
+  id         String   @id @default(cuid())
+  artisanId  String
+  artisan    Artisan  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+
+  docImageUrl String // uploaded ID card image (object storage)
+
+  // OCR-extracted structured fields + per-field confidence (0..1). Shown to the
+  // user for correction before submit — never silently trusted.
+  ocrIdNumber      String?
+  ocrName          String?
+  ocrCraft         String?
+  ocrRegion        String?
+  ocrConfidence    String? // JSON: { idNumber: 0.82, name: 0.91, ... }
+  ocrRawText       String?
+
+  // Values as corrected/confirmed by the user.
+  idNumber   String?
+  claimedGi  String? // GI cluster the artisan claims, cross-checked against GiEntry
+
+  status     ReviewStatus @default(PENDING)
+  reviewNote String?
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([status])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─────────────────────────────────────────────────────────────
+// GI reference dataset (manual monthly admin ingest — NO live gov API)
+// ─────────────────────────────────────────────────────────────
+model GiDataset {
+  id           String   @id @default(cuid())
+  version      Int // monotonically increasing ingest version
+  lastSyncedAt DateTime @default(now())
+  sourceNote   String? // e.g. "GI Registry Part A+B, uploaded by admin"
+  entries      GiEntry[]
+
+  @@index([version])
+}
+
+model GiEntry {
+  id             String    @id @default(cuid())
+  datasetId      String
+  dataset        GiDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+
+  giNumber       String
+  giName         String
+  craftCategory  String
+  region         String // region / cluster
+  authorisedUser String? // Part B authorised user name (nullable for Part A rows)
+
+  matches GiMatch[]
+
+  @@index([giName])
+  @@index([authorisedUser])
+}
+
+model GiMatch {
+  id         String   @id @default(cuid())
+  artisanId  String   @unique
+  artisan    Artisan  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  giEntryId  String
+  giEntry    GiEntry  @relation(fields: [giEntryId], references: [id])
+  datasetVersion Int
+  checkedAt  DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// Products + mandatory staged timeline
+// ─────────────────────────────────────────────────────────────
+model Product {
+  id         String  @id // non-sequential, non-guessable (see lib/ids.ts)
+  artisanId  String
+  artisan    Artisan @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+
+  title       String
+  materials   String // comma/newline separated; kept simple for demo
+  storyText   String?
+  storyVoiceUrl String?
+  category    String // craft cluster
+
+  status      ProductStatus @default(DRAFT)
+
+  // Set only once all 4 stages have photos and the record is sealed.
+  contentHash String? // SHA-256 over stable content + content-ids (survives storage migration)
+  qrPngUrl    String?
+  sealedAt    DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stages      StageEntry[]
+  ledgerEntry LedgerEntry?
+
+  @@index([artisanId])
+  @@index([status])
+}
+
+enum ProductStatus {
+  DRAFT // in progress, resumable "My items in progress"
+  SEALED // 4 stages complete, hash written, QR issued
+}
+
+enum Stage {
+  RAW_MATERIALS
+  CRAFTING
+  FINISHING
+  COMPLETED
+}
+
+// Append-only. A correction creates a NEW versioned entry; nothing overwritten.
+model StageEntry {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  stage      Stage
+  version    Int      @default(1)
+  supersedes String? // id of the entry this one corrects
+
+  photoUrls  String // JSON array of object-storage URLs (>=1 required)
+  voiceUrl   String?
+  note       String?
+
+  // Server-side timestamp — the authenticity anchor, never client-supplied.
+  capturedAt DateTime @default(now())
+
+  @@index([productId, stage])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Tamper-evident ledger (abstracted behind LedgerService interface)
+// ─────────────────────────────────────────────────────────────
+model LedgerEntry {
+  id         String   @id @default(cuid())
+  seq        Int      @unique // position in the chain
+  productId  String   @unique
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  contentHash String // hash of the product record content
+  prevHash    String // previous ledger entry hash — links the chain
+  entryHash   String // SHA-256(seq + productId + contentHash + prevHash)
+  backend     String // "local" | future: "fabric"/"eth"
+  isTestnet   Boolean @default(true) // labelled clearly in UI when true
+
+  createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// Admin audit log — every verification decision recorded
+// ─────────────────────────────────────────────────────────────
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  action    String // e.g. "VERIFICATION_APPROVED"
+  target    String // entity id
+  detail    String? // JSON with before/after or reason
+  createdAt DateTime @default(now())
+
+  @@index([target])
+}

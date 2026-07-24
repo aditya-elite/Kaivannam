@@ -1,0 +1,64 @@
+// Inline, dependency-free icons. Every key action is paired with one of these so
+// meaning survives partial literacy. Decorative icons get aria-hidden; meaningful
+// ones take a `title`. 24px grid, currentColor stroke.
+import type { SVGProps } from "react";
+
+type IconProps = SVGProps<SVGSVGElement> & { title?: string };
+
+function base({ title, children, ...props }: IconProps & { children: React.ReactNode }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role={title ? "img" : undefined}
+      aria-hidden={title ? undefined : true}
+      focusable="false"
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      {children}
+    </svg>
+  );
+}
+
+export const IconCheck = (p: IconProps) => base({ ...p, children: <polyline points="20 6 9 17 4 12" /> });
+export const IconShield = (p: IconProps) =>
+  base({ ...p, children: <><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z" /><polyline points="9 12 11 14 15 10" /></> });
+export const IconAlert = (p: IconProps) =>
+  base({ ...p, children: <><path d="M12 3l9 16H3z" /><line x1="12" y1="10" x2="12" y2="14" /><circle cx="12" cy="17" r="0.5" fill="currentColor" /></> });
+export const IconSearch = (p: IconProps) =>
+  base({ ...p, children: <><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.5" y2="16.5" /></> });
+export const IconQr = (p: IconProps) =>
+  base({ ...p, children: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><line x1="14" y1="14" x2="14" y2="21" /><line x1="18" y1="14" x2="21" y2="14" /><line x1="18" y1="18" x2="21" y2="21" /></> });
+export const IconCamera = (p: IconProps) =>
+  base({ ...p, children: <><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" /><circle cx="12" cy="13" r="3.5" /></> });
+export const IconMic = (p: IconProps) =>
+  base({ ...p, children: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><line x1="12" y1="18" x2="12" y2="21" /></> });
+export const IconGlobe = (p: IconProps) =>
+  base({ ...p, children: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" /></> });
+export const IconUser = (p: IconProps) =>
+  base({ ...p, children: <><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 4-6 8-6s8 2 8 6" /></> });
+export const IconArrowRight = (p: IconProps) =>
+  base({ ...p, children: <><line x1="4" y1="12" x2="20" y2="12" /><polyline points="14 6 20 12 14 18" /></> });
+export const IconArrowLeft = (p: IconProps) =>
+  base({ ...p, children: <><line x1="20" y1="12" x2="4" y2="12" /><polyline points="10 6 4 12 10 18" /></> });
+export const IconMenu = (p: IconProps) =>
+  base({ ...p, children: <><line x1="4" y1="7" x2="20" y2="7" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17" x2="20" y2="17" /></> });
+export const IconClose = (p: IconProps) =>
+  base({ ...p, children: <><line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" /></> });
+export const IconClock = (p: IconProps) =>
+  base({ ...p, children: <><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" /></> });
+export const IconPrint = (p: IconProps) =>
+  base({ ...p, children: <><polyline points="6 9 6 3 18 3 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="7" rx="1" /></> });
+export const IconThread = (p: IconProps) =>
+  base({ ...p, children: <><path d="M4 4c6 2 10 6 16 16" /><circle cx="4" cy="4" r="1.5" fill="currentColor" /><circle cx="20" cy="20" r="1.5" fill="currentColor" /></> });
+export const IconCloud = (p: IconProps) =>
+  base({ ...p, children: <path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A3.5 3.5 0 0 1 18 18z" /> });
+export const IconUpload = (p: IconProps) =>
+  base({ ...p, children: <><path d="M12 15V4" /><polyline points="7 9 12 4 17 9" /><path d="M5 20h14" /></> });
