@@ -298,15 +298,28 @@ async function main() {
   async function sealListed(opts: {
     id: string;
     artisan: { id: string; fullName: string; craft: string; region: string; hiddenSignatureHash: string | null };
-    keys: { privateKeyPem: string };
+    /**
+     * Optional. Lower-tier makers have no signing keypair yet, so their records
+     * seal and enter the ledger but carry no signed QR — which is exactly what
+     * the verify path already handles. Requiring keys here would have limited
+     * the catalogue to two artisans and left the register looking like a
+     * two-person co-op.
+     */
+    keys?: { privateKeyPem: string };
     title: string;
     materials: string;
     story: string;
     category: string;
-    giNumber: string;
-    giEntryId: string | null;
+    /** Optional: not every documented craft sits under a GI registration. */
+    giNumber?: string | null;
+    giEntryId?: string | null;
     photo: string;
-    priceInPaise: number;
+    /**
+     * Integer paise. Null means the piece is documented but not for sale —
+     * museum loans, commissions and an artisan's own archive are real cases,
+     * and the card renders "Price on request" rather than a zero.
+     */
+    priceInPaise: number | null;
     stock: number;
     daysAgo: number;
   }) {
@@ -320,13 +333,14 @@ async function main() {
         storyText: opts.story,
         category: opts.category,
         status: "SEALED",
-        giNumber: opts.giNumber,
-        giCertUrl: opts.photo,
-        giVerified: true,
-        giEntryId: opts.giEntryId,
+        giNumber: opts.giNumber ?? null,
+        giCertUrl: opts.giNumber ? opts.photo : null,
+        giVerified: !!opts.giNumber,
+        giEntryId: opts.giEntryId ?? null,
         priceInPaise: opts.priceInPaise,
         stock: opts.stock,
-        listedForSale: true,
+        // Only sell what has a price and something on the shelf.
+        listedForSale: opts.priceInPaise != null && opts.stock > 0,
         sealedAt,
       },
     });
@@ -357,13 +371,16 @@ async function main() {
     await db.ledgerEntry.create({
       data: { seq: seqN, productId: opts.id, contentHash: cHash, prevHash: prev, entryHash: eHash, backend: "local", isTestnet: true },
     });
+    // A maker without a keypair still gets a sealed record and a ledger entry;
+    // they simply have no signed QR to issue.
+    const sig = opts.keys ? signPayload(opts.id, sealedAt.toISOString(), opts.keys.privateKeyPem) : null;
     await db.product.update({
       where: { id: opts.id },
       data: {
         contentHash: cHash,
-        signature: signPayload(opts.id, sealedAt.toISOString(), opts.keys.privateKeyPem),
-        qrIssuedAt: sealedAt,
-        qrPngUrl: `/api/products/${opts.id}/qr`,
+        signature: sig,
+        qrIssuedAt: sig ? sealedAt : null,
+        qrPngUrl: sig ? `/api/products/${opts.id}/qr` : null,
       },
     });
   }
@@ -413,6 +430,65 @@ async function main() {
     stock: 6,
     daysAgo: 3,
   });
+
+  // ── Wider catalogue, so the register reads as a craft economy ──────────────
+  // Four traditions across four states rather than two makers. Prices are
+  // integer paise throughout; the last piece is deliberately unpriced to
+  // exercise the "documented but not for sale" path end to end.
+  const wider = [
+    { id: "KS-7H2M-4KP9-L6XR", artisan: lakshmi, keys: lakshmiKeys, title: "Korvai silk saree in madder red",
+      materials: "Mulberry silk, madder root dye, pure zari",
+      story: "The body and border are woven separately and joined by hand — the korvai join. You can feel the ridge where the two colours meet.",
+      category: "Kanchipuram silk weaving", giNumber: "GI-0146", giEntryId: lakshmiGi?.id ?? null,
+      photo: "/samples/silk-completed.svg", priceInPaise: 3_400_000, stock: 1, daysAgo: 6 },
+    { id: "KS-9B3T-2QW7-Z4NM", artisan: lakshmi, keys: lakshmiKeys, title: "Indigo silk dupatta with rudraksha border",
+      materials: "Mulberry silk, natural indigo, silver zari",
+      story: "A lighter piece for daily wear. The rudraksha border is the smallest motif I weave — one hundred and forty beads across.",
+      category: "Kanchipuram silk weaving", photo: "/samples/silk-crafting.svg",
+      priceInPaise: 980_000, stock: 3, daysAgo: 12 },
+    { id: "KS-5R8K-3JD2-V7YC", artisan: rama, keys: ramaKeys, title: "Dokra tribal horse figurine",
+      materials: "Brass, beeswax, river clay, rice husk",
+      story: "The horse is our village guardian. I cast it the way my father did — one mould, one pour, and the mould is broken to free it. No two are the same.",
+      category: "Dokra metal art", giNumber: "GI-0021", giEntryId: ramaGiEntry?.id ?? null,
+      photo: "/samples/dokra.svg", priceInPaise: 420_000, stock: 4, daysAgo: 3 },
+    { id: "KS-4W7L-6MB3-T2KJ", artisan: rama, keys: ramaKeys, title: "Dokra measuring bowl set of three",
+      materials: "Brass, beeswax, river clay",
+      story: "Grain measures. My grandmother used a set like these every day of her life. I make them in the old sizes, not in litres.",
+      category: "Dokra metal art", photo: "/samples/dokra.svg",
+      priceInPaise: 540_000, stock: 2, daysAgo: 18 },
+    { id: "KS-8C4V-9ZR5-N3HD", artisan: meena, title: "Molela votive plaque — Dev Narayan",
+      materials: "Banas river clay, natural slip, wood-fired",
+      story: "The plaque is made flat, not thrown. I press the clay onto the board and raise the figure with my thumbs. It is fired once, in a wood kiln.",
+      category: "Terracotta pottery", photo: "/samples/terracotta.svg",
+      priceInPaise: 240_000, stock: 6, daysAgo: 2 },
+    { id: "KS-6Y2Q-5TN8-B7WF", artisan: meena, title: "Terracotta water pot with wheel-cut neck",
+      materials: "Banas river clay, wood-fired",
+      story: "Clay keeps water cool without electricity. This is the shape we have always made — narrow at the neck so nothing spills when it is carried on the head.",
+      category: "Terracotta pottery", photo: "/samples/terracotta.svg",
+      priceInPaise: 165_000, stock: 9, daysAgo: 15 },
+    { id: "KS-3K9D-7VC2-M5RP", artisan: meena, title: "Pair of terracotta lamp stands",
+      materials: "Banas river clay, natural slip, wood-fired",
+      story: "For Diwali. My mother made these every year and sold them at the roadside. I still make them to her measurements.",
+      category: "Terracotta pottery", photo: "/samples/terracotta.svg",
+      priceInPaise: 98_000, stock: 12, daysAgo: 25 },
+    { id: "KS-1L5X-4HG6-Q8ZT", artisan: anitha, title: "Srikalahasti Kalamkari wall panel — Tree of Life",
+      materials: "Handloom cotton, myrobalan, natural vegetable dyes",
+      story: "Every line is drawn with a bamboo pen, not printed. The panel took forty days. The tree holds seventeen birds and each one is a different species.",
+      category: "Kalamkari", photo: "/samples/hero.svg",
+      priceInPaise: 1_250_000, stock: 1, daysAgo: 4 },
+    { id: "KS-9F3B-2SW7-K4LV", artisan: anitha, title: "Kalamkari cotton yardage in pomegranate",
+      materials: "Handloom cotton, pomegranate rind, iron acetate",
+      story: "The red comes from madder and the black from iron and jaggery left to ferment for three weeks. No chemical colour touches this cloth.",
+      category: "Kalamkari", photo: "/samples/hero.svg",
+      priceInPaise: 390_000, stock: 7, daysAgo: 11 },
+    { id: "KS-7T6N-8PJ3-D2XQ", artisan: anitha, title: "Kalamkari temple hanging, unlined",
+      materials: "Handloom cotton, natural vegetable dyes",
+      story: "This hung in our village temple for the festival. The story runs left to right, the way it is meant to be read aloud to children.",
+      category: "Kalamkari", photo: "/samples/hero.svg",
+      priceInPaise: null, stock: 0, daysAgo: 30 },
+  ];
+
+  for (const w of wider) await sealListed(w);
 
   console.log("Seeded:");
   console.log("  • 5 artisans across all verification tiers");
