@@ -29,7 +29,7 @@ export function ShopView({ products }: { products: ShopCard[] }) {
               <Link href={`/shop/${p.id}`} className="group block">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={p.photoUrl ?? "/samples/hero.svg"}
+                  src={p.photoUrl ?? "/samples/hero.png"}
                   alt={p.title}
                   className="aspect-[4/3] w-full object-cover"
                   width={480}

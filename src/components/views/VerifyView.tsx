@@ -256,7 +256,7 @@ function VerifiedResult({
             <div className="flex items-center gap-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={a.photoUrl ?? "/samples/hero.svg"}
+                src={a.photoUrl ?? "/samples/hero.png"}
                 alt={a.fullName}
                 className="h-16 w-16 shrink-0 rounded-full object-cover"
                 width={64}

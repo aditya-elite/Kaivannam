@@ -101,7 +101,7 @@ async function main() {
       region: "Kanchipuram",
       state: "Tamil Nadu",
       bio: "Third-generation silk weaver working on a traditional pit loom. Known for temple-border sarees in natural dyes.",
-      photoUrl: "/samples/artisan-lakshmi.svg",
+      photoUrl: "/samples/artisan-lakshmi.png",
       tier: "GI_AUTHORISED",
       pehchanNumber: lakshmiPehchan,
       pehchanVerified: true,
@@ -118,7 +118,7 @@ async function main() {
       region: "Bastar",
       state: "Chhattisgarh",
       bio: "Lost-wax metal caster making tribal figurines and lamps using the centuries-old Dokra technique.",
-      photoUrl: "/samples/artisan-rama.svg",
+      photoUrl: "/samples/artisan-rama.png",
       tier: "ID_VERIFIED",
       pehchanNumber: ramaPehchan,
       pehchanVerified: true,
@@ -135,7 +135,7 @@ async function main() {
       region: "Molela",
       state: "Rajasthan",
       bio: "Makes votive terracotta plaques of local deities, fired in a traditional wood kiln.",
-      photoUrl: "/samples/artisan-meena.svg",
+      photoUrl: "/samples/artisan-meena.png",
       tier: "COOP_VOUCHED",
     },
   });
@@ -197,7 +197,7 @@ async function main() {
   await db.verificationRequest.create({
     data: {
       artisanId: anitha.id,
-      docImageUrl: "/samples/terracotta.svg",
+      docImageUrl: "/samples/terracotta.png",
       ocrIdNumber: "AP-ART-2019-44821",
       ocrName: "Anitha Reddy",
       ocrCraft: "Kalamkari",
@@ -215,10 +215,10 @@ async function main() {
   const now = new Date();
   const dayMs = 864e5;
   const stagesInput = [
-    { stage: "RAW_MATERIALS", url: "/samples/silk-raw.svg", note: "Mulberry silk yarn dyed with natural indigo and madder.", daysAgo: 21 },
-    { stage: "CRAFTING", url: "/samples/silk-crafting.svg", note: "Weaving the body on the pit loom.", daysAgo: 14 },
-    { stage: "FINISHING", url: "/samples/silk-finishing.svg", note: "Adding the zari temple border.", daysAgo: 4 },
-    { stage: "COMPLETED", url: "/samples/silk-completed.svg", note: "Finished six-yard saree, washed and pressed.", daysAgo: 1 },
+    { stage: "RAW_MATERIALS", url: "/samples/silk-raw.png", note: "Mulberry silk yarn dyed with natural indigo and madder.", daysAgo: 21 },
+    { stage: "CRAFTING", url: "/samples/silk-crafting.png", note: "Weaving the body on the pit loom.", daysAgo: 14 },
+    { stage: "FINISHING", url: "/samples/silk-finishing.png", note: "Adding the zari temple border.", daysAgo: 4 },
+    { stage: "COMPLETED", url: "/samples/silk-completed.png", note: "Finished six-yard saree, washed and pressed.", daysAgo: 1 },
   ] as const;
 
   const product = await db.product.create({
@@ -232,7 +232,7 @@ async function main() {
       category: "Kanchipuram silk weaving",
       status: "SEALED",
       giNumber: "GI-0146",
-      giCertUrl: "/samples/silk-completed.svg",
+      giCertUrl: "/samples/silk-completed.png",
       giVerified: true,
       giEntryId: lakshmiGi?.id ?? null,
       priceInPaise: 1_245_000, // ₹12,450
@@ -399,7 +399,7 @@ async function main() {
     category: "Kanchipuram silk weaving",
     giNumber: "GI-0146",
     giEntryId: lakshmiGi?.id ?? null,
-    photo: "/samples/silk-finishing.svg",
+    photo: "/samples/silk-finishing.png",
     priceInPaise: 385_000,
     stock: 5,
     daysAgo: 8,
@@ -414,7 +414,7 @@ async function main() {
     category: "Dokra metal art",
     giNumber: "GI-0021",
     giEntryId: ramaGiEntry?.id ?? null,
-    photo: "/samples/hero.svg",
+    photo: "/samples/dokra.png",
     priceInPaise: 265_000,
     stock: 4,
     daysAgo: 5,
@@ -429,11 +429,70 @@ async function main() {
     category: "Dokra metal art",
     giNumber: "GI-0021",
     giEntryId: ramaGiEntry?.id ?? null,
-    photo: "/samples/hero.svg",
+    photo: "/samples/dokra.png",
     priceInPaise: 172_500,
     stock: 6,
     daysAgo: 3,
   });
+
+  // ── Wider catalogue, so the register reads as a craft economy ──────────────
+  // Four traditions across four states rather than two makers. Prices are
+  // integer paise throughout; the last piece is deliberately unpriced to
+  // exercise the "documented but not for sale" path end to end.
+  const wider = [
+    { id: "KS-7H2M-4KP9-L6XR", artisan: lakshmi, keys: lakshmiKeys, title: "Korvai silk saree in madder red",
+      materials: "Mulberry silk, madder root dye, pure zari",
+      story: "The body and border are woven separately and joined by hand — the korvai join. You can feel the ridge where the two colours meet.",
+      category: "Kanchipuram silk weaving", giNumber: "GI-0146", giEntryId: lakshmiGi?.id ?? null,
+      photo: "/samples/silk-completed.svg", priceInPaise: 3_400_000, stock: 1, daysAgo: 6 },
+    { id: "KS-9B3T-2QW7-Z4NM", artisan: lakshmi, keys: lakshmiKeys, title: "Indigo silk dupatta with rudraksha border",
+      materials: "Mulberry silk, natural indigo, silver zari",
+      story: "A lighter piece for daily wear. The rudraksha border is the smallest motif I weave — one hundred and forty beads across.",
+      category: "Kanchipuram silk weaving", photo: "/samples/silk-crafting.svg",
+      priceInPaise: 980_000, stock: 3, daysAgo: 12 },
+    { id: "KS-5R8K-3JD2-V7YC", artisan: rama, keys: ramaKeys, title: "Dokra tribal horse figurine",
+      materials: "Brass, beeswax, river clay, rice husk",
+      story: "The horse is our village guardian. I cast it the way my father did — one mould, one pour, and the mould is broken to free it. No two are the same.",
+      category: "Dokra metal art", giNumber: "GI-0021", giEntryId: ramaGiEntry?.id ?? null,
+      photo: "/samples/dokra.svg", priceInPaise: 420_000, stock: 4, daysAgo: 3 },
+    { id: "KS-4W7L-6MB3-T2KJ", artisan: rama, keys: ramaKeys, title: "Dokra measuring bowl set of three",
+      materials: "Brass, beeswax, river clay",
+      story: "Grain measures. My grandmother used a set like these every day of her life. I make them in the old sizes, not in litres.",
+      category: "Dokra metal art", photo: "/samples/dokra.svg",
+      priceInPaise: 540_000, stock: 2, daysAgo: 18 },
+    { id: "KS-8C4V-9ZR5-N3HD", artisan: meena, title: "Molela votive plaque — Dev Narayan",
+      materials: "Banas river clay, natural slip, wood-fired",
+      story: "The plaque is made flat, not thrown. I press the clay onto the board and raise the figure with my thumbs. It is fired once, in a wood kiln.",
+      category: "Terracotta pottery", photo: "/samples/terracotta.svg",
+      priceInPaise: 240_000, stock: 6, daysAgo: 2 },
+    { id: "KS-6Y2Q-5TN8-B7WF", artisan: meena, title: "Terracotta water pot with wheel-cut neck",
+      materials: "Banas river clay, wood-fired",
+      story: "Clay keeps water cool without electricity. This is the shape we have always made — narrow at the neck so nothing spills when it is carried on the head.",
+      category: "Terracotta pottery", photo: "/samples/terracotta.svg",
+      priceInPaise: 165_000, stock: 9, daysAgo: 15 },
+    { id: "KS-3K9D-7VC2-M5RP", artisan: meena, title: "Pair of terracotta lamp stands",
+      materials: "Banas river clay, natural slip, wood-fired",
+      story: "For Diwali. My mother made these every year and sold them at the roadside. I still make them to her measurements.",
+      category: "Terracotta pottery", photo: "/samples/terracotta.svg",
+      priceInPaise: 98_000, stock: 12, daysAgo: 25 },
+    { id: "KS-1L5X-4HG6-Q8ZT", artisan: anitha, title: "Srikalahasti Kalamkari wall panel — Tree of Life",
+      materials: "Handloom cotton, myrobalan, natural vegetable dyes",
+      story: "Every line is drawn with a bamboo pen, not printed. The panel took forty days. The tree holds seventeen birds and each one is a different species.",
+      category: "Kalamkari", photo: "/samples/hero.svg",
+      priceInPaise: 1_250_000, stock: 1, daysAgo: 4 },
+    { id: "KS-9F3B-2SW7-K4LV", artisan: anitha, title: "Kalamkari cotton yardage in pomegranate",
+      materials: "Handloom cotton, pomegranate rind, iron acetate",
+      story: "The red comes from madder and the black from iron and jaggery left to ferment for three weeks. No chemical colour touches this cloth.",
+      category: "Kalamkari", photo: "/samples/hero.svg",
+      priceInPaise: 390_000, stock: 7, daysAgo: 11 },
+    { id: "KS-7T6N-8PJ3-D2XQ", artisan: anitha, title: "Kalamkari temple hanging, unlined",
+      materials: "Handloom cotton, natural vegetable dyes",
+      story: "This hung in our village temple for the festival. The story runs left to right, the way it is meant to be read aloud to children.",
+      category: "Kalamkari", photo: "/samples/hero.svg",
+      priceInPaise: null, stock: 0, daysAgo: 30 },
+  ];
+
+  for (const w of wider) await sealListed(w);
 
   console.log("Seeded:");
   console.log("  • 5 artisans across all verification tiers");

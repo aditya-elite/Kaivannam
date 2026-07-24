@@ -41,7 +41,7 @@ export function CartView() {
             <Card className={`flex gap-4 ${l.available ? "" : "opacity-70"}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={l.photoUrl ?? "/samples/hero.svg"}
+                src={l.photoUrl ?? "/samples/hero.png"}
                 alt={l.title}
                 className="h-20 w-20 shrink-0 rounded-lg object-cover"
                 width={80}

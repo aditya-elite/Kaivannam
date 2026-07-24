@@ -135,7 +135,7 @@ export function ArtisansView({ artisans }: { artisans: Artisan[] }) {
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={a.photoUrl ?? "/samples/hero.svg"}
+                    src={a.photoUrl ?? "/samples/hero.png"}
                     alt={`Craft by ${a.fullName}, ${a.craft}`}
                     className="aspect-[4/3] w-full object-cover"
                     width={480}

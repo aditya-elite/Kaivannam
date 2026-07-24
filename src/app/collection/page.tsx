@@ -52,7 +52,7 @@ export default async function CollectionPage() {
     const image =
       (completed && firstPhoto(completed.photoUrls)) ??
       p.stages.map((s) => firstPhoto(s.photoUrls)).find(Boolean) ??
-      "/samples/hero.svg";
+      "/samples/hero.png";
 
     return {
       id: p.id,

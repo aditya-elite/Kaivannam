@@ -199,7 +199,7 @@ export function LandingView({
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={a.photoUrl ?? "/samples/hero.svg"}
+                    src={a.photoUrl ?? "/samples/hero.png"}
                     alt={`Craft work by ${a.fullName}, ${a.craft} artisan from ${a.region}`}
                     className="aspect-square w-full object-cover"
                     width={480}

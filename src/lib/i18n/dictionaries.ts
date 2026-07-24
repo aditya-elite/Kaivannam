@@ -294,6 +294,8 @@ const en: Dict = {
 
   "shop.price": "Price",
   "shop.priceOnRequest": "Price on request",
+  "shop.lastOne": "Last one",
+  "shop.fewLeft": "Only {count} left",
   "shop.giBacked": "GI verified",
   "shop.save": "Save",
   "shop.saved": "Saved",
@@ -762,6 +764,8 @@ const hi: Dict = {
 
   "shop.price": "मूल्य",
   "shop.priceOnRequest": "मूल्य पूछें",
+  "shop.lastOne": "आखिरी एक",
+  "shop.fewLeft": "केवल {count} बचे",
   "shop.giBacked": "जीआई सत्यापित",
   "shop.save": "सहेजें",
   "shop.saved": "सहेजा गया",
@@ -1039,6 +1043,8 @@ const ta: Dict = {
 
   "shop.price": "விலை",
   "shop.priceOnRequest": "விலை கேட்கவும்",
+  "shop.lastOne": "கடைசி ஒன்று",
+  "shop.fewLeft": "{count} மட்டுமே உள்ளன",
   "shop.giBacked": "GI சரிபார்க்கப்பட்டது",
   "shop.save": "சேமி",
   "shop.saved": "சேமிக்கப்பட்டது",

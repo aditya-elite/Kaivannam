@@ -46,7 +46,7 @@ export function ArtisanProfileView({ artisan, gi, products }: Props) {
       <header className="grid gap-6 sm:grid-cols-[220px_1fr]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={artisan.photoUrl ?? "/samples/hero.svg"}
+          src={artisan.photoUrl ?? "/samples/hero.png"}
           alt={`${artisan.fullName}, ${artisan.craft} artisan`}
           className="aspect-square w-full rounded-2xl object-cover shadow-card"
           width={440}
@@ -136,7 +136,7 @@ export function ArtisanProfileView({ artisan, gi, products }: Props) {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={p.photoUrl ?? "/samples/hero.svg"}
+                    src={p.photoUrl ?? "/samples/hero.png"}
                     alt={p.title}
                     className="aspect-[4/3] w-full rounded-t-2xl object-cover"
                     width={480}

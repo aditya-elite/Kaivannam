@@ -15,7 +15,7 @@ export function ShopProductView({ product }: { product: ShopDetail }) {
   const [qty, setQty] = useState(1);
   const [active, setActive] = useState(0);
   const max = Math.min(product.stock, 10);
-  const photos = product.photoUrls.length ? product.photoUrls : ["/samples/hero.svg"];
+  const photos = product.photoUrls.length ? product.photoUrls : ["/samples/hero.png"];
 
   return (
     <div className="mx-auto max-w-4xl">
