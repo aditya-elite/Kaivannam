@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { verifyProduct } from "@/lib/verify";
+import { getProvenance } from "@/lib/provenance";
 import { VerifyView } from "@/components/views/VerifyView";
 
 // Public product verification page (opened by scanning the QR). No account.
@@ -18,6 +19,10 @@ export default async function ProductVerifyPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const result = await verifyProduct(decodeURIComponent(id).toUpperCase());
-  return <VerifyView id={id} result={result} />;
+  const canonicalId = decodeURIComponent(id).toUpperCase();
+  const result = await verifyProduct(canonicalId);
+  // The two provenance layers, assembled separately from the verification checks
+  // above. Only meaningful for a product that was found.
+  const provenance = result.found ? await getProvenance(canonicalId) : null;
+  return <VerifyView id={id} result={result} provenance={provenance} />;
 }

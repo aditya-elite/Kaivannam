@@ -34,14 +34,39 @@
     line-height: 1.6;
     min-height: 100vh;
   }
-  /* Subtle block-print texture — decoration only, very low contrast. */
+
+  /* Devanagari and Tamil have larger notional em boxes but sit optically
+     smaller than Latin at the same pixel size, and both need more leading for
+     the marks above and below the baseline. Setting all three identically makes
+     the Hindi and Tamil pages read quieter than the English one, which is
+     backwards for this audience.
+
+     These scale UP from the 16px floor and never down — the floor is a hard
+     constraint and per-script tuning may only ever add. */
+  html[lang="hi"] body {
+    font-size: 17.5px;
+    line-height: 1.72;
+  }
+  html[lang="ta"] body {
+    font-size: 17.5px;
+    line-height: 1.78;
+  }
+
+  /* Khadi weave, replacing a flat dot grid. Two thread axes at coprime periods
+     (7px warp, 9px weft) so they never resolve into a visible grid, with the
+     warp slightly warmer than the weft — handloom cloth is never one colour in
+     both directions. The two slub specks sit on long, mutually prime periods so
+     the repeat is not readable. Fixed and non-scrolling: paints once. */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
-    background-image: theme("backgroundImage.block-print");
-    background-size: 22px 22px;
-    opacity: 0.5;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(107, 85, 70, 0.055) 0 1px, transparent 1px 7px),
+      repeating-linear-gradient(0deg, rgba(107, 85, 70, 0.038) 0 1px, transparent 1px 9px),
+      radial-gradient(circle at 30% 20%, rgba(193, 68, 14, 0.035) 0 2px, transparent 3px),
+      radial-gradient(circle at 72% 64%, rgba(46, 49, 146, 0.03) 0 2px, transparent 3px);
+    background-size: auto, auto, 61px 61px, 83px 83px;
     pointer-events: none;
     z-index: 0;
   }
@@ -103,6 +128,74 @@
   }
   /* Content sits above the texture pseudo-element. */
   main, header, footer { position: relative; z-index: 1; }
+
+  /* ── Typography utilities ───────────────────────────────────────────────
+     Product IDs are read aloud across a shop counter and typed in from a
+     printed tag, often in poor light. Tabular figures stop the string
+     changing width as it changes, and the tracking separates the pairs that
+     actually get confused — 1/I and 0/O. Both matter; the tracking is doing
+     as much work as the figures. */
+  .product-id {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.1em;
+  }
+  /* Any number in a column that should not wobble: stat counters, queue
+     counts, ledger sequence numbers. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Initial capital on the maker's story. Latin only, deliberately:
+     ::first-letter on Devanagari or Tamil can split a conjunct or orphan a
+     vowel mark and produce nonsense. Gated until a native reader of each
+     script has looked at it. */
+  html[lang="en"] .versal::first-letter {
+    float: left;
+    font-size: 3.6em;
+    line-height: 0.82;
+    font-weight: 800;
+    padding: 0.06em 0.16em 0 0;
+    @apply text-terracotta;
+  }
+
+  /* Optical left edge on pull quotes. hanging-punctuation is Safari-only
+     today; the text-indent carries it elsewhere. Both degrade to a normal
+     paragraph, which is fine. */
+  .hang-punct {
+    hanging-punctuation: first last;
+    text-indent: -0.38em;
+  }
+}
+
+/* ============================================================
+   PRINT — the tag is the only part of Kaivannam that becomes a
+   physical object, so it gets real print furniture rather than a
+   web page with a QR code on it.
+   ============================================================ */
+@media print {
+  .tag-sheet {
+    position: relative;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  /* Corner cut marks — tags get cut out with scissors. */
+  .tag-sheet .cut-mark {
+    display: block !important;
+  }
+  /* Fold line so the tag can hang double-sided over a garment edge. */
+  .tag-sheet .fold-line {
+    display: block !important;
+  }
+  /* The signature rule is the one credential a counterfeiter cannot copy out
+     of the database, so it must survive to paper. */
+  .tag-sheet .sig-rule {
+    display: block !important;
+  }
+  /* Force the QR and rules to print even with "background graphics" off. */
+  .tag-sheet, .tag-sheet * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 /* ── Re-themed craft splash (mechanics adapted from the provided animation.css:
@@ -182,10 +275,13 @@
   animation: threadShimmer 3s linear infinite, letterRise 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 .splash__tagline {
+  /* Font fallback resolves per glyph, so one chain covers all three scripts. */
+  font-family: var(--font-noto-sans), var(--font-noto-deva), var(--font-noto-tamil), sans-serif;
   font-size: clamp(0.8rem, 2.4vw, 1rem);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.12em;
   color: var(--splash-muted);
+  text-align: center;
+  padding: 0 1rem;
   opacity: 0;
   animation: letterRise 0.6s ease forwards 1.1s;
 }

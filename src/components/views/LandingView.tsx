@@ -9,6 +9,7 @@ import { Spine } from "@/components/craft/Spine";
 import { Kolam } from "@/components/craft/Kolam";
 import { Reveal } from "@/components/craft/Reveal";
 import { roughClasses } from "@/lib/rough";
+import { dyeLotColor } from "@/lib/dyelot";
 import {
   IconQr,
   IconUser,
@@ -117,14 +118,19 @@ export function LandingView({
 
           {/* §2.6 — scale contrast: 13px tracked labels against the display
               type above, with nothing in the middle of the scale. */}
+          {/* `tnum` keeps the two figures on a shared advance width so the
+              column edge holds as the counts change. These are NOT animated:
+              a count-up on a <dd> can interrupt a screen reader mid-sentence
+              with a different number, and the fix costs more machinery than a
+              spinning digit is worth. */}
           <dl className="mt-10 flex gap-10">
             <div>
               <dt className="type-label text-white/70">{t("nav.artisans")}</dt>
-              <dd className="text-4xl font-extrabold">{stats.artisans}</dd>
+              <dd className="tnum text-4xl font-extrabold">{stats.artisans}</dd>
             </div>
             <div>
               <dt className="type-label text-white/70">{t("verify.timeline")}</dt>
-              <dd className="text-4xl font-extrabold">{stats.products}</dd>
+              <dd className="tnum text-4xl font-extrabold">{stats.products}</dd>
             </div>
           </dl>
         </section>
@@ -135,7 +141,7 @@ export function LandingView({
       {/* ── How it works ──────────────────────────────────────────────────── */}
       <section aria-labelledby="how-heading">
         <p className="type-label text-muted">{t("nav.how")}</p>
-        <h2 id="how-heading" className="mt-2 text-2xl font-bold sm:text-3xl">
+        <h2 id="how-heading" className="letterpress mt-2 text-2xl font-bold sm:text-3xl">
           {t("home.step2Title")}
         </h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -147,7 +153,11 @@ export function LandingView({
             /* §3.3 — stamp-in, staggered 70ms. Three items, so the ink-bleed
                refinement is affordable here (skipped past six). */
             <Reveal key={i} index={i} bleed className="text-ink">
-              <div className={`h-full bg-surface p-5 shadow-card ${edges[i]}`}>
+              {/* §2.8 ink bleed — the capillary spread under the rough edge.
+                  Tier A plates only: the blur is static here (paints once,
+                  never animates, never on a scrolling layer), which is the
+                  only condition under which it is affordable. */}
+              <div className={`plate-bleed h-full bg-surface p-5 shadow-card ${edges[i]}`}>
                 <span className="grid h-12 w-12 place-items-center rounded-xl bg-haldi/20 text-terracotta">
                   <s.Icon width={26} height={26} />
                 </span>
@@ -166,7 +176,7 @@ export function LandingView({
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="type-label text-muted">{t("artisans.title")}</p>
-            <h2 id="featured-heading" className="mt-2 text-2xl font-bold sm:text-3xl">
+            <h2 id="featured-heading" className="letterpress mt-2 text-2xl font-bold sm:text-3xl">
               {t("home.ctaBrowse")}
             </h2>
           </div>
@@ -179,23 +189,35 @@ export function LandingView({
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {featured.map((a, i) => (
-            <Reveal key={a.id} index={i}>
+            /* cols=3 sends the reveal along the diagonal instead of down the
+               DOM order — the same axis as the spine above. */
+            <Reveal key={a.id} index={i} cols={3}>
               <Link
                 href={`/artisans/${a.id}`}
-                className="group block h-full rounded-2xl bg-surface shadow-card transition-shadow hover:shadow-lift"
+                className="group row-shear block h-full bg-surface shadow-card transition-shadow hover:shadow-lift"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={a.photoUrl ?? "/samples/hero.svg"}
-                  alt={`Craft work by ${a.fullName}, ${a.craft} artisan from ${a.region}`}
-                  className="aspect-square w-full rounded-t-2xl object-cover"
-                  width={480}
-                  height={480}
-                />
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={a.photoUrl ?? "/samples/hero.svg"}
+                    alt={`Craft work by ${a.fullName}, ${a.craft} artisan from ${a.region}`}
+                    className="aspect-square w-full object-cover"
+                    width={480}
+                    height={480}
+                  />
+                  <span className="product-id absolute bottom-2 right-2 bg-ink/75 px-1.5 py-1 font-mono text-[11px] font-bold text-cream">
+                    NO. {String(i + 1).padStart(3, "0")}
+                  </span>
+                </div>
                 {/* Tier B rule inside a Tier A page: text never sits on the
                     image. It gets its own opaque plate below it. */}
                 <div className="space-y-2 p-4">
                   <h3 className="text-lg font-bold group-hover:text-indigo">{a.fullName}</h3>
+                  <span
+                    aria-hidden="true"
+                    className="block h-[3px] w-10"
+                    style={{ background: dyeLotColor(i, "terracotta", 11) }}
+                  />
                   <p className="text-base text-muted">
                     {a.craft} · {a.region}, {a.state}
                   </p>

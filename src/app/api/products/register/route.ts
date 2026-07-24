@@ -6,6 +6,8 @@ import { getLedger } from "@/lib/ledger";
 import { newProductId } from "@/lib/ids";
 import { sha256 } from "@/lib/hash";
 import { computeProductHash, STAGE_ORDER } from "@/lib/product-record";
+import { createInitialRecord } from "@/lib/authenticity/record";
+import { ensureGenesisOwner } from "@/lib/ownership";
 import { lookupGiByNumber } from "@/lib/gi";
 import { generateArtisanKeyPair, signScanPayload } from "@/lib/crypto-keys";
 import { rupeesToPaise } from "@/lib/money";
@@ -208,6 +210,13 @@ export async function POST(req: NextRequest) {
       sealedAt,
     },
   });
+
+  // ── Two provenance layers, both seeded at seal, both separate from the hash
+  //    above (which is Layer 1's fingerprint). createInitialRecord freezes the
+  //    v1 authenticity record + its consensus; ensureGenesisOwner writes the
+  //    first custody entry (the maker holds it). Neither can alter contentHash. ──
+  await createInitialRecord(productId);
+  await ensureGenesisOwner(productId);
 
   return NextResponse.json({ id: productId });
 }

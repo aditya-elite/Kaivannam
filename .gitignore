@@ -33,3 +33,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# local design lab — UI/UX + motion explorations, scratch work, never shipped
+/ui-lab

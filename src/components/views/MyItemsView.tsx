@@ -150,7 +150,7 @@ export function MyItemsView({
                     <p className="text-lg font-bold">{p.title}</p>
                     <p className="text-sm text-muted">{p.category}</p>
                     <div className="mt-2 flex items-center justify-between">
-                      <span className="font-mono text-sm text-muted">{p.id}</span>
+                      <span className="product-id font-mono text-sm text-muted">{p.id}</span>
                       {p.sealedAt ? (
                         <span className="text-sm text-muted">{formatDate(p.sealedAt)}</span>
                       ) : null}

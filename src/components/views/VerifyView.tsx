@@ -11,6 +11,8 @@ import { WeaveProgress } from "@/components/craft/WeaveProgress";
 import { roughClasses } from "@/lib/rough";
 import { formatDate } from "@/lib/format";
 import type { VerificationResult } from "@/lib/verify";
+import type { Provenance } from "@/lib/provenance";
+import { ProvenancePanels } from "@/components/provenance/ProvenancePanels";
 import { IconCheck, IconClose, IconClock, IconQr, IconAlert, IconArrowRight } from "@/components/icons";
 
 /**
@@ -107,7 +109,15 @@ function ConfirmLink({ href, children, confirm, yes }: { href: string; children:
   );
 }
 
-export function VerifyView({ id, result }: { id: string; result: VerificationResult }) {
+export function VerifyView({
+  id,
+  result,
+  provenance = null,
+}: {
+  id: string;
+  result: VerificationResult;
+  provenance?: Provenance | null;
+}) {
   const t = useT();
 
   const notFound = !result.found || result.verdict === "NOT_FOUND";
@@ -143,7 +153,7 @@ export function VerifyView({ id, result }: { id: string; result: VerificationRes
     );
   }
 
-  return <VerifiedResult id={id} result={result} liveRegion={liveRegion} />;
+  return <VerifiedResult id={id} result={result} provenance={provenance} liveRegion={liveRegion} />;
 }
 
 /* ── Success language ─────────────────────────────────────────────────────── */
@@ -151,10 +161,12 @@ export function VerifyView({ id, result }: { id: string; result: VerificationRes
 function VerifiedResult({
   id,
   result,
+  provenance,
   liveRegion,
 }: {
   id: string;
   result: VerificationResult;
+  provenance: Provenance | null;
   liveRegion: React.ReactNode;
 }) {
   const t = useT();
@@ -202,6 +214,10 @@ function VerifiedResult({
         ))}
       </ul>
 
+      {/* The two provenance layers — independent consensus (permanent) and
+          custody (changeable), styled as distinct things. See ProvenancePanels. */}
+      {provenance ? <ProvenancePanels productId={p.id} provenance={provenance} /> : null}
+
       <Rule className="my-8" />
 
       <div className="space-y-6">
@@ -214,9 +230,21 @@ function VerifiedResult({
               <p className="text-base text-muted">{p.materials}</p>
             </div>
             {p.storyText ? (
-              <div className="mt-4">
+              /* §2.9 deckled edge — the one placement where the handmade-paper
+                 metaphor is doing narrative work. Applied more widely it stops
+                 being a material and becomes a gimmick, so it lives here and
+                 nowhere else. The versal and hanging punctuation are the
+                 typographic half of the same idea: this paragraph is set like
+                 a page from a book, not like a field in a record. */
+              <div className="deckle mt-4 bg-cream p-4">
                 <h3 className="text-base font-bold">{t("verify.story")}</h3>
-                <p className="text-base text-muted">“{p.storyText}”</p>
+                {/* Versal only — no hang-punct here. ::first-letter already
+                    absorbs the opening quote into the drop cap (that is what
+                    the spec says it does), so a negative text-indent on the
+                    same line would pull the floated capital off the margin
+                    instead of the punctuation. The two features are correct
+                    separately and wrong together. */}
+                <p className="versal mt-1 text-base text-ink">“{p.storyText}”</p>
               </div>
             ) : null}
           </Card>
@@ -278,14 +306,20 @@ function VerifiedResult({
                     <h3 className="text-lg font-bold">{t(`stage.${s.stage}`)}</h3>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-[160px_1fr]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={s.photoUrls[0]}
-                      alt={`${t(`stage.${s.stage}`)} — ${p.title}`}
-                      className="aspect-square w-full rounded-xl object-cover"
-                      width={320}
-                      height={320}
-                    />
+                    {/* §6.2b — stage photographs arrive from the server, so
+                        they develop (a veil retracting) rather than settle
+                        (a print being placed). Settle is for uploads the
+                        artisan just took; using both in one view is noise. */}
+                    <span className="photo-develop block aspect-square w-full overflow-hidden rounded-xl">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={s.photoUrls[0]}
+                        alt={`${t(`stage.${s.stage}`)} — ${p.title}`}
+                        className="h-full w-full object-cover"
+                        width={320}
+                        height={320}
+                      />
+                    </span>
                     <div className="space-y-1">
                       <p className="flex items-center gap-1.5 text-sm text-muted">
                         <IconClock width={15} height={15} /> {t("stage.capturedAt")}:{" "}
@@ -307,11 +341,11 @@ function VerifiedResult({
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-muted">{t("verify.fingerprint")}</dt>
-              <dd className="font-mono">{result.contentHashShort}…</dd>
+              <dd className="product-id font-mono">{result.contentHashShort}…</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted">{t("verify.ledgerSeq")}</dt>
-              <dd className="font-mono">#{result.ledgerSeq}</dd>
+              <dd className="product-id font-mono">#{result.ledgerSeq}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted">{t("verify.recordedOn")}</dt>
@@ -319,7 +353,7 @@ function VerifiedResult({
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted">{t("verify.productNumber")}</dt>
-              <dd className="font-mono">{id}</dd>
+              <dd className="product-id font-mono">{id}</dd>
             </div>
           </dl>
           {result.isTestnet ? (

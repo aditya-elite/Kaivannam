@@ -53,7 +53,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const user = await getCurrentUser();
 
   return (
-    <html lang={locale} className={`${notoSans.variable} ${notoDeva.variable} ${notoTamil.variable}`}>
+    <html
+      lang={locale}
+      className={`${notoSans.variable} ${notoDeva.variable} ${notoTamil.variable}`}
+      /* The inline script below adds `js` to this element's class list before
+         React hydrates, so the client DOM legitimately carries a class the
+         server HTML does not. React flags that as a hydration mismatch and
+         refuses to patch it, which is correct in general and wrong here — the
+         difference is the entire point of the script.
+
+         suppressHydrationWarning applies to this element's own attributes only
+         (it does not cascade to children), so the rest of the tree is still
+         fully checked. This is the same escape hatch theme-bootstrap scripts
+         use, and it is preferable to the alternatives: rendering `js`
+         server-side would defeat the no-JS fallback, and moving the class to
+         <body> just relocates the same mismatch. */
+      suppressHydrationWarning
+    >
       <head>
         {/* Scroll-reveal start states are scoped to `.js` in motion.css. Without
             this the IntersectionObserver never runs and an unscoped opacity: 0

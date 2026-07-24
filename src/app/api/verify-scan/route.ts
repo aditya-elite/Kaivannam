@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyScanSignature } from "@/lib/crypto-keys";
 import { checkReplay, recordScan } from "@/lib/scan-log";
+import { recordVerificationScan } from "@/lib/consensus/scan-history";
+import { recomputeAndSupersedeIfChanged } from "@/lib/authenticity/record";
 import { evaluate3KeyTrust } from "@/lib/three-key";
 import { computeProductHash } from "@/lib/product-record";
 import { getLedger } from "@/lib/ledger";
@@ -97,6 +99,22 @@ export async function POST(req: NextRequest) {
     { livenessPassed, replay },
     { hashMatches },
   );
+
+  // ── Consensus input: a GENUINE scan (real signature, intact record, not a
+  //    replay) is durable evidence the physical object circulates. Record it to
+  //    the persistent buyer-history table and let it supersede the frozen
+  //    authenticity record with a possibly-higher score. Best-effort: a failure
+  //    here never changes the scan verdict the buyer sees. Location is coarsened
+  //    to ~11km so no precise track is kept. ──
+  if (product && key1Valid && hashMatches && replay === "OK") {
+    const locationLabel = geo ? `~${geo.lat.toFixed(1)},${geo.lng.toFixed(1)}` : null;
+    try {
+      await recordVerificationScan({ productId: product.id, scanner: ip, locationLabel });
+      await recomputeAndSupersedeIfChanged(product.id);
+    } catch {
+      /* history is additive; never block a verdict on it */
+    }
+  }
 
   return NextResponse.json(
     {

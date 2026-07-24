@@ -42,9 +42,16 @@ export function SiteHeader({ user }: Props) {
 
   // Public, no-auth links. "Register a product" is visible but the auth gate
   // only triggers when actually starting registration.
+  // MERGE NOTE: two browsing surfaces arrived from different branches —
+  // /collection (the showroom) and /shop (the transactional listing that the
+  // cart and checkout flow link into). Both still work and neither has been
+  // deleted, but putting both in the primary nav gives six top-level items plus
+  // cart, account and sign-out, which does not fit and reads as two shops.
+  // The showroom is the better front door, so it is the one surfaced here;
+  // /shop stays live for deep links and the checkout flow. Worth unifying.
   const links = [
     { href: "/", label: t("nav.home") },
-    { href: "/shop", label: t("nav.shop") },
+    { href: "/collection", label: t("nav.collection") },
     { href: "/artisans", label: t("nav.artisans") },
     { href: "/lookup", label: t("nav.lookup") },
     { href: "/how-it-works", label: t("nav.how") },
@@ -96,13 +103,13 @@ export function SiteHeader({ user }: Props) {
           </span>
         </Link>
 
-        <nav ref={navRef} aria-label="Primary" className="relative hidden items-center gap-1 md:flex">
+        <nav ref={navRef} aria-label="Primary" className="relative hidden items-center gap-1 lg:flex">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               aria-current={isActive(l.href) ? "page" : undefined}
-              className={`min-h-tap rounded-lg px-3 py-2 text-base font-semibold ${
+              className={`min-h-tap whitespace-nowrap rounded-lg px-3 py-2 text-base font-semibold ${
                 isActive(l.href) ? "text-indigo" : "text-ink hover:bg-ink/5"
               }`}
             >
@@ -115,19 +122,29 @@ export function SiteHeader({ user }: Props) {
 
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
+          {/* Both survive the merge: "Register a product" is the artisan's way
+              in, the cart is the shopper's. They serve different people and
+              dropping either would remove a whole audience's primary action.
+              The register link hides below sm; the cart never does. */}
+          <Link
+            href="/register"
+            className="hidden min-h-tap items-center gap-2 whitespace-nowrap rounded-xl bg-terracotta px-4 py-2 text-base font-semibold text-white hover:bg-terracotta-600 xl:inline-flex"
+          >
+            {t("nav.register")}
+          </Link>
           <CartLink label={t("nav.cart")} />
           {user ? (
             <>
               <Link
                 href={user.role === "CONSUMER" ? "/shop" : "/my-items"}
-                className="hidden min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 px-3 text-ink md:inline-flex"
+                className="hidden min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 px-3 text-ink lg:inline-flex"
                 aria-label={user.displayName}
                 title={user.displayName}
               >
                 <IconUser width={22} height={22} />
               </Link>
               {/* Sign out — always available (labelled) when signed in. */}
-              <form action={signOutAction} className="hidden md:block">
+              <form action={signOutAction} className="hidden lg:block">
                 <button
                   type="submit"
                   className="inline-flex min-h-tap items-center gap-2 rounded-xl border-2 border-ink/15 px-3 py-2 text-base font-semibold text-ink hover:border-ink/40"
@@ -140,14 +157,14 @@ export function SiteHeader({ user }: Props) {
             /* Sign in — clearly labelled and present at all times when logged out. */
             <Link
               href="/login"
-              className="inline-flex min-h-tap items-center gap-2 rounded-xl bg-indigo px-4 py-2 text-base font-semibold text-white hover:bg-indigo-700"
+              className="inline-flex min-h-tap items-center gap-2 whitespace-nowrap rounded-xl bg-indigo px-4 py-2 text-base font-semibold text-white hover:bg-indigo-700"
             >
               <IconUser width={18} height={18} /> {t("nav.signin")}
             </Link>
           )}
           <button
             type="button"
-            className="inline-flex min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 md:hidden"
+            className="inline-flex min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 lg:hidden"
             aria-label={open ? t("common.close") : t("nav.menu")}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
@@ -161,7 +178,7 @@ export function SiteHeader({ user }: Props) {
         /* §4.1 — selvedge panel. The decorative woven edge leads and the panel
            body settles in behind it. No backdrop blur: expensive and unreliable
            on low-end GPUs, and it buys nothing here. */
-        <nav aria-label="Primary mobile" className="border-t border-ink/10 bg-cream md:hidden">
+        <nav aria-label="Primary mobile" className="border-t border-ink/10 bg-cream lg:hidden">
           <span
             aria-hidden="true"
             className="selvedge-lead block h-1.5 w-full bg-terracotta"

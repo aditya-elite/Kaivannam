@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Kalāsūtra design system.
+ * Kaivannam design system.
  * Palette rooted in Indian craft traditions on a warm khadi-cream base.
  * Every foreground/background pair used in the UI is checked against WCAG AA
  * (4.5:1 body text, 3:1 UI components) — see docs in globals.css.

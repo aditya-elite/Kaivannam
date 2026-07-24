@@ -24,10 +24,10 @@ model User {
   role         Role     @default(ARTISAN)
   createdAt    DateTime @default(now())
 
-  artisan  Artisan?
-  sessions Session[]
+  artisan   Artisan?
+  sessions  Session[]
   auditLogs AuditLog[]
-  orders   Order[]
+  orders    Order[]
 }
 
 enum Role {
@@ -50,19 +50,19 @@ model Session {
 // Artisan public profile + verification state
 // ─────────────────────────────────────────────────────────────
 model Artisan {
-  id        String  @id @default(cuid())
-  userId    String? @unique
-  user      User?   @relation(fields: [userId], references: [id])
+  id     String  @id @default(cuid())
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id])
 
-  fullName  String
-  craft     String // e.g. "Handloom weaving", "Dokra metal art"
-  region    String // village / cluster
-  state     String
-  bio       String?
-  photoUrl  String? // object-storage URL, not binary
+  fullName String
+  craft    String // e.g. "Handloom weaving", "Dokra metal art"
+  region   String // village / cluster
+  state    String
+  bio      String?
+  photoUrl String? // object-storage URL, not binary
 
   // Tiered verification (never a binary gate). Higher tier = stronger provenance.
-  tier      VerificationTier @default(SELF_DECLARED)
+  tier VerificationTier @default(SELF_DECLARED)
 
   // Gate 1 — artisan identity. Confirmed Pehchan (national artisan ID) shown on
   // the profile. `pehchanNumber` stored in full but rendered MASKED publicly.
@@ -101,30 +101,30 @@ enum VerificationTier {
 
 // Pehchan ID upload + OCR extraction, reviewed in the admin queue.
 model VerificationRequest {
-  id         String   @id @default(cuid())
-  artisanId  String
-  artisan    Artisan  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  artisanId String
+  artisan   Artisan @relation(fields: [artisanId], references: [id], onDelete: Cascade)
 
   docImageUrl String? // uploaded ID card image (object storage) — optional for number-only entry
 
   // OCR-extracted structured fields + per-field confidence (0..1). Shown to the
   // user for correction before submit — never silently trusted.
-  ocrIdNumber      String?
-  ocrName          String?
-  ocrCraft         String?
-  ocrRegion        String?
-  ocrConfidence    String? // JSON: { idNumber: 0.82, name: 0.91, ... }
-  ocrRawText       String?
+  ocrIdNumber   String?
+  ocrName       String?
+  ocrCraft      String?
+  ocrRegion     String?
+  ocrConfidence String? // JSON: { idNumber: 0.82, name: 0.91, ... }
+  ocrRawText    String?
 
   // Values as corrected/confirmed by the user.
-  idNumber   String?
-  claimedGi  String? // GI cluster the artisan claims, cross-checked against GiEntry
+  idNumber  String?
+  claimedGi String? // GI cluster the artisan claims, cross-checked against GiEntry
 
   status     ReviewStatus @default(PENDING)
   reviewNote String?
   reviewedBy String?
   reviewedAt DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime     @default(now())
 
   @@index([status])
 }
@@ -140,9 +140,9 @@ enum ReviewStatus {
 // The Gate-1 validity check is format+checksum AND membership in this register.
 // ─────────────────────────────────────────────────────────────
 model PehchanDataset {
-  id           String   @id @default(cuid())
+  id           String         @id @default(cuid())
   version      Int // monotonically increasing ingest version
-  lastSyncedAt DateTime @default(now())
+  lastSyncedAt DateTime       @default(now())
   sourceNote   String?
   entries      PehchanEntry[]
 
@@ -150,14 +150,14 @@ model PehchanDataset {
 }
 
 model PehchanEntry {
-  id             String         @id @default(cuid())
-  datasetId      String
-  dataset        PehchanDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  id        String         @id @default(cuid())
+  datasetId String
+  dataset   PehchanDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
 
-  pehchanNumber  String
-  holderName     String
-  craft          String?
-  region         String?
+  pehchanNumber String
+  holderName    String
+  craft         String?
+  region        String?
 
   @@index([pehchanNumber])
 }
@@ -166,9 +166,9 @@ model PehchanEntry {
 // GI reference dataset (manual monthly admin ingest — NO live gov API)
 // ─────────────────────────────────────────────────────────────
 model GiDataset {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   version      Int // monotonically increasing ingest version
-  lastSyncedAt DateTime @default(now())
+  lastSyncedAt DateTime  @default(now())
   sourceNote   String? // e.g. "GI Registry Part A+B, uploaded by admin"
   entries      GiEntry[]
 
@@ -176,9 +176,9 @@ model GiDataset {
 }
 
 model GiEntry {
-  id             String    @id @default(cuid())
-  datasetId      String
-  dataset        GiDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  id        String    @id @default(cuid())
+  datasetId String
+  dataset   GiDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
 
   giNumber       String
   giName         String
@@ -193,30 +193,30 @@ model GiEntry {
 }
 
 model GiMatch {
-  id         String   @id @default(cuid())
-  artisanId  String   @unique
-  artisan    Artisan  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
-  giEntryId  String
-  giEntry    GiEntry  @relation(fields: [giEntryId], references: [id])
+  id             String   @id @default(cuid())
+  artisanId      String   @unique
+  artisan        Artisan  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  giEntryId      String
+  giEntry        GiEntry  @relation(fields: [giEntryId], references: [id])
   datasetVersion Int
-  checkedAt  DateTime @default(now())
+  checkedAt      DateTime @default(now())
 }
 
 // ─────────────────────────────────────────────────────────────
 // Products + mandatory staged timeline
 // ─────────────────────────────────────────────────────────────
 model Product {
-  id         String  @id // non-sequential, non-guessable (see lib/ids.ts)
-  artisanId  String
-  artisan    Artisan @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  id        String  @id // non-sequential, non-guessable (see lib/ids.ts)
+  artisanId String
+  artisan   Artisan @relation(fields: [artisanId], references: [id], onDelete: Cascade)
 
-  title       String
-  materials   String // comma/newline separated; kept simple for demo
-  storyText   String?
+  title         String
+  materials     String // comma/newline separated; kept simple for demo
+  storyText     String?
   storyVoiceUrl String?
-  category    String // craft cluster
+  category      String // craft cluster
 
-  status      ProductStatus @default(DRAFT)
+  status ProductStatus @default(DRAFT)
 
   // ── Storefront listing (consumer sales) ──
   // Shoppable when: status=SEALED && listedForSale && stock > 0 && priceInPaise != null.
@@ -226,10 +226,10 @@ model Product {
 
   // Gate 2 — product authenticity. A GI (Geographical Indication) certificate is
   // OCR-read at registration and matched against the ingested GI register.
-  giNumber    String? // GI number extracted from the artisan's certificate
-  giCertUrl   String? // uploaded GI certificate image (object storage)
-  giVerified  Boolean @default(false) // matched an ingested GiEntry
-  giEntryId   String? // the matched GiEntry id (nullable)
+  giNumber   String? // GI number extracted from the artisan's certificate
+  giCertUrl  String? // uploaded GI certificate image (object storage)
+  giVerified Boolean @default(false) // matched an ingested GiEntry
+  giEntryId  String? // the matched GiEntry id (nullable)
 
   // Set only once all 4 stages have photos and the record is sealed.
   contentHash String? // SHA-256 over stable content + content-ids (survives storage migration)
@@ -240,11 +240,21 @@ model Product {
   qrPngUrl    String?
   sealedAt    DateTime?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   stages      StageEntry[]
   ledgerEntry LedgerEntry?
+
+  // ── Two-layer provenance (see the AuthenticityRecord / OwnershipEntry blocks
+  //    below and lib/authenticity + lib/ownership). Authenticity is written once
+  //    and frozen; custody is a separate append-only log. They never intermingle,
+  //    and the transfer code has no write path to the authenticity tables. ──
+  authenticityRecords AuthenticityRecord[]
+  attestations        Attestation[]
+  verificationScans   VerificationScan[]
+  ownershipEntries    OwnershipEntry[]
+  transferRequests    TransferRequest[]
 
   @@index([artisanId])
   @@index([status])
@@ -264,17 +274,17 @@ enum Stage {
 
 // Append-only. A correction creates a NEW versioned entry; nothing overwritten.
 model StageEntry {
-  id         String   @id @default(cuid())
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   stage      Stage
-  version    Int      @default(1)
+  version    Int     @default(1)
   supersedes String? // id of the entry this one corrects
 
-  photoUrls  String // JSON array of object-storage URLs (>=1 required)
-  voiceUrl   String?
-  note       String?
+  photoUrls String // JSON array of object-storage URLs (>=1 required)
+  voiceUrl  String?
+  note      String?
 
   // Server-side timestamp — the authenticity anchor, never client-supplied.
   capturedAt DateTime @default(now())
@@ -282,14 +292,164 @@ model StageEntry {
   @@index([productId, stage])
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTHENTICITY CORE  (LAYER 1 — write-once, frozen, versioned via supersede)
+//
+// See lib/authenticity. Rules enforced here at the schema level:
+//   • A record is NEVER updated in place. Immutability is real: a correction or
+//     a recomputed trust score APPENDS a new version that links to the prior one
+//     via `supersedesId`. The @unique on supersedesId means each record can be
+//     superseded at most once — the version chain cannot fork.
+//   • `coreHash` is the product's making-fingerprint (identity + artisan +
+//     materials + staged timeline). Ownership is deliberately NOT part of it, so
+//     a product transferred any number of times still verifies against it.
+//   • `trustScore` + `breakdown` are the frozen consensus at the moment this
+//     version was written. They rise over the item's life ONLY by appending a
+//     new version, never by mutation.
+// Nothing in the ownership layer has write access to this table.
+// ═══════════════════════════════════════════════════════════════════════════
+model AuthenticityRecord {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  version Int // 1 at seal, then 2, 3 … each a supersede of the last
+
+  // The making-fingerprint this version was computed against. For a score-only
+  // supersede this equals the prior version's coreHash; for a correction it is
+  // the hash of the corrected facts. v1.coreHash === Product.contentHash.
+  coreHash String
+
+  // The canonical making-facts snapshot (JSON) this version froze. A correction
+  // stores the corrected snapshot here; the original stays visible in v1.
+  recordJson String
+
+  // Frozen consensus at write time.
+  trustScore Int // 0–100
+  breakdown  String // JSON: the five weighted inputs and their contributions
+
+  // Supersede chain. `reason` distinguishes a correction ("wrong material") from
+  // a routine score recompute (null reason).
+  supersedesId    String?             @unique
+  supersedes      AuthenticityRecord? @relation("supersede", fields: [supersedesId], references: [id])
+  supersededBy    AuthenticityRecord? @relation("supersede")
+  supersedeReason String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([productId, version])
+  @@index([productId])
+}
+
+// Independent attesters (LAYER 1 inputs — the score READS these; they never
+// mutate a frozen record). An attestation is its own record with its own
+// identity + timestamp. Independence from the vendor is enforced in
+// lib/consensus (an attester that is the product's own artisan is rejected and
+// contributes nothing), so the vendor cannot self-attest to inflate the score.
+model Attestation {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  attesterType AttesterType // COOPERATIVE (highest independence) or NGO
+  attesterName String // the vouching organisation, shown in plain language
+  attesterRef  String? // optional external registry id for the organisation
+
+  statement           String? // what they attest to, in their words
+  witnessedProduction Boolean @default(false) // saw the item being made
+
+  createdAt DateTime  @default(now())
+  revokedAt DateTime? // an attester may withdraw; a revoked attestation stops counting
+
+  @@index([productId])
+}
+
+enum AttesterType {
+  COOPERATIVE // a registered cooperative / self-help group the artisan belongs to
+  NGO // an NGO or field partner
+}
+
+// Buyer verification history (LAYER 1 input — append-only, external). Every
+// genuine (KEY-1-valid) scan of the physical tag is recorded here. The score
+// reads the count and the spread of distinct locations; newly registered items
+// have none and accumulate it over their life. This is separate from the
+// in-memory replay buffer in lib/scan-log (which resets on restart).
+model VerificationScan {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Coarse location label only (e.g. a city/region), never a precise track.
+  locationLabel String?
+  // Salted hash of the scanner IP — used only to count DISTINCT scanners, never
+  // stored in the clear and never reversible to an address.
+  scannerHash   String?
+
+  at DateTime @default(now())
+
+  @@index([productId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OWNERSHIP / CUSTODY  (LAYER 2 — append-only, physically separate)
+//
+// See lib/ownership + lib/ownership-db (the capability boundary). "Current
+// owner" is the latest entry on READ — there is deliberately no mutable
+// current_owner column to overwrite. Transfers only ever APPEND. Nothing here
+// touches the authenticity core, and the transfer code is handed a db handle
+// that exposes only these two tables.
+// ═══════════════════════════════════════════════════════════════════════════
+model OwnershipEntry {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  seq       Int // 1 = genesis (the maker at registration), then 2, 3 …
+  fromParty String? // null for the genesis entry
+  toParty   String // who holds it after this entry
+  note      String? // optional reason ("gift", "sold at fair")
+
+  createdAt DateTime @default(now())
+
+  @@unique([productId, seq])
+  @@index([productId])
+}
+
+// Two-sided transfer handshake. A transfer commits (appends an OwnershipEntry)
+// only after the recipient ACCEPTS, so custody can't be pushed onto someone
+// unknowingly.
+model TransferRequest {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  fromParty String // must equal the current owner (latest OwnershipEntry.toParty)
+  toParty   String // the invited recipient
+  note      String?
+
+  status     TransferStatus @default(PENDING)
+  createdAt  DateTime       @default(now())
+  resolvedAt DateTime?
+
+  @@index([productId])
+  @@index([status])
+}
+
+enum TransferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
 // ─────────────────────────────────────────────────────────────
 // Tamper-evident ledger (abstracted behind LedgerService interface)
 // ─────────────────────────────────────────────────────────────
 model LedgerEntry {
-  id         String   @id @default(cuid())
-  seq        Int      @unique // position in the chain
-  productId  String   @unique
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  seq       Int     @unique // position in the chain
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   contentHash String // hash of the product record content
   prevHash    String // previous ledger entry hash — links the chain
@@ -297,7 +457,7 @@ model LedgerEntry {
   backend     String // "local" | future: "fabric"/"eth"
   isTestnet   Boolean @default(true) // labelled clearly in UI when true
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -305,14 +465,14 @@ model LedgerEntry {
 // Kaivannam processes the transaction; the buyer contacts the maker directly.
 // ─────────────────────────────────────────────────────────────
 model Order {
-  id           String   @id @default(cuid())
+  id String @id @default(cuid())
 
   // Buyer — guest checkout is allowed, so the account link is optional.
-  buyerUserId  String?
-  buyerUser    User?    @relation(fields: [buyerUserId], references: [id])
-  buyerName    String
-  buyerEmail   String
-  buyerPhone   String
+  buyerUserId String?
+  buyerUser   User?   @relation(fields: [buyerUserId], references: [id])
+  buyerName   String
+  buyerEmail  String
+  buyerPhone  String
 
   // Delivery details.
   addressLine1 String
@@ -320,17 +480,17 @@ model Order {
   city         String
   state        String
   postalCode   String
-  country      String   @default("India")
+  country      String  @default("India")
 
   subtotalPaise Int
   status        OrderStatus @default(PENDING)
 
   // Simulated payment — NO real gateway (see src/lib/payment.ts).
-  paymentRef   String?
-  cardLast4    String?
+  paymentRef String?
+  cardLast4  String?
 
-  createdAt    DateTime @default(now())
-  items        OrderItem[]
+  createdAt DateTime    @default(now())
+  items     OrderItem[]
 
   @@index([buyerEmail])
   @@index([buyerUserId])
@@ -345,9 +505,9 @@ enum OrderStatus {
 // Immutable line item — everything is snapshotted so an order never changes even
 // if the product is later edited, relisted, or deleted.
 model OrderItem {
-  id                  String @id @default(cuid())
-  orderId             String
-  order               Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   productId           String
   titleSnapshot       String

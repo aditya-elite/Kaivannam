@@ -122,6 +122,71 @@
   line-height: 1.4;
 }
 
+/* §2.7 Letterpress. Two 1px shadows, no blur, no filter — the type sits
+   *into* the cream rather than on top of it. Display sizes only: at 16px
+   the highlight fringe starts eating the glyph and body text gets
+   measurably harder to read. Reads correctly on cream, not on white or
+   on a saturated ground. */
+.letterpress {
+  color: #34241a;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85),
+    0 -1px 0 rgba(43, 29, 20, 0.16);
+}
+
+/* §2.8 Ink bleed. Block-printed ink wicks into the fibre a fraction past the
+   block edge. The blur here is the one expensive property the spec otherwise
+   forbids, and it is admissible ONLY because it is static: it paints once and
+   never animates, never moves, never sits on a scrolling layer. Do not put
+   this on anything that transitions. */
+.plate-bleed {
+  position: relative;
+  z-index: 0;
+}
+.plate-bleed::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  z-index: -1;
+  background: rgba(43, 29, 20, 0.2);
+  filter: blur(2.5px);
+  pointer-events: none;
+}
+
+/* §2.9 Deckled edge — handmade paper, torn rather than cut. A mask, not a
+   clip-path: a mask can be soft at the boundary and a clip is always a hard
+   cut, and fibrous paper edges are not sharp. Reserved for the story card,
+   where the paper metaphor is doing narrative work; used everywhere it
+   becomes a gimmick inside one screen. */
+.deckle {
+  -webkit-mask-image: var(--deckle-mask);
+  mask-image: var(--deckle-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  --deckle-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none' viewBox='0 0 100 100'%3E%3Cpath fill='%23fff' d='M0,2 C12,0.4 26,3.1 39,1.2 C55,-0.4 72,2.8 86,1 L100,2.4 L99.1,26 L100,52 L98.8,74 L99.6,98 C86,99.6 70,96.9 55,98.8 C40,100.4 22,97.4 9,99.2 L0.4,97.8 L1.2,72 L0,49 L1,24 Z'/%3E%3C/svg%3E");
+}
+
+/* §2.10 Selvedge — the finished woven edge of a length of cloth. A denser,
+   more literal cousin of the sawtooth thread on the tab underline. Needs to
+   be large enough to read as weave rather than as noise, so it belongs on
+   section breaks and the footer edge, not on cards. */
+.selvedge-strip {
+  height: 12px;
+  width: 100%;
+  background-image:
+    repeating-linear-gradient(90deg, #c1440e 0 3px, transparent 3px 7px),
+    linear-gradient(#e9a319, #e9a319);
+  clip-path: polygon(
+    0 0, 100% 0, 100% 62%,
+    96% 100%, 92% 62%, 88% 100%, 84% 62%, 80% 100%, 76% 62%, 72% 100%,
+    68% 62%, 64% 100%, 60% 62%, 56% 100%, 52% 62%, 48% 100%, 44% 62%,
+    40% 100%, 36% 62%, 32% 100%, 28% 62%, 24% 100%, 20% 62%, 16% 100%,
+    12% 62%, 8% 100%, 4% 62%, 0 100%
+  );
+}
+
 /* ============================================================
    §3 LANDING PAGE (Tier A)
    ============================================================ */
@@ -171,8 +236,17 @@
    Inlined as a data URI (~0.6KB, no request) rather than a fragment reference,
    which Chrome does not resolve reliably for HTML elements.
    Speck coverage is ~3% of glyph area, so measured contrast barely moves. */
-@supports (mask-image: url("data:image/svg+xml,%3Csvg/%3E")) or
-  (-webkit-mask-image: url("data:image/svg+xml,%3Csvg/%3E")) {
+/* The feature test deliberately uses a gradient, NOT a data-URI url().
+   Autoprefixer rewrites @supports conditions to add vendor-prefixed variants,
+   and it splits a quoted data URI at the first colon — the emitted condition
+   became `url("data)`, an unterminated string. A CSS parser that hits an
+   unterminated string abandons the rest of the stylesheet, so this one line
+   silently disabled every rule below it: the kolam, the seal, the weave, the
+   press states, the loaders and the whole showroom layer.
+   Testing mask-image with a gradient proves exactly the same capability and
+   contains nothing for the prefixer to mangle. */
+@supports (mask-image: linear-gradient(#000, #000)) or
+  (-webkit-mask-image: linear-gradient(#000, #000)) {
   .type-distress {
     --ink-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34'%3E%3Cpath fill='%23fff' fill-rule='evenodd' d='M0 0h34v34H0z M3 5h1.6v1.3H3z M9 2h1.1v1.6H9z M14 7h1.4v1.1H14z M20 3h1.2v1.4H20z M26 6h1.5v1.2H26z M31 2h1.1v1.5H31z M5 12h1.3v1.5H5z M12 15h1.5v1.1H12z M18 11h1.1v1.4H18z M24 14h1.4v1.2H24z M30 12h1.2v1.6H30z M2 20h1.5v1.2H2z M8 23h1.2v1.5H8z M15 21h1.4v1.3H15z M21 24h1.1v1.2H21z M27 20h1.5v1.4H27z M4 28h1.2v1.3H4z M11 30h1.5v1.2H11z M17 27h1.1v1.5H17z M23 31h1.4v1.1H23z M29 28h1.2v1.4H29z'/%3E%3C/svg%3E");
     -webkit-mask-image: var(--ink-grain);
@@ -256,6 +330,24 @@
 }
 .kolam.is-visible path {
   animation: draw-thread var(--kolam-dur, 700ms) var(--ease-out) forwards;
+}
+
+/* §3.5b Scroll-linked variant. Where the browser has scroll-driven
+   animations, the divider is drawn by the reader's own scroll position
+   rather than by a fixed timer — the line advances at the pace they are
+   moving, which is what a hand drawing a kolam actually does.
+
+   Strictly additive: no JS, no scroll listener, and the IntersectionObserver
+   version above keeps working untouched everywhere this is unsupported.
+   Both selectors are overridden so the result is identical whether or not
+   the observer has already fired. */
+@supports (animation-timeline: view()) {
+  .js .kolam path,
+  .kolam.is-visible path {
+    animation: draw-thread linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 55%;
+  }
 }
 
 /* §3.6 Parallax border ornament. Scroll-driven only where supported;
@@ -497,6 +589,33 @@
   to { opacity: 1; transform: none; }
 }
 
+/* §6.2b Photo develop. For photographs arriving from the server rather than
+   ones the artisan has just taken: a veil retracts upward off the image.
+
+   Explicitly NOT blur-to-sharp. Blur is the obvious "developing" effect and
+   it is exactly the filter this spec rules out — it repaints a large area
+   every frame. A veil on scaleY reads the same and composites on the GPU.
+
+   Pairs with .photo-settle rather than replacing it: settle for uploads,
+   develop for arrivals. Using both in one view is noise — pick per context. */
+.photo-develop {
+  position: relative;
+  overflow: hidden;
+}
+.photo-develop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #fdf8f0;
+  transform-origin: bottom;
+  pointer-events: none;
+  animation: develop var(--dur-slow) var(--ease-settle) forwards;
+}
+@keyframes develop {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(0); }
+}
+
 /* §6.3 Stage-complete stamp. Always paired with a text status change —
    animation never carries completion on its own. */
 .stage-stamp {
@@ -505,6 +624,33 @@
 }
 @keyframes stage-stamp {
   from { opacity: 0; transform: scale(1.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* §6.4 Thread-snap. Sealing a product is the emotional counterpart to
+   verifying one — weeks of documentation resolving into a record — and it
+   previously just disabled a button. A thread pulling taut and knotting is
+   the seal's vocabulary used at the other end of the journey.
+
+   Runs once, ~940ms, then stops. Same discipline as the seal: nothing here
+   loops, and the confirmation text does not depend on it. */
+.thread-snap .snap-line {
+  stroke-dasharray: var(--len, 400);
+  stroke-dashoffset: var(--len, 400);
+}
+.thread-snap.is-playing .snap-line {
+  animation: draw-thread 620ms var(--ease-settle) forwards;
+}
+.thread-snap .snap-knot {
+  opacity: 0;
+  transform-origin: center;
+}
+.thread-snap.is-playing .snap-knot {
+  animation: knot 320ms var(--ease-stamp) forwards;
+  animation-delay: calc(340ms + var(--n, 0) * 80ms);
+}
+@keyframes knot {
+  from { opacity: 0; transform: scale(1.8); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -620,6 +766,241 @@
   animation: stage-stamp 280ms var(--ease-stamp) forwards;
 }
 /* Failed: static icon plus text. Failures are never animated — see §5.3. */
+
+/* ============================================================
+   §10 THE SHOWROOM (Tier A)
+   The collection page is staged as a lit room rather than a grid.
+   Everything below is gradients, transforms and opacity — no photographs
+   of an interior, no library. A boutique built from images would cost
+   more than the whole rest of the page on a 3G connection.
+   ============================================================ */
+
+/* §10.1 Ambient light. Three fixed washes: a warm ceiling spill, a low
+   side lamp, and a cool floor bounce so the warm tones have something to
+   sit against. Fixed and non-scrolling, so this composites once. */
+.showroom-light {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(120% 60% at 50% -10%, rgba(233, 163, 25, 0.20) 0%, transparent 62%),
+    radial-gradient(70% 50% at 4% 34%, rgba(242, 107, 33, 0.13) 0%, transparent 60%),
+    radial-gradient(80% 55% at 98% 72%, rgba(193, 68, 14, 0.10) 0%, transparent 58%),
+    radial-gradient(100% 40% at 50% 108%, rgba(46, 49, 146, 0.07) 0%, transparent 60%);
+}
+
+/* §10.2 Spotlight on a featured piece. A soft cone, not a hard edge —
+   a hard-edged cone reads as a stage light and this is a shop. */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  /* Bleeds vertically only. A negative horizontal inset pushes the cone past
+     the section edge and, on any section that is not itself clipped, that
+     becomes real horizontal page overflow at tablet and phone widths. The
+     gradient fades to transparent by 72% anyway, so it never reached the
+     sides — the horizontal bleed bought nothing and cost a sideways scroll. */
+  inset: -18% 0 -6%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(58% 62% at 50% 12%, rgba(255, 236, 194, 0.55) 0%, rgba(255, 236, 194, 0.16) 42%, transparent 72%);
+}
+
+/* §10.3 Dust in a sunbeam. Eight motes, never more: past a dozen it stops
+   reading as air and starts reading as snow. Each drifts on its own period
+   so they never pulse together. transform + opacity only. */
+.mote {
+  position: absolute;
+  border-radius: 9999px;
+  background: rgba(255, 240, 209, 0.9);
+  box-shadow: 0 0 6px rgba(255, 224, 160, 0.7);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: mote-drift var(--mote-dur, 18s) linear infinite;
+  animation-delay: var(--mote-delay, 0s);
+}
+@keyframes mote-drift {
+  0%   { opacity: 0;    transform: translate3d(0, 12vh, 0) scale(0.7); }
+  12%  { opacity: 0.55; }
+  70%  { opacity: 0.35; }
+  100% { opacity: 0;    transform: translate3d(var(--mote-x, 24px), -34vh, 0) scale(1); }
+}
+
+/* §10.4 Wooden shelf. The plank is a gradient stack: two grain frequencies
+   plus a lit top edge and a contact shadow under the lip. */
+.shelf-plank {
+  height: 14px;
+  border-radius: 0 0 3px 3px;
+  background-image:
+    linear-gradient(180deg, rgba(255, 226, 176, 0.55) 0 2px, transparent 2px),
+    repeating-linear-gradient(90deg, rgba(80, 46, 20, 0.16) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(90deg, rgba(80, 46, 20, 0.09) 0 1px, transparent 1px 23px),
+    linear-gradient(180deg, #8b5a2b 0%, #6f4520 62%, #4e2f14 100%);
+  box-shadow: 0 6px 14px -6px rgba(78, 47, 20, 0.55);
+}
+/* The shadow an object casts down onto the plank it stands on. */
+.shelf-contact {
+  height: 10px;
+  background: radial-gradient(60% 100% at 50% 0%, rgba(78, 47, 20, 0.28) 0%, transparent 72%);
+}
+
+/* §10.5 Shelf reveal. The plank draws out from its centre, then the pieces
+   standing on it rise. Scoped to `.js` so it degrades to "already there". */
+.js .shelf-reveal .shelf-plank {
+  transform: scaleX(0.15);
+  transform-origin: center;
+}
+.shelf-reveal.is-visible .shelf-plank {
+  transform: scaleX(1);
+  transition: transform var(--dur-slow) var(--ease-settle);
+}
+.js .shelf-reveal .shelf-item {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.shelf-reveal.is-visible .shelf-item {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-stamp);
+  /* Pieces settle after the plank has arrived, left to right. */
+  transition-delay: calc(260ms + var(--i, 0) * 80ms);
+}
+
+/* §10.6 The display stand. Lift is a transform; the shadow underneath is a
+   separate layer whose opacity changes, because animating box-shadow itself
+   repaints the whole card every frame. */
+.stand {
+  position: relative;
+  transition: transform var(--dur-base) var(--ease-settle);
+}
+.stand::after {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: -14px;
+  height: 18px;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(50% 100% at 50% 0%, rgba(78, 47, 20, 0.40) 0%, transparent 74%);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .stand:hover,
+  .stand:focus-within {
+    transform: translateY(-6px);
+  }
+  .stand:hover::after,
+  .stand:focus-within::after {
+    opacity: 1;
+  }
+}
+/* Keyboard users get the same affordance on touch devices too. */
+.stand:focus-within {
+  transform: translateY(-6px);
+}
+
+/* §10.7 Warm shimmer. A band of light crossing the piece, as if someone
+   walked past the lamp. Runs once per hover, never loops. */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 240, 209, 0.42) 48%,
+    rgba(255, 240, 209, 0.12) 58%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+}
+@media (hover: hover) {
+  .stand:hover .shimmer::before,
+  .stand:focus-within .shimmer::before {
+    animation: shimmer-pass 900ms var(--ease-out) forwards;
+  }
+}
+@keyframes shimmer-pass {
+  from { opacity: 1; transform: translateX(-120%); }
+  to   { opacity: 0; transform: translateX(120%); }
+}
+
+/* §10.8 Image zoom. Scale only, and only on the image — scaling the card
+   would resample the text with it. */
+.zoom-frame { overflow: hidden; }
+.zoom-frame img {
+  transition: transform var(--dur-slow) var(--ease-settle);
+  will-change: transform;
+}
+@media (hover: hover) {
+  .stand:hover .zoom-frame img,
+  .stand:focus-within .zoom-frame img {
+    transform: scale(1.06);
+  }
+}
+
+/* §10.9 Parallax on the room, not on the merchandise. Scroll-driven where
+   supported, absent where not — the §3.6 rule: a JS scroll listener costs
+   more than the effect is worth on a low-end phone. Only the decorative
+   backdrop moves; product imagery never does. */
+@supports (animation-timeline: scroll()) {
+  .room-parallax {
+    animation: room-drift linear both;
+    animation-timeline: scroll(root block);
+  }
+  @keyframes room-drift {
+    to { transform: translate3d(0, -6%, 0); }
+  }
+}
+
+/* §10.10 The verification mark on a card. A slow, quiet breath — this is
+   the one element allowed to loop, because it is signalling a live
+   guarantee rather than announcing a completed event. Well under the
+   3-flashes-per-second threshold and it never changes colour. */
+.qr-pulse {
+  transform-origin: center;
+  animation: qr-breathe 3.2s var(--ease-heavy) infinite;
+}
+@keyframes qr-breathe {
+  0%, 100% { transform: scale(1);    opacity: 0.85; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+
+/* §10.11 Block-print section divider. A row of stamped motifs that fades
+   at both ends so it reads as a printed border, not a rule. */
+.blockprint {
+  height: 26px;
+  opacity: 0.5;
+  background-repeat: repeat-x;
+  background-position: center;
+  background-size: 44px 26px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+}
+
+/* §10.12 Carved frame for the hero. Two inset keylines with a warm
+   highlight between them — a turned wooden moulding in two declarations. */
+.carved-frame {
+  box-shadow:
+    inset 0 0 0 2px rgba(78, 47, 20, 0.55),
+    inset 0 0 0 5px rgba(233, 163, 25, 0.28),
+    inset 0 0 0 7px rgba(78, 47, 20, 0.42);
+}
 
 /* ============================================================
    REDUCED MOTION — designed variants, not a blanket kill.
@@ -755,11 +1136,30 @@
     animation: rm-fade 150ms linear forwards !important;
     transform: none !important;
   }
+  /* §6.2b the veil is simply gone — the photograph is present on arrival. */
+  .photo-develop::after {
+    animation: none !important;
+    display: none !important;
+  }
   .stage-stamp,
   .sync-stamp {
     animation: none !important;
     opacity: 1;
     transform: none !important;
+  }
+  /* §6.4 thread renders drawn and the knots are simply present. The moment
+     still reads — it is a picture of a finished, knotted thread — it just
+     does not perform. */
+  .thread-snap .snap-line,
+  .thread-snap.is-playing .snap-line {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+  .thread-snap .snap-knot,
+  .thread-snap.is-playing .snap-knot {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
   }
 
   /* §7 press still registers as state, just without travel. */
@@ -789,6 +1189,68 @@
   .motif-empty.is-filled path {
     stroke-dashoffset: 0 !important;
     animation: none !important;
+  }
+
+  /* §10 The room is *lighting and geometry*, and both survive intact —
+     the ambient washes, the spotlight, the wooden planks, the carved frame
+     and the block-print dividers are all static and untouched here. What
+     stops is the drifting, sweeping and breathing. */
+
+  /* §10.3 Dust removed outright. Perpetual drifting specks in the
+     periphery are a genuine trigger for motion-sensitive users, and this
+     is the one element that never stops on its own. */
+  .mote {
+    animation: none !important;
+    display: none !important;
+  }
+
+  /* §10.5 Shelf and its pieces are simply present, no draw, no stagger. */
+  .js .shelf-reveal .shelf-plank,
+  .shelf-reveal.is-visible .shelf-plank {
+    transform: none !important;
+    transition: none !important;
+  }
+  .js .shelf-reveal .shelf-item,
+  .shelf-reveal.is-visible .shelf-item {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: opacity 150ms linear !important;
+    transition-delay: 0ms !important;
+  }
+
+  /* §10.6 Hover still registers — the contact shadow appears, the card
+     does not travel. The affordance survives; the movement does not. */
+  .stand,
+  .stand:hover,
+  .stand:focus-within {
+    transform: none !important;
+    transition: none !important;
+  }
+  .stand::after { transition: none !important; }
+
+  /* §10.7/§10.8 no sweep, no zoom. */
+  .shimmer::before,
+  .stand:hover .shimmer::before,
+  .stand:focus-within .shimmer::before {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  .zoom-frame img,
+  .stand:hover .zoom-frame img,
+  .stand:focus-within .zoom-frame img {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* §10.9/§10.10 the room holds still and the mark stops breathing. */
+  .room-parallax {
+    animation: none !important;
+    transform: none !important;
+  }
+  .qr-pulse {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
   }
 
   @keyframes rm-fade {

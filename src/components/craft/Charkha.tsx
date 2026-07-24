@@ -11,6 +11,22 @@
  */
 const SPOKES = 10;
 
+/**
+ * Rounds a computed SVG coordinate to 4dp.
+ *
+ * `Math.cos` and `Math.sin` are not required to be bit-identical across
+ * JavaScript engines, and they are not: rendering a spoke on the server
+ * produced x2="7.819660112501051" while the browser computed 7.819660112501047
+ * for the same angle. React compares the two as strings during hydration, sees
+ * a mismatch it cannot patch, and throws for the whole tree.
+ *
+ * 4dp is far finer than a device pixel at any size this renders at, and it is
+ * coarse enough to swallow a ~1e-15 discrepancy. Do not remove this in favour
+ * of raw trig — the bug it fixes only appears once the component is
+ * server-rendered, so it is easy to reintroduce and hard to spot locally.
+ */
+const r4 = (n: number) => Math.round(n * 1e4) / 1e4;
+
 export function Charkha({ label, size = 40 }: { label: string; size?: number }) {
   return (
     <div className="flex items-center gap-3" role="status" aria-live="polite">
@@ -30,14 +46,14 @@ export function Charkha({ label, size = 40 }: { label: string; size?: number }) 
           return (
             <line
               key={i}
-              x1={24 + Math.cos(a) * 5}
-              y1={24 + Math.sin(a) * 5}
-              x2={24 + Math.cos(a) * 20}
-              y2={24 + Math.sin(a) * 20}
+              x1={r4(24 + Math.cos(a) * 5)}
+              y1={r4(24 + Math.sin(a) * 5)}
+              x2={r4(24 + Math.cos(a) * 20)}
+              y2={r4(24 + Math.sin(a) * 20)}
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
-              opacity={0.35 + (i / SPOKES) * 0.55}
+              opacity={r4(0.35 + (i / SPOKES) * 0.55)}
             />
           );
         })}
@@ -115,12 +131,14 @@ export function SyncStatus({ state, label }: { state: SyncState; label: string }
             {Array.from({ length: 8 }, (_, i) => {
               const a = (i / 8) * Math.PI * 2;
               return (
+                /* Same rounding as Charkha above — this variant is also
+                   server-rendered, so raw trig would mismatch identically. */
                 <line
                   key={i}
-                  x1={12 + Math.cos(a) * 2.5}
-                  y1={12 + Math.sin(a) * 2.5}
-                  x2={12 + Math.cos(a) * 9}
-                  y2={12 + Math.sin(a) * 9}
+                  x1={r4(12 + Math.cos(a) * 2.5)}
+                  y1={r4(12 + Math.sin(a) * 2.5)}
+                  x2={r4(12 + Math.cos(a) * 9)}
+                  y2={r4(12 + Math.sin(a) * 9)}
                   stroke="currentColor"
                   strokeWidth="1.2"
                 />
