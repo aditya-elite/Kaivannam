@@ -13,6 +13,9 @@ export type Piece = {
   category: string;
   storyText: string | null;
   priceLabel: string;
+  /** Listed, priced and in stock — same test the storefront applies. */
+  forSale: boolean;
+  stock: number;
   giVerified: boolean;
   giNumber: string | null;
   verifiedOn: string;
@@ -191,6 +194,14 @@ export function CraftCard({
             <div className="min-w-0">
               <p className="type-label text-muted">{t("shop.price")}</p>
               <p className="product-id text-lg font-extrabold text-ink">{piece.priceLabel}</p>
+              {/* Availability is stated, not implied. "Last one" is a fact off
+                  the stock column, not a pressure tactic — a single-maker
+                  workshop genuinely does have one of most things. */}
+              {piece.forSale && piece.stock <= 2 ? (
+                <p className="mt-0.5 text-xs font-semibold text-terracotta">
+                  {piece.stock === 1 ? t("shop.lastOne") : t("shop.fewLeft", { count: piece.stock })}
+                </p>
+              ) : null}
             </div>
             {piece.giNumber ? (
               <p className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-700">
