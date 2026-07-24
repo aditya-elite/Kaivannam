@@ -4,7 +4,8 @@ import { useActionState, useState } from "react";
 import { useT } from "@/lib/i18n/provider";
 import { Button, Card } from "@/components/ui";
 import { signInAction, signUpAction, type AuthState } from "@/app/login/actions";
-import { IconShield, IconUser } from "@/components/icons";
+import { IconShield, IconUser, IconGoogle } from "@/components/icons";
+import { createClient } from "@/lib/supabase/client";
 
 export function AuthForm({
   next,
@@ -18,13 +19,42 @@ export function AuthForm({
   const t = useT();
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [accountType, setAccountType] = useState<"artisan" | "shopper">(initialAccountType);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const shopper = initialAccountType === "shopper";
   const action = mode === "signin" ? signInAction : signUpAction;
   const [state, formAction, pending] = useActionState<AuthState, FormData>(action, {});
 
+  async function handleGoogleSignIn() {
+    try {
+      setGoogleLoading(true);
+      const supabase = createClient();
+      const origin = window.location.origin;
+      const redirectTo = `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (error) {
+        console.error("Google sign in error:", error.message);
+        setGoogleLoading(false);
+      }
+    } catch (err) {
+      console.error("Google login failed:", err);
+      setGoogleLoading(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-md">
-      {/* One-line explanation of WHY auth is needed, right at the trigger point. */}
+      {/* Explanation banner */}
       <Card className="mb-4 border-l-4 border-teal">
         <div className="flex items-start gap-3">
           <IconShield width={24} height={24} className="mt-0.5 shrink-0 text-teal" />
@@ -37,14 +67,15 @@ export function AuthForm({
       </Card>
 
       <Card>
+        {/* Mode Selector Tabs */}
         <div className="mb-5 flex rounded-xl bg-cream p-1" role="tablist">
           <button
             type="button"
             role="tab"
             aria-selected={mode === "signin"}
             onClick={() => setMode("signin")}
-            className={`min-h-tap flex-1 rounded-lg px-4 py-2 text-base font-semibold ${
-              mode === "signin" ? "bg-surface text-indigo shadow-card" : "text-muted"
+            className={`min-h-tap flex-1 rounded-lg px-4 py-2 text-base font-semibold transition-colors ${
+              mode === "signin" ? "bg-surface text-indigo shadow-card" : "text-muted hover:text-ink"
             }`}
           >
             {t("auth.signIn")}
@@ -54,14 +85,35 @@ export function AuthForm({
             role="tab"
             aria-selected={mode === "signup"}
             onClick={() => setMode("signup")}
-            className={`min-h-tap flex-1 rounded-lg px-4 py-2 text-base font-semibold ${
-              mode === "signup" ? "bg-surface text-indigo shadow-card" : "text-muted"
+            className={`min-h-tap flex-1 rounded-lg px-4 py-2 text-base font-semibold transition-colors ${
+              mode === "signup" ? "bg-surface text-indigo shadow-card" : "text-muted hover:text-ink"
             }`}
           >
             {t("auth.createAccount")}
           </button>
         </div>
 
+        {/* Supabase Google OAuth Provider Button */}
+        <div className="mb-5 space-y-3">
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+            className="flex min-h-tap w-full items-center justify-center gap-3 rounded-xl border-2 border-ink/15 bg-white px-4 py-3 text-base font-semibold text-ink shadow-sm transition-all hover:border-ink/30 hover:bg-cream/50 active:scale-[0.99] disabled:opacity-60"
+          >
+            <IconGoogle />
+            <span>{googleLoading ? t("common.loading") : mode === "signin" ? "Sign in with Google" : "Sign up with Google"}</span>
+          </button>
+
+          <div className="relative flex items-center justify-center">
+            <div className="w-full border-t border-ink/15" />
+            <span className="absolute bg-surface px-3 text-xs font-semibold uppercase tracking-wider text-muted">
+              or continue with email
+            </span>
+          </div>
+        </div>
+
+        {/* Email / Password Form */}
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="next" value={next} />
           <input type="hidden" name="accountType" value={accountType} />
@@ -77,8 +129,8 @@ export function AuthForm({
                       type="button"
                       onClick={() => setAccountType(v)}
                       aria-pressed={accountType === v}
-                      className={`min-h-tap flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${
-                        accountType === v ? "bg-surface text-indigo shadow-card" : "text-muted"
+                      className={`min-h-tap flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                        accountType === v ? "bg-surface text-indigo shadow-card" : "text-muted hover:text-ink"
                       }`}
                     >
                       {v === "artisan" ? t("auth.typeArtisan") : t("auth.typeShopper")}
@@ -92,13 +144,14 @@ export function AuthForm({
               <Field id="displayName" name="displayName" label={t("auth.name")} required autoComplete="name" />
             </>
           ) : null}
+
           <Field
             id="handle"
             name="handle"
             label={t("auth.handle")}
             required
             autoComplete="username"
-            inputMode="text"
+            inputMode="email"
           />
           <Field
             id="password"
@@ -115,7 +168,7 @@ export function AuthForm({
             </p>
           ) : null}
 
-          <Button type="submit" className="w-full" disabled={pending}>
+          <Button type="submit" className="w-full" disabled={pending || googleLoading}>
             <IconUser width={20} height={20} />
             {pending ? t("common.loading") : mode === "signin" ? t("auth.signIn") : t("auth.createAccount")}
           </Button>

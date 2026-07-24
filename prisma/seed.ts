@@ -501,6 +501,191 @@ async function main() {
 
   for (const w of wider) await sealListed(w);
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // PROVENANCE — two separate layers seeded for every sealed product.
+  //   Layer 1 (authenticity): a frozen AuthenticityRecord v1 with its consensus.
+  //   Layer 2 (custody): the genesis ownership entry (the maker holds it).
+  // Then a showcase product gets independent attestations (raising the score
+  // via a supersede), a transfer chain, a pending handshake and a correction.
+  // ═══════════════════════════════════════════════════════════════════════
+  const nrm = (s: string) => s.trim().toLowerCase();
+
+  function historySignal(
+    self: { category: string; materials: string },
+    siblings: Array<{ category: string; materials: string }>,
+  ): { signal: number; detail: string } {
+    if (!siblings.length)
+      return { signal: 0.3, detail: "First registration by this maker — no track record yet" };
+    const sameCat = siblings.filter((s) => nrm(s.category) === nrm(self.category)).length;
+    const catCons = sameCat / siblings.length;
+    const words = (s: string) =>
+      new Set(s.toLowerCase().split(/[,\n;]+|\s{2,}/).map((w) => w.trim()).filter(Boolean));
+    const mine = words(self.materials);
+    const theirs = words(siblings.map((s) => s.materials).join(", "));
+    let ov = 0;
+    for (const w of mine) if (theirs.has(w)) ov++;
+    const matCons = mine.size ? ov / mine.size : 0;
+    const signal = Math.max(0, Math.min(1, 0.5 * catCons + 0.5 * matCons));
+    return {
+      signal,
+      detail:
+        signal >= 0.7
+          ? `Consistent with ${siblings.length} earlier ${siblings.length === 1 ? "piece" : "pieces"} by this maker`
+          : signal >= 0.4
+            ? "Partly matches this maker's earlier work"
+            : "Differs from this maker's usual craft or materials",
+    };
+  }
+
+  type PWithArtisan = {
+    id: string;
+    title: string;
+    materials: string;
+    category: string;
+    storyText: string | null;
+    contentHash: string | null;
+    artisanId: string;
+    artisan: { fullName: string; craft: string; region: string };
+  };
+
+  function buildRaw(
+    p: PWithArtisan,
+    siblings: Array<{ category: string; materials: string }>,
+    attestations: Array<{ attesterType: string; attesterName: string; revokedAt: Date | null }>,
+    scans: Array<{ locationLabel: string | null }>,
+  ): RawSignals {
+    const live = attestations.filter((a) => !a.revokedAt && nrm(a.attesterName) !== nrm(p.artisan.fullName));
+    const cooperatives = [...new Set(live.filter((a) => a.attesterType === "COOPERATIVE").map((a) => a.attesterName))];
+    const ngos = [...new Set(live.filter((a) => a.attesterType === "NGO").map((a) => a.attesterName))];
+    const h = historySignal({ category: p.category, materials: p.materials }, siblings);
+    const distinctLocations = new Set(scans.map((s) => s.locationLabel).filter(Boolean)).size;
+    return {
+      cooperatives,
+      ngos,
+      timelineSignal: 1,
+      timelineDetail: "4 of 4 production stages documented, timestamps consistent",
+      historySignal: h.signal,
+      historyDetail: h.detail,
+      priorRegistrations: siblings.length,
+      scanCount: scans.length,
+      distinctLocations,
+    };
+  }
+
+  const recordSnapshot = (p: PWithArtisan) =>
+    canonical({
+      productId: p.id,
+      title: p.title,
+      materials: p.materials,
+      category: p.category,
+      storyText: p.storyText,
+      artisan: { id: p.artisanId, fullName: p.artisan.fullName, craft: p.artisan.craft, region: p.artisan.region },
+    });
+
+  const sealed = (await db.product.findMany({
+    where: { status: "SEALED" },
+    include: { artisan: { select: { fullName: true, craft: true, region: true } } },
+  })) as unknown as PWithArtisan[];
+
+  for (const p of sealed) {
+    const siblings = sealed
+      .filter((s) => s.artisanId === p.artisanId && s.id !== p.id)
+      .map((s) => ({ category: s.category, materials: s.materials }));
+    const raw = buildRaw(p, siblings, [], []);
+    const consensus = assembleConsensus(raw, DEFAULT_WEIGHTS);
+    await db.authenticityRecord.create({
+      data: {
+        productId: p.id,
+        version: 1,
+        coreHash: p.contentHash ?? "",
+        recordJson: recordSnapshot(p),
+        trustScore: consensus.score,
+        breakdown: JSON.stringify(consensus),
+      },
+    });
+    await db.ownershipEntry.create({
+      data: { productId: p.id, seq: 1, fromParty: null, toParty: p.artisan.fullName, note: "Registered by the maker" },
+    });
+  }
+
+  // ── Showcase: KS-4F7Q-9XB2-M3KP — the piece with a full provenance story ──
+  const showcase = sealed.find((p) => p.id === "KS-4F7Q-9XB2-M3KP");
+  if (showcase) {
+    const sib = sealed
+      .filter((s) => s.artisanId === showcase.artisanId && s.id !== showcase.id)
+      .map((s) => ({ category: s.category, materials: s.materials }));
+
+    const atts = [
+      { attesterType: "COOPERATIVE", attesterName: "Kanchipuram Handloom Weavers' Cooperative", revokedAt: null as Date | null, statement: "Lakshmi is a member in good standing; this saree was woven on her registered pit loom.", witnessedProduction: false },
+      { attesterType: "NGO", attesterName: "Craft Roots Foundation", revokedAt: null as Date | null, statement: "Our field officer photographed this piece on the loom during a September visit.", witnessedProduction: true },
+    ];
+    for (const a of atts) {
+      await db.attestation.create({
+        data: {
+          productId: showcase.id,
+          attesterType: a.attesterType as "COOPERATIVE" | "NGO",
+          attesterName: a.attesterName,
+          statement: a.statement,
+          witnessedProduction: a.witnessedProduction,
+        },
+      });
+    }
+
+    const scanLocs = ["~13.0,80.2", "~19.1,72.9", "~28.6,77.2", "~13.0,80.2"];
+    for (const loc of scanLocs) {
+      await db.verificationScan.create({
+        data: { productId: showcase.id, locationLabel: loc, scannerHash: sha256(`seed|${loc}|${Math.random()}`) },
+      });
+    }
+
+    const v1 = await db.authenticityRecord.findFirst({ where: { productId: showcase.id }, orderBy: { version: "desc" } });
+    const raw2 = buildRaw(showcase, sib, atts, scanLocs.map((l) => ({ locationLabel: l })));
+    const c2 = assembleConsensus(raw2, DEFAULT_WEIGHTS);
+    const v2 = await db.authenticityRecord.create({
+      data: {
+        productId: showcase.id,
+        version: (v1?.version ?? 1) + 1,
+        coreHash: v1?.coreHash ?? showcase.contentHash ?? "",
+        recordJson: v1?.recordJson ?? recordSnapshot(showcase),
+        trustScore: c2.score,
+        breakdown: JSON.stringify(c2),
+        supersedesId: v1?.id ?? null,
+        supersedeReason: null,
+      },
+    });
+
+    const correctedFacts = {
+      productId: showcase.id,
+      title: showcase.title,
+      materials: "Pure mulberry silk, natural indigo & madder dyes, pure zari (korvai join)",
+      category: showcase.category,
+      storyText: showcase.storyText,
+      artisan: { id: showcase.artisanId, fullName: showcase.artisan.fullName, craft: showcase.artisan.craft, region: showcase.artisan.region },
+    };
+    await db.authenticityRecord.create({
+      data: {
+        productId: showcase.id,
+        version: v2.version + 1,
+        coreHash: sha256(canonical(correctedFacts)),
+        recordJson: canonical(correctedFacts),
+        trustScore: c2.score,
+        breakdown: v2.breakdown,
+        supersedesId: v2.id,
+        supersedeReason: "Materials described the weave imprecisely at registration — corrected to name the korvai join.",
+      },
+    });
+
+    await db.ownershipEntry.create({
+      data: { productId: showcase.id, seq: 2, fromParty: showcase.artisan.fullName, toParty: "Priya Menon", note: "Sold at the Chennai craft fair" },
+    });
+    await db.ownershipEntry.create({
+      data: { productId: showcase.id, seq: 3, fromParty: "Priya Menon", toParty: "The Weaving Story, Bengaluru", note: "Consigned to the boutique" },
+    });
+    await db.transferRequest.create({
+      data: { productId: showcase.id, fromParty: "The Weaving Story, Bengaluru", toParty: "Ananya Rao", note: "Awaiting buyer's acceptance", status: "PENDING" },
+    });
+  }
+
   console.log("Seeded:");
   console.log("  • 5 artisans across all verification tiers");
   console.log("  • GI dataset v1 with 5 entries · Pehchan register v1 with 2 entries");
