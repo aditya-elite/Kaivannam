@@ -40,7 +40,7 @@ export type CurrentUser = {
   id: string;
   handle: string;
   displayName: string;
-  role: "ARTISAN" | "COORDINATOR" | "ADMIN";
+  role: "ARTISAN" | "COORDINATOR" | "CONSUMER" | "ADMIN";
   artisanId: string | null;
 };
 

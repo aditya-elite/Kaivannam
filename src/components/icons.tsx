@@ -62,3 +62,11 @@ export const IconCloud = (p: IconProps) =>
   base({ ...p, children: <path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A3.5 3.5 0 0 1 18 18z" /> });
 export const IconUpload = (p: IconProps) =>
   base({ ...p, children: <><path d="M12 15V4" /><polyline points="7 9 12 4 17 9" /><path d="M5 20h14" /></> });
+export const IconBag = (p: IconProps) =>
+  base({ ...p, children: <><path d="M6 8h12l-1 12H7z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></> });
+export const IconTag = (p: IconProps) =>
+  base({ ...p, children: <><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z" /><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" /></> });
+export const IconTruck = (p: IconProps) =>
+  base({ ...p, children: <><rect x="2" y="6" width="12" height="10" rx="1" /><path d="M14 9h4l3 3v4h-7z" /><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /></> });
+export const IconLogout = (p: IconProps) =>
+  base({ ...p, children: <><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2" /><polyline points="17 9 21 12 17 15" /><line x1="21" y1="12" x2="9" y2="12" /></> });

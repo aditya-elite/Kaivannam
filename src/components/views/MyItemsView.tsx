@@ -7,6 +7,8 @@ import { Card, SectionHeading, ButtonLink, Button } from "@/components/ui";
 import { TierBadge, type Tier } from "@/components/TierBadge";
 import { formatDate } from "@/lib/format";
 import { signOutAction } from "@/app/login/actions";
+import { updateListing } from "@/app/my-items/actions";
+import { formatINR } from "@/lib/money";
 import { listDrafts, deleteDraft, stagesDone, type Draft } from "@/lib/client/draft";
 import { WeaveProgress } from "@/components/craft/WeaveProgress";
 import { SyncStatus } from "@/components/craft/Charkha";
@@ -24,7 +26,15 @@ export function MyItemsView({
   authed: boolean;
   artisanName: string | null;
   verificationTier: string | null;
-  published: { id: string; title: string; category: string; sealedAt: string | null }[];
+  published: {
+    id: string;
+    title: string;
+    category: string;
+    sealedAt: string | null;
+    priceInPaise: number | null;
+    stock: number;
+    listedForSale: boolean;
+  }[];
 }) {
   const t = useT();
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -135,15 +145,10 @@ export function MyItemsView({
           ) : (
             <ul className="grid gap-3 sm:grid-cols-2">
               {published.map((p) => (
-                <li key={p.id}>
-                  <Link
-                    href={`/product/${p.id}`}
-                    className="flex h-full flex-col justify-between rounded-2xl bg-surface p-4 shadow-card hover:shadow-lift"
-                  >
-                    <div>
-                      <p className="text-lg font-bold">{p.title}</p>
-                      <p className="text-sm text-muted">{p.category}</p>
-                    </div>
+                <li key={p.id} className="rounded-2xl bg-surface p-4 shadow-card">
+                  <Link href={`/product/${p.id}`} className="block hover:opacity-90">
+                    <p className="text-lg font-bold">{p.title}</p>
+                    <p className="text-sm text-muted">{p.category}</p>
                     <div className="mt-2 flex items-center justify-between">
                       <span className="product-id font-mono text-sm text-muted">{p.id}</span>
                       {p.sealedAt ? (
@@ -151,9 +156,15 @@ export function MyItemsView({
                       ) : null}
                     </div>
                   </Link>
-                  {/* Sealed on the server — a single check stamp, then static.
-                      Never a persistent animation on a resolved state. Outside
-                      the link so the live region is not read as part of it. */}
+
+                  {/* Storefront listing editor. */}
+                  <ListingEditor
+                    productId={p.id}
+                    priceInPaise={p.priceInPaise}
+                    stock={p.stock}
+                    listed={p.listedForSale}
+                  />
+
                   <SyncStatus state="synced" label={t("sync.synced")} />
                 </li>
               ))}
@@ -165,6 +176,73 @@ export function MyItemsView({
           <p className="text-base text-muted">{t("auth.whyBody")}</p>
         </Card>
       )}
+    </div>
+  );
+}
+
+function ListingEditor({
+  productId,
+  priceInPaise,
+  stock,
+  listed,
+}: {
+  productId: string;
+  priceInPaise: number | null;
+  stock: number;
+  listed: boolean;
+}) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mt-3 border-t border-ink/10 pt-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm">
+          {listed && priceInPaise != null ? (
+            <span className="font-semibold text-teal-700">
+              {formatINR(priceInPaise)} · {t("shop.inStock", { n: String(stock) })}
+            </span>
+          ) : (
+            <span className="text-muted">{t("mine.notListed")}</span>
+          )}
+        </span>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="text-sm font-semibold text-indigo hover:underline"
+        >
+          {open ? t("common.close") : t("mine.editListing")}
+        </button>
+      </div>
+
+      {open ? (
+        <form action={updateListing} className="mt-3 space-y-2">
+          <input type="hidden" name="productId" value={productId} />
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input type="checkbox" name="listForSale" defaultChecked={listed} className="h-4 w-4" />
+            {t("reg.listForSale")}
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              name="price"
+              defaultValue={priceInPaise != null ? String(priceInPaise / 100) : ""}
+              placeholder={t("reg.price")}
+              inputMode="decimal"
+              className="min-h-tap w-full rounded-lg border-2 border-ink/15 bg-surface px-3 text-base focus:border-teal"
+            />
+            <input
+              name="stock"
+              defaultValue={String(stock)}
+              placeholder={t("reg.stock")}
+              inputMode="numeric"
+              className="min-h-tap w-full rounded-lg border-2 border-ink/15 bg-surface px-3 text-base focus:border-teal"
+            />
+          </div>
+          <Button type="submit" variant="secondary" className="w-full">
+            {t("common.save")}
+          </Button>
+        </form>
+      ) : null}
     </div>
   );
 }

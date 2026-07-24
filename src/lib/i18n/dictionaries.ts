@@ -179,6 +179,9 @@ const en: Dict = {
   "auth.whyTitle": "Sign in to register your product",
   "auth.whyBody":
     "You only need an account to add a product. Browsing and checking products never needs one. Your entered details are saved and waiting for you.",
+  "auth.whyBuyTitle": "Sign in to complete your purchase",
+  "auth.whyBuyBody":
+    "An account is required to buy, so you can track your order and reach the maker. Your cart is saved — you'll come straight back to checkout.",
   "auth.handle": "Phone number or email",
   "auth.password": "Password",
   "auth.signIn": "Sign in",
@@ -390,6 +393,105 @@ const en: Dict = {
   "scan.keyFail": "Failed",
   "scan.viewRecord": "View full record",
   "scan.again": "Scan another",
+
+  // ── Storefront / shop ──
+  "nav.shop": "Shop",
+  "nav.cart": "Cart",
+  "home.ctaShop": "Shop the collection",
+  "shop.title": "Shop handcrafted pieces",
+  "shop.intro":
+    "Buy directly from verified makers. Every piece carries a tamper-evident record of who made it and how.",
+  "shop.empty": "No pieces are listed for sale yet. Please check back soon.",
+  "shop.verified": "Verified authentic",
+  "shop.viewRecord": "view record",
+  "shop.lowStock": "Only {n} left",
+  "shop.inStock": "{n} in stock",
+  "shop.addToCart": "Add to cart",
+  "shop.buyNow": "Buy now",
+  "shop.quantity": "Quantity",
+
+  // ── Cart ──
+  "cart.title": "Your cart",
+  "cart.empty": "Your cart is empty.",
+  "cart.added": "Added to cart",
+  "cart.remove": "Remove",
+  "cart.unavailable": "No longer available — remove to continue.",
+  "cart.reduced": "Only {n} available — quantity adjusted.",
+  "cart.subtotal": "Subtotal",
+  "cart.shippingNote": "Delivery is arranged with the maker. Shown at no extra charge here.",
+  "cart.fixItems": "Some items need attention before checkout.",
+  "cart.checkout": "Proceed to checkout",
+
+  // ── Checkout ──
+  "checkout.title": "Checkout",
+  "checkout.delivery": "Delivery details",
+  "checkout.name": "Full name",
+  "checkout.email": "Email",
+  "checkout.phone": "Phone",
+  "checkout.address1": "Address",
+  "checkout.address2": "Address line 2",
+  "checkout.city": "City / town",
+  "checkout.state": "State",
+  "checkout.postalCode": "PIN code",
+  "checkout.summary": "Order summary",
+  "checkout.accountNote": "Your order will be saved to your account.",
+  "checkout.authTitle": "Sign in to complete your purchase",
+  "checkout.authBody":
+    "An account is required to buy — it lets you track your order and reach the maker. Your cart is saved and you'll come right back here.",
+  "checkout.createAccount": "Create a shopper account",
+  "checkout.haveAccount": "Already have an account?",
+  "checkout.missingDelivery": "Please fill in all required delivery fields.",
+  "checkout.badEmail": "Please enter a valid email address.",
+  "checkout.outOfStock": "An item just went out of stock — please review your cart.",
+  "checkout.genericError": "Something went wrong. Please try again.",
+
+  // ── Payment (simulated) ──
+  "pay.title": "Payment",
+  "pay.simNote":
+    "This is a simulated payment for demonstration — no real card is charged and no card details are stored.",
+  "pay.cardNumber": "Card number",
+  "pay.expiry": "Expiry (MM/YY)",
+  "pay.cvv": "CVV",
+  "pay.declineHint": "Tip: use card {card} to see a declined payment.",
+  "pay.processing": "Processing…",
+  "pay.pay": "Pay",
+  "pay.declined": "Payment was declined. Please try a different card.",
+
+  // ── Marketplace policy ──
+  "policy.title": "Before you buy",
+  "policy.noReturns": "All sales are final — no returns or exchanges through Kaivannam.",
+  "policy.processOnly": "Kaivannam only processes the payment and the sale of goods.",
+  "policy.contactMaker": "For delivery, care, or any query about the item, contact the maker directly.",
+
+  // ── Order confirmation ──
+  "order.thanks": "Thank you for your purchase",
+  "order.confirmed": "Your order is confirmed and the maker has been notified.",
+  "order.number": "Order",
+  "order.items": "Items",
+  "order.maker": "Maker",
+  "order.paid": "Total paid",
+  "order.card": "Card",
+  "order.ref": "Ref",
+  "order.keepShopping": "Keep shopping",
+  "order.registerTitle": "Create an account (optional)",
+  "order.registerBody": "Register now to track this order and check out faster next time.",
+  "order.registerCta": "Create my account",
+
+  // ── Account type (sign-up) ──
+  "auth.accountType": "I am…",
+  "auth.typeArtisan": "A maker",
+  "auth.typeShopper": "A shopper",
+  "auth.typeArtisanHint": "Register and sell your handcrafted pieces.",
+  "auth.typeShopperHint": "Buy pieces and track your orders.",
+  "auth.exists": "An account with this email already exists. Please sign in.",
+
+  // ── Vendor listing ──
+  "reg.listForSale": "List this piece for sale",
+  "reg.listForSaleHelp": "Set a price and quantity to offer this item in the shop.",
+  "reg.price": "Price (₹)",
+  "reg.stock": "Quantity in stock",
+  "mine.notListed": "Not listed for sale",
+  "mine.editListing": "Edit listing",
 
   "footer.rights": "A demonstration platform for craft provenance.",
   "footer.testnet": "Records shown are on a test system, clearly labelled.",

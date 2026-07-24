@@ -21,6 +21,10 @@ export type Draft = {
   // Gate 2 — the product's GI certificate (image + OCR-read/confirmed number).
   giNumber: string;
   giCertImage: string; // compressed image data URL, "" until captured
+  // Storefront listing (optional — the maker can sell the piece).
+  priceRupees: string; // kept as a string for the input; parsed server-side
+  stock: string;
+  listForSale: boolean;
   stages: Record<StageKey, DraftStage>;
   updatedAt: string;
 };
@@ -43,6 +47,9 @@ export function newDraft(): Draft {
     hiddenSignatureHint: "",
     giNumber: "",
     giCertImage: "",
+    priceRupees: "",
+    stock: "1",
+    listForSale: false,
     stages: {
       RAW_MATERIALS: emptyStage(),
       CRAFTING: emptyStage(),

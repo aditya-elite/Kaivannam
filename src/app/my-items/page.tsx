@@ -7,7 +7,15 @@ import { MyItemsView } from "@/components/views/MyItemsView";
 export default async function MyItemsPage() {
   const user = await getCurrentUser();
 
-  let published: { id: string; title: string; category: string; sealedAt: string | null }[] = [];
+  let published: {
+    id: string;
+    title: string;
+    category: string;
+    sealedAt: string | null;
+    priceInPaise: number | null;
+    stock: number;
+    listedForSale: boolean;
+  }[] = [];
   let verificationTier: string | null = null;
 
   if (user?.artisanId) {
@@ -23,6 +31,9 @@ export default async function MyItemsPage() {
       title: p.title,
       category: p.category,
       sealedAt: p.sealedAt ? p.sealedAt.toISOString() : null,
+      priceInPaise: p.priceInPaise,
+      stock: p.stock,
+      listedForSale: p.listedForSale,
     }));
     verificationTier = artisan?.tier ?? null;
   }

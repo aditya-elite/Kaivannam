@@ -27,11 +27,13 @@ model User {
   artisan  Artisan?
   sessions Session[]
   auditLogs AuditLog[]
+  orders   Order[]
 }
 
 enum Role {
   ARTISAN
   COORDINATOR // cooperative field worker registering on behalf of artisans
+  CONSUMER // shopper account (no artisan profile) — optional, created post-purchase
   ADMIN
 }
 
@@ -222,6 +224,12 @@ model Product {
 
   status      ProductStatus @default(DRAFT)
 
+  // ── Storefront listing (consumer sales) ──
+  // Shoppable when: status=SEALED && listedForSale && stock > 0 && priceInPaise != null.
+  priceInPaise  Int? // price in paise (₹1 = 100 paise), integer to avoid float money
+  stock         Int     @default(0)
+  listedForSale Boolean @default(false)
+
   // Gate 2 — product authenticity. A GI (Geographical Indication) certificate is
   // OCR-read at registration and matched against the ingested GI register.
   giNumber    String? // GI number extracted from the artisan's certificate
@@ -296,6 +304,65 @@ model LedgerEntry {
   isTestnet   Boolean @default(true) // labelled clearly in UI when true
 
   createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// Consumer orders (sale of goods only — no returns handled here)
+// Kaivannam processes the transaction; the buyer contacts the maker directly.
+// ─────────────────────────────────────────────────────────────
+model Order {
+  id           String   @id @default(cuid())
+
+  // Buyer — guest checkout is allowed, so the account link is optional.
+  buyerUserId  String?
+  buyerUser    User?    @relation(fields: [buyerUserId], references: [id])
+  buyerName    String
+  buyerEmail   String
+  buyerPhone   String
+
+  // Delivery details.
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  country      String   @default("India")
+
+  subtotalPaise Int
+  status        OrderStatus @default(PENDING)
+
+  // Simulated payment — NO real gateway (see src/lib/payment.ts).
+  paymentRef   String?
+  cardLast4    String?
+
+  createdAt    DateTime @default(now())
+  items        OrderItem[]
+
+  @@index([buyerEmail])
+  @@index([buyerUserId])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+// Immutable line item — everything is snapshotted so an order never changes even
+// if the product is later edited, relisted, or deleted.
+model OrderItem {
+  id                  String @id @default(cuid())
+  orderId             String
+  order               Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId           String
+  titleSnapshot       String
+  artisanId           String
+  artisanNameSnapshot String
+  unitPricePaise      Int
+  quantity            Int
+
+  @@index([orderId])
 }
 
 // ─────────────────────────────────────────────────────────────

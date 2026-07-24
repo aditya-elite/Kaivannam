@@ -152,6 +152,9 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
           hiddenSignatureHint: draft.hiddenSignatureHint,
           giNumber: draft.giNumber,
           giCertImage: draft.giCertImage,
+          priceRupees: draft.priceRupees,
+          stock: draft.stock,
+          listForSale: draft.listForSale,
           stages: Object.fromEntries(
             STAGE_KEYS.map((k) => [k, { photos: draft.stages[k].photos, note: draft.stages[k].note }]),
           ),
@@ -197,7 +200,8 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
   const detailsValid = draft.title.trim() && draft.category.trim() && giValid;
   const storyValid = draft.materials.trim();
   const allStagesDone = done === 4;
-  const canSeal = detailsValid && storyValid && allStagesDone;
+  const listingValid = !draft.listForSale || (Number(draft.priceRupees) > 0 && Number(draft.stock) >= 1);
+  const canSeal = detailsValid && storyValid && allStagesDone && listingValid;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -428,6 +432,40 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
                 {t("reg.hiddenSigHelp")}
               </p>
             ) : null}
+
+            {/* Optional storefront listing — put the piece up for sale. */}
+            <div className="rounded-xl border-2 border-terracotta/30 bg-terracotta/5 p-4">
+              <label className="flex items-center gap-2 text-base font-bold text-terracotta">
+                <input
+                  type="checkbox"
+                  checked={draft.listForSale}
+                  onChange={(e) => update({ listForSale: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                {t("reg.listForSale")}
+              </label>
+              <p className="mt-1 text-sm text-muted">{t("reg.listForSaleHelp")}</p>
+              {draft.listForSale ? (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <TextField
+                    label={t("reg.price")}
+                    value={draft.priceRupees}
+                    onChange={(v) => update({ priceRupees: v.replace(/[^0-9.]/g, "") })}
+                    placeholder="2500"
+                    required
+                    requiredLabel={t("common.required")}
+                  />
+                  <TextField
+                    label={t("reg.stock")}
+                    value={draft.stock}
+                    onChange={(v) => update({ stock: v.replace(/[^0-9]/g, "") })}
+                    placeholder="1"
+                    required
+                    requiredLabel={t("common.required")}
+                  />
+                </div>
+              ) : null}
+            </div>
 
             {submitError ? (
               <p role="alert" className="rounded-lg bg-warning/10 p-3 text-base font-semibold text-warning">
