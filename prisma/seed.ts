@@ -160,6 +160,13 @@ async function main() {
     },
   });
 
+  // Public attestation contact channels — how a cooperative or NGO reaches a
+  // maker to arrange vouching. Demo values.
+  await db.artisan.update({ where: { id: lakshmi.id }, data: { contactEmail: "lakshmi.weaves@example.in", contactPhone: "+91 98400 12345" } });
+  await db.artisan.update({ where: { id: rama.id }, data: { contactEmail: "rama.dokra@example.in", contactPhone: "+91 94255 67890" } });
+  await db.artisan.update({ where: { id: meena.id }, data: { contactEmail: "meena.molela@example.in", contactPhone: "+91 90015 22334" } });
+  await db.artisan.update({ where: { id: anitha.id }, data: { contactEmail: "anitha.kalamkari@example.in", contactPhone: "+91 88976 45521" } });
+
   // ── GI reference dataset (as if ingested by an admin this month) ──
   const dataset = await db.giDataset.create({
     data: { version: 1, sourceNote: "GI Registry Part A + Part B — manual monthly ingest (demo)" },
@@ -488,7 +495,7 @@ async function main() {
     { id: "KS-7T6N-8PJ3-D2XQ", artisan: anitha, title: "Kalamkari temple hanging, unlined",
       materials: "Handloom cotton, natural vegetable dyes",
       story: "This hung in our village temple for the festival. The story runs left to right, the way it is meant to be read aloud to children.",
-      category: "Kalamkari", photo: "/samples/hero.svg",
+      category: "Kalamkari", photo: "/samples/kalamkari.png",
       priceInPaise: null, stock: 0, daysAgo: 30 },
   ];
 
@@ -498,7 +505,7 @@ async function main() {
   console.log("  • 5 artisans across all verification tiers");
   console.log("  • GI dataset v1 with 5 entries · Pehchan register v1 with 2 entries");
   console.log("  • 1 pending verification (admin queue)");
-  console.log(`  • ${sealed.length} sealed products, each with a frozen authenticity record + genesis owner`);
+  console.log("  • 4 sealed + signed products, all listed in the shop");
   console.log("  • Showcase KS-4F7Q-9XB2-M3KP: 2 independent attestations, 4 scans, 3-entry custody chain, pending transfer, 1 correction");
   console.log(`  • Demo Pehchan → Lakshmi: ${lakshmiPehchan}  Rama: ${ramaPehchan}`);
   console.log("Login demo → artisan: 9840012345 / password   admin: admin / admin123");
