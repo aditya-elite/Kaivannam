@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Motion studies — Kaivannam UI Lab</title>
+<link rel="stylesheet" href="lab.css">
+<style>
+.btn {
+  font: 600 16px/1 inherit; border: 0; cursor: pointer;
+  background: var(--terracotta); color: #fff; padding: 13px 20px; border-radius: 8px;
+  transition: transform 180ms var(--ease-stamp);
+}
+.btn:active { transform: scale(.98); }
+.btn.ghost { background: transparent; color: var(--ink); border: 2px solid rgba(43,29,20,.25); }
+
+/* 1 — thread-snap */
+.snap { position: relative; height: 120px; }
+.snap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.snap path { stroke: var(--terracotta); stroke-width: 2.5; fill: none; stroke-dasharray: 400; stroke-dashoffset: 400; }
+.snap.go path { animation: pull 620ms var(--ease-settle) forwards; }
+@keyframes pull { to { stroke-dashoffset: 0; } }
+.snap .beads circle { opacity: 0; }
+.snap.go .beads circle { animation: bead 320ms var(--ease-stamp) forwards; }
+.snap.go .beads circle:nth-child(1){animation-delay:340ms}
+.snap.go .beads circle:nth-child(2){animation-delay:420ms}
+.snap.go .beads circle:nth-child(3){animation-delay:500ms}
+@keyframes bead { from{opacity:0;transform:scale(1.8)} to{opacity:1;transform:scale(1)} }
+
+/* 2 — scroll-linked kolam */
+.scroller { height: 210px; overflow-y: auto; border: 1px solid rgba(43,29,20,.14); background: var(--cream); }
+.scroller .filler { height: 200px; display: grid; place-items: center; color: var(--muted); font-size: 14px; }
+.kol { display: grid; place-items: center; padding: 10px 0; }
+.kol path { stroke: var(--terracotta); stroke-width: 2; fill: none; stroke-dasharray: 1; stroke-dashoffset: 1; }
+@supports (animation-timeline: view()) {
+  .kol path { animation: draw linear both; animation-timeline: view(); animation-range: entry 10% cover 55%; }
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.nosupport { display: none; }
+@supports not (animation-timeline: view()) { .nosupport { display: block; } .kol path { stroke-dashoffset: 0; } }
+
+/* 3 — spatial stagger */
+.grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.grid3 span { background: var(--indigo); color: #fff; display: grid; place-items: center; height: 54px; border-radius: 3px; font-size: 13px; font-weight: 700; opacity: 0; }
+.grid3.go span { animation: pop 300ms var(--ease-stamp) forwards; }
+@keyframes pop { from{opacity:0;transform:translateY(8px) scale(.98)} to{opacity:1;transform:none} }
+
+/* 4 — photo develop */
+.dev { position: relative; width: 180px; height: 180px; overflow: hidden; border-radius: 4px; background: linear-gradient(140deg,#7a4e2d,#c1440e 55%,#e9a319); }
+.dev::after { content:""; position:absolute; inset:0; background-image: radial-gradient(circle at 1px 1px, rgba(43,29,20,.5) 1px, transparent 0); background-size: 3px 3px; opacity:.5; }
+.dev .veil { position: absolute; inset: 0; background: var(--cream); transform-origin: bottom; }
+.dev.go .veil { animation: wipeup 620ms var(--ease-settle) forwards; }
+@keyframes wipeup { to { transform: scaleY(0); } }
+
+/* 5 — tilt (the bad idea) */
+.tilt { width: 200px; padding: 20px; background: #fff; border: 1px solid rgba(43,29,20,.15); border-radius: 6px; transition: transform 140ms ease-out; will-change: transform; }
+</style>
+</head>
+<body>
+
+<nav class="labbar">
+  <span class="mark">Kai<span>vannam</span> · UI Lab</span>
+  <a href="index.html">Overview</a>
+  <a href="01-surface.html">Surface</a>
+  <a href="02-type.html">Type</a>
+  <a href="03-motion.html" aria-current="page">Motion</a>
+  <a href="04-components.html">Components</a>
+</nav>
+
+<div class="wrap">
+  <p class="eyebrow" style="margin-top:44px">Study 03</p>
+  <h1>Motion, past the spec</h1>
+  <p class="lede">
+    The shipped spec covers reveals, the seal, the weave and page transitions. What is missing is
+    mostly at the seams — the moment between two states. Below: four additions worth having, and
+    three refusals with reasons, because the refusals are the more useful half.
+  </p>
+
+  <!-- 1 -->
+  <h2 id="threadsnap">1 · Thread-snap on form submit</h2>
+  <p>
+    Sealing a product is the emotional counterpart to verifying one, and right now it just
+    disables a button. A thread drawing taut and knotting is the same vocabulary as the seal,
+    used at the other end of the journey.
+  </p>
+  <div class="spec">
+    <header><h3>Submit confirmation</h3><span class="tag t-mid">~30 lines</span></header>
+    <div class="stage on-cream">
+      <div class="snap" id="snap">
+        <svg viewBox="0 0 400 120" aria-hidden="true">
+          <path d="M10,60 C90,20 150,100 200,60 C250,20 310,100 390,60"/>
+          <g class="beads" fill="#e9a319">
+            <circle cx="115" cy="52" r="5"/><circle cx="200" cy="60" r="5.5"/><circle cx="290" cy="68" r="5"/>
+          </g>
+        </svg>
+      </div>
+      <button class="btn" onclick="replay('snap')">Replay</button>
+    </div>
+    <footer>
+      Runs once, ~940ms total, then stops — same discipline as the seal. Under reduced motion the
+      thread renders drawn and the beads are simply present.
+      <p class="verdict yes">The registration flow's missing payoff moment.</p>
+    </footer>
+  </div>
+
+  <!-- 2 -->
+  <h2 id="scrollkolam">2 · Scroll-linked kolam</h2>
+  <p>
+    The kolam divider currently draws on a 700ms timer once it enters view. Tying it to scroll
+    position instead means the reader draws it at their own pace — and it costs no JS at all.
+  </p>
+  <div class="spec">
+    <header><h3>Divider driven by <code>view()</code></h3><span class="tag t-mid">progressive</span></header>
+    <div class="stage" style="padding:0">
+      <div class="scroller">
+        <div class="filler">↓ scroll this panel ↓</div>
+        <div class="kol">
+          <svg width="220" height="70" viewBox="0 0 216 64" aria-hidden="true">
+            <path pathLength="1" d="M4,32 C4,16 20,4 36,4 C52,4 68,16 68,32 C68,48 52,60 36,60 C20,60 4,48 4,32"/>
+            <path pathLength="1" d="M74,32 L210,32"/>
+          </svg>
+        </div>
+        <div class="filler">keep going</div>
+      </div>
+      <p class="nosupport" style="font-size:14px;color:var(--warning);margin:10px 0 0">
+        Your browser has no <code>animation-timeline</code> — the fallback (path fully drawn) is what you're seeing.
+      </p>
+    </div>
+    <pre><span class="c">/* motion.css — layered on top of the existing IO version */</span>
+@supports (animation-timeline: view()) {
+  .kolam path {
+    animation: draw-thread linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 55%;
+  }
+}</pre>
+    <footer>
+      Zero JS, zero scroll listeners, and where unsupported the existing IntersectionObserver
+      version keeps working untouched.
+      <p class="verdict yes">Strictly better than what is there now.</p>
+    </footer>
+  </div>
+
+  <!-- 3 -->
+  <h2 id="spatial">3 · Stagger by position, not DOM index</h2>
+  <div class="spec">
+    <header><h3>Diagonal reveal order</h3><span class="tag t-cheap">index maths</span></header>
+    <div class="ab">
+      <div class="on-cream"><span class="lbl">By DOM index — reads as a queue</span>
+        <div class="grid3" id="g1"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
+      </div>
+      <div class="on-cream"><span class="lbl">By row+col — reads as a wave</span>
+        <div class="grid3" id="g2"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
+      </div>
+    </div>
+    <div class="stage on-cream" style="padding-top:0"><button class="btn ghost" onclick="replay('g1');replay('g2')">Replay both</button></div>
+    <pre><span class="c">// delay = (row + col) * 60ms — the wave runs along the same diagonal</span>
+<span class="c">// axis as the §2.2 spine, so the two devices agree with each other.</span>
+const delay = (Math.floor(i / cols) + (i % cols)) * 60;</pre>
+    <footer>
+      Same cost as the current stagger, and it happens to match the diagonal already used by the
+      spine. On the artisan grid this is a noticeable improvement.
+      <p class="verdict yes">Change one line in the Reveal observer callback.</p>
+    </footer>
+  </div>
+
+  <!-- 4 -->
+  <h2 id="develop">4 · Photo "develops" instead of fading</h2>
+  <div class="spec">
+    <header><h3>Stage photo entrance</h3><span class="tag t-cheap">transform only</span></header>
+    <div class="stage on-cream" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <div class="dev" id="dev"><span class="veil"></span></div>
+      <div style="max-width:32ch">
+        <button class="btn ghost" onclick="replay('dev')">Replay</button>
+        <p style="font-size:14px;color:var(--muted);margin:12px 0 0">
+          A veil retracting with <code>scaleY</code> — not a blur. Blur-to-sharp is the obvious
+          "developing" effect and it is exactly the expensive filter the spec rules out. This
+          reads the same and composites on the GPU.
+        </p>
+      </div>
+    </div>
+    <footer>
+      Pairs with the existing <code>photo-settle</code> rather than replacing it: settle for
+      uploads the artisan just took, develop for photos arriving from the server.
+      <p class="verdict maybe">Pick one per context. Using both in one view is noise.</p>
+    </footer>
+  </div>
+
+  <h2>Three refusals</h2>
+
+  <!-- 5 -->
+  <div class="spec" id="tilt">
+    <header><h3>Pointer-tracking card tilt</h3><span class="tag t-dear">rejected</span></header>
+    <div class="stage on-cream" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <div class="tilt" id="tiltcard"><strong>Meenakshi R.</strong><br><span style="color:var(--muted);font-size:14px">Kanchipuram weaving</span></div>
+      <p style="max-width:34ch;font-size:14px;color:var(--muted);margin:0">
+        Move your pointer over the card. Now consider that the target device is a touchscreen,
+        where this does nothing at all — so it is an effect built exclusively for the reviewers
+        and not for the users. It also needs a <code>mousemove</code> handler per card and
+        permanent <code>will-change</code>.
+      </p>
+    </div>
+    <footer><p class="verdict no">Zero reach on the actual device. Costs the most of anything here.</p></footer>
+  </div>
+
+  <!-- 6 -->
+  <div class="spec" id="countup">
+    <header><h3>Counting-up stat numbers</h3><span class="tag t-dear">rejected</span></header>
+    <div class="stage on-cream">
+      <p style="max-width:56ch;margin:0">
+        The landing stats are inside a <code>&lt;dd&gt;</code>. Animating the text content means a
+        screen reader can begin announcing "four hundred and twelve" and be interrupted with a
+        different number. Fixing that means <code>aria-hidden</code> on the visible number plus a
+        parallel live value — a lot of machinery so that a digit can spin.
+      </p>
+    </div>
+    <footer><p class="verdict no">Accessibility cost is real, benefit is decorative.</p></footer>
+  </div>
+
+  <!-- 7 -->
+  <div class="spec" id="parallaximg">
+    <header><h3>Parallax on artisan photographs</h3><span class="tag t-dear">rejected</span></header>
+    <div class="stage on-cream">
+      <p style="max-width:56ch;margin:0">
+        Parallax is already permitted for the thin edge ornament, where it moves a few pixels of
+        decoration. Applying it to portraits means continuously repainting a large image while
+        scrolling — the single most reliable way to drop frames on a low-end Android. The
+        ornament exists precisely so this temptation has a cheap outlet.
+      </p>
+    </div>
+    <footer><p class="verdict no">Large-area repaint on the slowest devices we support.</p></footer>
+  </div>
+
+  <div class="note">
+    <strong>Test that actually decides these.</strong> Chrome DevTools → Performance → CPU 4× slowdown,
+    Network Slow 3G, then run the verification flow end to end. Anything that drops below 50fps
+    there does not ship, however good it looks on a laptop.
+  </div>
+
+</div>
+
+<script>
+// Replay helper — strips the class, forces reflow, adds it back.
+function replay(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('go');
+  void el.offsetWidth;
+  el.classList.add('go');
+}
+// Spatial vs DOM stagger.
+function applyDelays() {
+  document.querySelectorAll('#g1 span').forEach((s, i) => s.style.animationDelay = (i * 60) + 'ms');
+  document.querySelectorAll('#g2 span').forEach((s, i) => {
+    const row = Math.floor(i / 3), col = i % 3;
+    s.style.animationDelay = ((row + col) * 60) + 'ms';
+  });
+}
+applyDelays();
+['snap','g1','g2','dev'].forEach(replay);
+
+// Tilt — deliberately included so the cost is visible, not hypothetical.
+const card = document.getElementById('tiltcard');
+card.addEventListener('mousemove', (e) => {
+  const b = card.getBoundingClientRect();
+  const x = (e.clientX - b.left) / b.width - .5;
+  const y = (e.clientY - b.top) / b.height - .5;
+  card.style.transform = `perspective(600px) rotateY(${x * 9}deg) rotateX(${-y * 9}deg)`;
+});
+card.addEventListener('mouseleave', () => card.style.transform = '');
+</script>
+</body>
+</html>

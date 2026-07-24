@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Typography — Kaivannam UI Lab</title>
+<link rel="stylesheet" href="lab.css">
+<style>
+.idbig { font: 700 30px/1.3 ui-monospace, Menlo, Consolas, monospace; }
+.idbig.tab { font-variant-numeric: tabular-nums; letter-spacing: .10em; }
+.jitter { animation: swap 1.6s steps(1) infinite; }
+@keyframes swap { 0%{content:"1"} 50%{content:"8"} }
+.counter { font: 800 46px/1 system-ui; }
+.counter.tab { font-variant-numeric: tabular-nums; }
+
+.ramp > * { margin: 0 0 10px; }
+.r-display { font-size: 54px; font-weight: 800; letter-spacing: -.035em; line-height: .95; }
+.r-label { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.r-mid { font-size: 22px; font-weight: 600; letter-spacing: -.005em; color: #9c8878; }
+
+.script-row { display: grid; grid-template-columns: 84px 1fr; gap: 14px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid rgba(43,29,20,.08); }
+.script-row b { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.s-latin, .s-deva, .s-tamil { font-size: 22px; }
+.s-deva  { font-family: "Noto Sans Devanagari", "Nirmala UI", sans-serif; }
+.s-tamil { font-family: "Noto Sans Tamil", "Nirmala UI", sans-serif; }
+.tuned .s-deva  { font-size: 23.8px; line-height: 1.72; }
+.tuned .s-tamil { font-size: 24.4px; line-height: 1.78; }
+
+.versal p { margin: 0; font-size: 17px; line-height: 1.68; max-width: 46ch; }
+.versal.on p::first-letter {
+  float: left; font-size: 62px; line-height: .82; font-weight: 800;
+  padding: 4px 10px 0 0; color: var(--terracotta);
+}
+.hang { max-width: 46ch; font-size: 17px; line-height: 1.68; }
+.hang.on { hanging-punctuation: first last; text-indent: -.38em; }
+</style>
+</head>
+<body>
+
+<nav class="labbar">
+  <span class="mark">Kai<span>vannam</span> · UI Lab</span>
+  <a href="index.html">Overview</a>
+  <a href="01-surface.html">Surface</a>
+  <a href="02-type.html" aria-current="page">Type</a>
+  <a href="03-motion.html">Motion</a>
+  <a href="04-components.html">Components</a>
+</nav>
+
+<div class="wrap">
+  <p class="eyebrow" style="margin-top:44px">Study 02</p>
+  <h1>Typography</h1>
+  <p class="lede">
+    Three writing systems, a 16px floor that cannot move, and a product number people read aloud
+    across a shop counter. The type here has more constraints than most projects and it is
+    currently being treated as if it had none.
+  </p>
+
+  <!-- numerals -->
+  <h2 id="numerals">1 · Tabular numerals and the product ID</h2>
+  <p>
+    <code>KS-4F7Q-9XB2-M3KP</code> gets read off a printed tag and typed into the lookup field by
+    someone who may be doing it in poor light. Proportional digits make the string shift width as
+    it changes, and <code>1</code>/<code>I</code> and <code>0</code>/<code>O</code> collide.
+  </p>
+  <div class="spec">
+    <header><h3>Identifier legibility</h3><span class="tag t-cheap">two declarations</span></header>
+    <div class="ab">
+      <div class="on-cream"><span class="lbl">Now</span>
+        <div class="idbig">KS-4F7Q-9XB2-M3KP</div>
+        <div class="idbig" style="margin-top:8px">KS-1I0O-8B5S-2Z7T</div>
+      </div>
+      <div class="on-cream"><span class="lbl">Tabular + tracked</span>
+        <div class="idbig tab">KS-4F7Q-9XB2-M3KP</div>
+        <div class="idbig tab" style="margin-top:8px">KS-1I0O-8B5S-2Z7T</div>
+      </div>
+    </div>
+    <pre><span class="c">/* the ID, wherever it appears — lookup field, tag, technical details */</span>
+.product-id { font-variant-numeric: tabular-nums; letter-spacing: .10em; }</pre>
+    <footer>
+      The tracking is doing as much work as the tabular figures — it separates the character pairs
+      that get confused. Look at the second row in both columns.
+      <p class="verdict yes">Highest value-per-character change in the whole lab.</p>
+    </footer>
+  </div>
+
+  <div class="spec">
+    <header><h3>Stat counters</h3><span class="tag t-cheap">1 declaration</span></header>
+    <div class="ab">
+      <div class="on-cream"><span class="lbl">Proportional — column edge wobbles</span>
+        <div class="counter">1 118</div><div class="counter">4 271</div><div class="counter">9 003</div>
+      </div>
+      <div class="on-cream"><span class="lbl">Tabular — column edge holds</span>
+        <div class="counter tab">1 118</div><div class="counter tab">4 271</div><div class="counter tab">9 003</div>
+      </div>
+    </div>
+    <footer>Applies to the landing hero <code>&lt;dd&gt;</code> stats and the admin queue counts.</footer>
+  </div>
+
+  <!-- ramp -->
+  <h2 id="ramp">2 · Hold the scale gap open</h2>
+  <div class="spec">
+    <header><h3>§2.6 scale contrast, enforced</h3><span class="tag t-cheap">discipline, not code</span></header>
+    <div class="ab">
+      <div class="on-cream ramp"><span class="lbl">Middle populated — muddy</span>
+        <div class="r-display">Kaivannam</div>
+        <div class="r-mid">Proof of the hand that made it</div>
+        <div class="r-label">Verified record</div>
+      </div>
+      <div class="on-cream ramp"><span class="lbl">Gap held — the effect</span>
+        <div class="r-display">Kaivannam</div>
+        <div class="r-label">Verified record</div>
+      </div>
+    </div>
+    <footer>
+      The spec already says this. It is listed because the middle tier creeps back in every time
+      someone adds a subheading, and the left column is what the hero drifts toward.
+      <p class="verdict yes">Costs nothing. Needs a reviewer who will say no.</p>
+    </footer>
+  </div>
+
+  <!-- scripts -->
+  <h2 id="scripts">3 · Three-script optical harmony</h2>
+  <p>
+    Devanagari and Tamil have larger notional em boxes but sit optically smaller than Latin at the
+    same pixel size, and both need more leading because of the marks above and below the baseline.
+    Setting all three at <code>22px / 1.6</code> makes the Hindi and Tamil pages look quieter than
+    the English one — which is exactly backwards for the audience.
+  </p>
+  <div class="spec">
+    <header><h3>Per-script sizing</h3><span class="tag t-mid">3 rules, real impact</span></header>
+    <div class="ab">
+      <div class="on-cream"><span class="lbl">Uniform 22px</span>
+        <div class="script-row"><b>Latin</b><span class="s-latin">Proof of the hand</span></div>
+        <div class="script-row"><b>Devanagari</b><span class="s-deva">जिस हाथ ने बनाया</span></div>
+        <div class="script-row"><b>Tamil</b><span class="s-tamil">செய்த கையின் சான்று</span></div>
+      </div>
+      <div class="on-cream tuned"><span class="lbl">Tuned per script</span>
+        <div class="script-row"><b>Latin</b><span class="s-latin">Proof of the hand</span></div>
+        <div class="script-row"><b>Devanagari</b><span class="s-deva">जिस हाथ ने बनाया</span></div>
+        <div class="script-row"><b>Tamil</b><span class="s-tamil">செய்த கையின் சான்று</span></div>
+      </div>
+    </div>
+    <pre><span class="c">/* globals.css — html[lang] is already set correctly by the server */</span>
+html[lang="hi"] body { font-size: 17.3px; line-height: 1.72; }
+html[lang="ta"] body { font-size: 17.6px; line-height: 1.78; }</pre>
+    <footer>
+      <strong>Do not go below the floor.</strong> These scale <em>up</em> from 16px, never down —
+      the 16px minimum is a hard constraint and tuning must only ever add.
+      <p class="verdict yes">The most under-appreciated item in the lab.</p>
+    </footer>
+  </div>
+
+  <!-- versal -->
+  <h2 id="versal">4 · The story versal</h2>
+  <div class="spec">
+    <header><h3>Initial capital on the maker's story</h3><span class="tag t-cheap">::first-letter</span></header>
+    <div class="ab">
+      <div class="on-cream versal"><span class="lbl">Now</span><p>My grandmother taught me this border when I was eleven. It takes four days to set the warp and another six to finish. The pattern is called mayil kan — peacock's eye.</p></div>
+      <div class="on-cream versal on"><span class="lbl">With versal</span><p>My grandmother taught me this border when I was eleven. It takes four days to set the warp and another six to finish. The pattern is called mayil kan — peacock's eye.</p></div>
+    </div>
+    <footer>
+      <strong>Script caveat:</strong> <code>::first-letter</code> on Devanagari or Tamil can split a
+      conjunct or orphan a vowel mark and produce nonsense. Gate it to <code>html[lang="en"]</code>
+      until it has been checked with a native reader for each script.
+      <p class="verdict maybe">English only for now. Genuinely ask before enabling elsewhere.</p>
+    </footer>
+  </div>
+
+  <!-- hanging -->
+  <h2 id="hanging">5 · Hanging punctuation on quotes</h2>
+  <div class="spec">
+    <header><h3>Optical left edge</h3><span class="tag t-cheap">progressive</span></header>
+    <div class="ab">
+      <div class="on-cream"><span class="lbl">Now — quote pushes the line in</span><p class="hang">"My grandmother taught me this border when I was eleven, and I have never used another."</p></div>
+      <div class="on-cream"><span class="lbl">Hanging — edge stays true</span><p class="hang on">"My grandmother taught me this border when I was eleven, and I have never used another."</p></div>
+    </div>
+    <footer>
+      <code>hanging-punctuation</code> is Safari-only today, so the <code>text-indent</code> fallback
+      does the work elsewhere. Both degrade to "normal paragraph", which is fine.
+      <p class="verdict maybe">Nice on the story card. Invisible to most users. Do it last.</p>
+    </footer>
+  </div>
+
+  <div class="note">
+    <strong>Two I considered and rejected.</strong> A display <em>serif</em> for headings would
+    fight the three-script requirement — you would need a matched Devanagari and Tamil serif, and
+    the pairing will be wrong in at least one script. And variable-font weight animation on
+    hover looks lovely on a MacBook and jank-stutters on a Snapdragon 4.
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Components — Kaivannam UI Lab</title>
+<link rel="stylesheet" href="lab.css">
+<style>
+/* 1 — fields */
+.f-old { display:block; width:100%; max-width:320px; padding:13px 14px; font:16px inherit;
+  border:2px solid rgba(43,29,20,.15); border-radius:12px; background:var(--cream); color:var(--ink); }
+.f-old:focus { outline:3px solid var(--teal); outline-offset:3px; border-color:var(--teal); }
+.f-new { display:block; width:100%; max-width:320px; padding:11px 2px; font:16px inherit;
+  border:0; border-bottom:2px solid rgba(43,29,20,.28); border-radius:0; background:transparent; color:var(--ink); }
+.f-new:focus { outline:3px solid var(--teal); outline-offset:4px; border-bottom-color:var(--terracotta); }
+.flab { font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:7px; }
+
+/* 2 — tier badge */
+.pill { display:inline-flex; align-items:center; gap:7px; background:rgba(31,111,120,.14); color:#175259;
+  font-size:13px; font-weight:700; padding:6px 12px; border-radius:999px; }
+.wax { display:inline-flex; align-items:center; gap:10px; }
+.wax .disc { position:relative; width:44px; height:44px; flex:0 0 44px; }
+.wax .disc svg { display:block; }
+.wax .txt { display:flex; flex-direction:column; line-height:1.25; }
+.wax .txt b { font-size:14px; }
+.wax .txt span { font-size:12px; color:var(--muted); }
+
+/* 3 — artisan card */
+.card-old { width:240px; background:#fff; border-radius:16px; box-shadow:0 2px 8px rgba(120,78,45,.10); overflow:hidden; }
+.card-old .ph { height:150px; background:linear-gradient(140deg,#7a4e2d,#c1440e 60%,#e9a319); }
+.card-old .bd { padding:14px; }
+.card-new { width:240px; background:#fff; box-shadow:0 2px 8px rgba(120,78,45,.10); overflow:hidden;
+  clip-path:polygon(0 0,100% 0,calc(100% - 18px) 100%,0 100%); }
+.card-new .ph { height:150px; background:linear-gradient(140deg,#7a4e2d,#c1440e 60%,#e9a319); position:relative; }
+.card-new .ph .ed { position:absolute; right:8px; bottom:8px; background:rgba(43,29,20,.72); color:#fdf8f0;
+  font:700 11px/1 ui-monospace,monospace; letter-spacing:.08em; padding:5px 7px; }
+.card-new .bd { padding:14px 16px 16px; }
+.card-new .rule { height:2px; background:currentColor; opacity:.16; margin:9px 0;
+  clip-path:polygon(0 12%,18% 4%,37% 30%,55% 10%,74% 34%,91% 8%,100% 22%,100% 78%,88% 96%,68% 66%,49% 92%,31% 62%,14% 90%,0 70%); }
+.mut { color:var(--muted); font-size:14px; }
+
+/* 4 — printed tag */
+.tag-sheet { background:#fff; width:300px; padding:22px 20px 18px; position:relative; color:var(--ink); text-align:center; }
+.tag-sheet .cut { position:absolute; width:12px; height:12px; border-color:rgba(43,29,20,.5); }
+.tag-sheet .cut.tl { top:5px; left:5px; border-left:1px solid; border-top:1px solid; }
+.tag-sheet .cut.tr { top:5px; right:5px; border-right:1px solid; border-top:1px solid; }
+.tag-sheet .cut.bl { bottom:5px; left:5px; border-left:1px solid; border-bottom:1px solid; }
+.tag-sheet .cut.br { bottom:5px; right:5px; border-right:1px solid; border-bottom:1px solid; }
+.tag-sheet .fold { position:absolute; left:0; right:0; top:50%; border-top:1px dashed rgba(43,29,20,.32); }
+.tag-sheet .fold::after { content:"fold"; position:absolute; right:6px; top:-16px; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:rgba(43,29,20,.4); }
+.qr { width:120px; height:120px; margin:12px auto; background:
+  repeating-conic-gradient(#2b1d14 0 25%, #fdf8f0 0 50%) 0 0/16px 16px; border:6px solid #fdf8f0; }
+.sigline { border-bottom:1px solid rgba(43,29,20,.4); height:26px; margin:10px 8px 4px; }
+.sigcap { font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.idtag { font:700 15px/1 ui-monospace,monospace; letter-spacing:.12em; font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+
+<nav class="labbar">
+  <span class="mark">Kai<span>vannam</span> · UI Lab</span>
+  <a href="index.html">Overview</a>
+  <a href="01-surface.html">Surface</a>
+  <a href="02-type.html">Type</a>
+  <a href="03-motion.html">Motion</a>
+  <a href="04-components.html" aria-current="page">Components</a>
+</nav>
+
+<div class="wrap">
+  <p class="eyebrow" style="margin-top:44px">Study 04</p>
+  <h1>Components</h1>
+  <p class="lede">
+    Four places where the design vocabulary was written down but never actually reached the
+    component. These are the least speculative items in the lab — each one is closing a gap
+    between the spec and the build.
+  </p>
+
+  <!-- 1 -->
+  <h2 id="fields">1 · Hairline form fields</h2>
+  <p>
+    §2.4 is explicit: rules over boxes, because the reference is editorial rather than app-like.
+    The registration form — the longest flow in the product — is still entirely bordered boxes.
+  </p>
+  <div class="spec">
+    <header><h3>Text input</h3><span class="tag t-cheap">CSS only</span></header>
+    <div class="ab">
+      <div class="on-cream"><span class="lbl">Now — boxed</span>
+        <label class="flab" for="a">Item title</label>
+        <input class="f-old" id="a" value="Kanchipuram silk saree">
+        <label class="flab" for="b" style="margin-top:16px">Materials</label>
+        <input class="f-old" id="b" value="Mulberry silk, zari">
+      </div>
+      <div class="on-cream"><span class="lbl">Proposed — ruled</span>
+        <label class="flab" for="c">Item title</label>
+        <input class="f-new" id="c" value="Kanchipuram silk saree">
+        <label class="flab" for="d" style="margin-top:16px">Materials</label>
+        <input class="f-new" id="d" value="Mulberry silk, zari">
+      </div>
+    </div>
+    <footer>
+      Tab into both columns. The focus ring is unchanged — 3px, offset, never animated — so the
+      accessibility contract holds; the rule beneath simply takes over from the box.
+      <strong>One real trade-off:</strong> a boxed field advertises "you can type here" more loudly,
+      which matters for users with low digital literacy. Worth a look at the empty state before
+      rolling this across the whole flow.
+      <p class="verdict maybe">Try it on one step first, not all four.</p>
+    </footer>
+  </div>
+
+  <!-- 2 -->
+  <h2 id="tier">2 · Wax-seal tier badge</h2>
+  <p>
+    Verification tier is the most consequential fact on an artisan profile — it is the difference
+    between "checked by a cooperative" and "typed in by anyone". It currently looks like a
+    framework chip.
+  </p>
+  <div class="spec">
+    <header><h3>Trust tier</h3><span class="tag t-mid">1 component</span></header>
+    <div class="ab">
+      <div class="on-cream"><span class="lbl">Now</span>
+        <span class="pill">✓ Cooperative verified</span>
+        <div style="height:12px"></div>
+        <span class="pill" style="background:rgba(233,163,25,.22);color:#6b4708">Self declared</span>
+      </div>
+      <div class="on-cream"><span class="lbl">Proposed — struck seal</span>
+        <span class="wax">
+          <span class="disc">
+            <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+              <path d="M22,2 C31,2 42,10 42.5,22 C43,34 32,41.5 22,42 C12,42.5 2,34 1.6,22 C1.2,10 13,2 22,2 Z" fill="#1f6f78"/>
+              <path d="M22,7 C29,7 37,13 37.4,22 C37.8,31 29,36.6 22,37 C15,37.4 7,31 6.7,22 C6.4,13 15,7 22,7 Z" fill="none" stroke="rgba(253,248,240,.45)" stroke-width="1.2"/>
+              <polyline points="14,22 20,28 31,16" fill="none" stroke="#fdf8f0" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="txt"><b>Cooperative verified</b><span>Checked against the register</span></span>
+        </span>
+        <div style="height:14px"></div>
+        <span class="wax">
+          <span class="disc">
+            <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+              <path d="M22,2 C31,2 42,10 42.5,22 C43,34 32,41.5 22,42 C12,42.5 2,34 1.6,22 C1.2,10 13,2 22,2 Z" fill="none" stroke="#6b5546" stroke-width="2" stroke-dasharray="5 4"/>
+              <line x1="15" y1="22" x2="29" y2="22" stroke="#6b5546" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="txt"><b>Self declared</b><span>Not yet checked by anyone</span></span>
+        </span>
+      </div>
+    </div>
+    <footer>
+      Reuses the wobbled-circle path from <code>Seal.tsx</code>, so the two never look like different
+      systems. Note the unverified state is a <em>broken</em> seal outline, not a red warning —
+      "not yet checked" is not an accusation against the artisan.
+      <p class="verdict yes">Same information, far better weighted.</p>
+    </footer>
+  </div>
+
+  <!-- 3 -->
+  <h2 id="card">3 · Artisan card</h2>
+  <div class="spec">
+    <header><h3>Directory item</h3><span class="tag t-cheap">existing primitives</span></header>
+    <div class="ab">
+      <div class="on-cream" style="display:grid;place-items:center"><span class="lbl" style="justify-self:start">Now</span>
+        <div class="card-old">
+          <div class="ph"></div>
+          <div class="bd"><strong>Meenakshi R.</strong><div class="mut">Kanchipuram weaving · Tamil Nadu</div>
+          <div style="margin-top:8px"><span class="pill" style="font-size:12px">✓ Verified</span></div></div>
+        </div>
+      </div>
+      <div class="on-cream" style="display:grid;place-items:center"><span class="lbl" style="justify-self:start">Proposed</span>
+        <div class="card-new">
+          <div class="ph"><span class="ed">NO. 014</span></div>
+          <div class="bd"><strong>Meenakshi R.</strong>
+          <div class="rule"></div>
+          <div class="mut">Kanchipuram weaving</div><div class="mut">Tamil Nadu</div>
+          <div style="margin-top:10px"><span class="wax"><span class="disc" style="width:26px;height:26px;flex-basis:26px">
+            <svg width="26" height="26" viewBox="0 0 44 44" aria-hidden="true">
+              <path d="M22,2 C31,2 42,10 42.5,22 C43,34 32,41.5 22,42 C12,42.5 2,34 1.6,22 C1.2,10 13,2 22,2 Z" fill="#1f6f78"/>
+              <polyline points="14,22 20,28 31,16" fill="none" stroke="#fdf8f0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg></span><span class="txt"><b style="font-size:12.5px">Cooperative verified</b></span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      Three changes, all from primitives that already exist: the sheared bottom-right corner
+      (<code>row-shear</code>), the hand-ruled divider (<code>rule-hand</code>), and an edition
+      number on the photograph. The edition mark is the one new idea — craft objects are numbered,
+      and it costs one <code>&lt;span&gt;</code>.
+      <p class="verdict yes">No new CSS. Assembly only.</p>
+    </footer>
+  </div>
+
+  <!-- 4 -->
+  <h2 id="tag">4 · The printed tag</h2>
+  <p>
+    This is the only part of Kaivannam that becomes a physical object. It currently prints like a
+    web page that happens to have a QR code on it.
+  </p>
+  <div class="spec">
+    <header><h3>Tag sheet</h3><span class="tag t-mid">print stylesheet</span></header>
+    <div class="stage on-cream" style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+      <div class="tag-sheet">
+        <span class="cut tl"></span><span class="cut tr"></span><span class="cut bl"></span><span class="cut br"></span>
+        <div style="font-weight:800;font-size:17px">Kai<span style="color:var(--terracotta)">vannam</span></div>
+        <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px">Proof of the hand that made it</div>
+        <div class="qr"></div>
+        <div class="idtag">KS-4F7Q-9XB2-M3KP</div>
+        <span class="fold"></span>
+        <div style="margin-top:34px">
+          <div class="sigline"></div>
+          <div class="sigcap">Maker's mark</div>
+        </div>
+      </div>
+      <ul style="max-width:34ch;font-size:15px;color:var(--muted);padding-left:18px;margin:0">
+        <li><strong style="color:var(--ink)">Cut marks</strong> at the corners — tags get cut out with scissors.</li>
+        <li><strong style="color:var(--ink)">Fold line</strong> so the tag can hang double-sided over a garment edge.</li>
+        <li><strong style="color:var(--ink)">Signature rule</strong> — the artisan signs the physical object. That is the one credential a counterfeiter cannot copy from the database.</li>
+        <li><strong style="color:var(--ink)">Tabular tracked ID</strong> from study 02, because this is where it gets read from.</li>
+      </ul>
+    </div>
+    <footer>
+      Everything here lives in <code>@media print</code>, so it adds nothing to the screen bundle.
+      <code>globals.css</code> already strips chrome for print — this fills in what should be there instead.
+      <p class="verdict yes">The highest-leverage physical touchpoint in the product.</p>
+    </footer>
+  </div>
+
+  <div class="note">
+    <strong>Sequencing.</strong> Do the tag (4) and the tier seal (2) before the card (3). The card
+    is the most visible but the other two are the ones that change whether somebody trusts the
+    object in their hands, which is the entire point of the product.
+  </div>
+
+</div>
+</body>
+</html>

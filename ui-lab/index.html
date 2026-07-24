@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaivannam — UI Lab</title>
+<link rel="stylesheet" href="lab.css">
+<style>
+  /* Hub-only: the ranked table and the texture strip. */
+  .strip { display: grid; grid-template-columns: repeat(7, 1fr); height: 76px; margin: 28px 0 0; border-radius: 3px; overflow: hidden; }
+  .strip div { display: flex; align-items: flex-end; padding: 6px; font-size: 10px; font-weight: 700; letter-spacing: .06em; }
+
+  table.rank { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 15px; }
+  table.rank th { text-align: left; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 10px 8px 0; border-bottom: 2px solid rgba(43,29,20,.18); }
+  table.rank td { padding: 11px 10px 11px 0; border-bottom: 1px solid rgba(43,29,20,.1); vertical-align: top; }
+  table.rank tr:hover td { background: rgba(233,163,25,.06); }
+  table.rank a { color: var(--indigo); font-weight: 600; }
+  .n { font-variant-numeric: tabular-nums; color: var(--muted); width: 2ch; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 14px; margin-top: 20px; }
+  .cards a {
+    display: block; text-decoration: none; color: var(--ink);
+    background: var(--surface); padding: 20px 18px;
+    border: 1px solid rgba(43,29,20,.14);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
+    transition: transform 180ms var(--ease-stamp);
+  }
+  .cards a:hover { transform: translateY(-2px); }
+  .cards a:active { transform: scale(.985); }
+  .cards .k { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--terracotta); font-weight: 700; }
+  .cards h3 { margin: 8px 0 4px; }
+  .cards p { font-size: 14px; color: var(--muted); margin: 0; }
+</style>
+</head>
+<body>
+
+<nav class="labbar">
+  <span class="mark">Kai<span>vannam</span> · UI Lab</span>
+  <a href="index.html" aria-current="page">Overview</a>
+  <a href="01-surface.html">Surface</a>
+  <a href="02-type.html">Type</a>
+  <a href="03-motion.html">Motion</a>
+  <a href="04-components.html">Components</a>
+</nav>
+
+<div class="wrap">
+
+  <p class="eyebrow" style="margin-top:44px">Local only · not in the repo</p>
+  <h1>Where the UI can go next</h1>
+  <p class="lede">
+    The motion and geometry spec is already built — shear, rough edges, the diagonal spine,
+    the seal, the weave, stamp-in reveals. This lab is about the layer <em>after</em> that:
+    what would make Kaivannam look like it was made by a person rather than assembled from a
+    component library.
+  </p>
+
+  <div class="note">
+    <strong>How to read this.</strong> Every proposal carries a cost tag and a verdict, and
+    several verdicts are <em>don't</em>. A list where everything is a good idea is a list nobody
+    thought about. The demos are live — hover them, press them, and turn on your OS
+    reduced-motion setting to see what survives.
+  </div>
+
+  <div class="strip">
+    <div style="background:#fdf8f0;color:#2b1d14">CREAM</div>
+    <div style="background:#c1440e;color:#fff">TERRACOTTA</div>
+    <div style="background:#e9a319;color:#2b1d14">HALDI</div>
+    <div style="background:#1f6f78;color:#fff">TEAL</div>
+    <div style="background:#2e3192;color:#fff">INDIGO</div>
+    <div style="background:#2b1d14;color:#fdf8f0">INK</div>
+    <div style="background:#6b5546;color:#fdf8f0">MUTED</div>
+  </div>
+
+  <h2>The shortlist, ranked</h2>
+  <p style="color:var(--muted);margin-top:2px">
+    Ordered by <em>visible change per hour spent</em>, not by how interesting they are to build.
+  </p>
+
+  <table class="rank">
+    <thead>
+      <tr><th>#</th><th>Idea</th><th>Cost</th><th>Why it matters here</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td>
+        <td><a href="02-type.html#numerals">Tabular numerals + stencilled product IDs</a></td>
+        <td><span class="tag t-cheap">1 line</span></td>
+        <td>Product IDs are read aloud in shops and typed off printed tags. Proportional digits make <code>KS-4F7Q</code> jitter.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td>
+        <td><a href="01-surface.html#paper">Khadi paper grain</a></td>
+        <td><span class="tag t-cheap">~0.4KB</span></td>
+        <td>The base is currently a flat dot grid. Real cloth has fibre. Biggest look change for the least code.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td>
+        <td><a href="04-components.html#fields">Hairline form fields</a></td>
+        <td><span class="tag t-cheap">CSS only</span></td>
+        <td>§2.4 says rules over boxes, but the registration form is still all boxes. The spec is half-applied.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td>
+        <td><a href="01-surface.html#dyelot">Dye-lot colour variance</a></td>
+        <td><span class="tag t-mid">seeded util</span></td>
+        <td>Extends the <code>rough.ts</code> idea from shape to colour. A grid of cards stops reading as stamped.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td>
+        <td><a href="02-type.html#scripts">Per-script optical sizing</a></td>
+        <td><span class="tag t-mid">3 rules</span></td>
+        <td>Devanagari and Tamil sit optically smaller than Latin at the same px. Hindi pages currently look timid.</td>
+      </tr>
+      <tr>
+        <td class="n">6</td>
+        <td><a href="04-components.html#tier">Wax-seal tier badge</a></td>
+        <td><span class="tag t-mid">1 component</span></td>
+        <td>Trust tier is the most consequential fact on an artisan card and it looks like a generic pill.</td>
+      </tr>
+      <tr>
+        <td class="n">7</td>
+        <td><a href="03-motion.html#scrollkolam">Scroll-linked kolam</a></td>
+        <td><span class="tag t-mid">progressive</span></td>
+        <td>Ties the divider to the reader's own pace. Degrades to the current IO version where unsupported.</td>
+      </tr>
+      <tr>
+        <td class="n">8</td>
+        <td><a href="04-components.html#tag">Printable tag furniture</a></td>
+        <td><span class="tag t-mid">print CSS</span></td>
+        <td>Cut marks, fold line, a signature rule. The tag is a physical artefact and currently prints like a web page.</td>
+      </tr>
+      <tr>
+        <td class="n">9</td>
+        <td><a href="03-motion.html#tilt">Pointer-tilt on cards</a></td>
+        <td><span class="tag t-dear">JS + risk</span></td>
+        <td>Reads as generic SaaS, does nothing on touch — which is the entire target device. Listed so it can be ruled out.</td>
+      </tr>
+      <tr>
+        <td class="n">10</td>
+        <td><a href="03-motion.html#countup">Counting stat numbers</a></td>
+        <td><span class="tag t-dear">a11y risk</span></td>
+        <td>Animating a number that a screen reader is mid-way through announcing. Tempting, wrong.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>The four studies</h2>
+  <div class="cards">
+    <a href="01-surface.html">
+      <span class="k">01</span><h3>Surface &amp; material</h3>
+      <p>Paper grain, ink bleed, deckled edges, dye-lot variance, letterpress.</p>
+    </a>
+    <a href="02-type.html">
+      <span class="k">02</span><h3>Typography</h3>
+      <p>Numerals, tracking ramp, three-script harmony, the story versal.</p>
+    </a>
+    <a href="03-motion.html">
+      <span class="k">03</span><h3>Motion studies</h3>
+      <p>What to add past the shipped spec — and three things to refuse.</p>
+    </a>
+    <a href="04-components.html">
+      <span class="k">04</span><h3>Components</h3>
+      <p>Fields, tier badge, artisan card, the printed tag.</p>
+    </a>
+  </div>
+
+  <h2>What I'd actually do first</h2>
+  <p>
+    If there is one afternoon available, spend it on <strong>1, 2 and 3</strong>. They touch every
+    screen, cost almost nothing to run on a low-end phone, and none of them can break a state
+    machine. Items 4–8 are a second pass. Items 9 and 10 are in the list so that when someone
+    suggests them later there is a written answer.
+  </p>
+
+  <div class="note" style="border-color:var(--indigo)">
+    <strong>Where I'm not confident.</strong> The dye-lot variance (4) is the one I'd want to see
+    on a real device before committing — a hue jitter that reads as "handmade" on a calibrated
+    laptop can read as "broken CSS" on a cheap LCD in daylight. Build it behind a flag and look
+    at it outdoors before deciding. Same caution for letterpress on the cream: it depends on
+    screen gamma more than I'd like.
+  </div>
+
+</div>
+</body>
+</html>

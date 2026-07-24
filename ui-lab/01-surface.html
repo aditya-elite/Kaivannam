@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Surface &amp; material — Kaivannam UI Lab</title>
+<link rel="stylesheet" href="lab.css">
+<style>
+/* ── 1. Khadi paper grain ─────────────────────────────────────────────── */
+.grain-old, .grain-new { height: 190px; position: relative; }
+.grain-old { background-color: #fdf8f0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(46,49,146,.05) 1px, transparent 0);
+  background-size: 22px 22px; }
+.grain-new { background-color: #fdf8f0; }
+.grain-new::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  /* Two offset thread axes at different periods so they never form a visible
+     grid, plus a very low-opacity speckle. Warp is slightly warmer than weft —
+     handloom cloth is never one colour in both directions. */
+  background-image:
+    repeating-linear-gradient(90deg, rgba(107,85,70,.055) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(0deg,  rgba(107,85,70,.038) 0 1px, transparent 1px 9px),
+    radial-gradient(circle at 30% 20%, rgba(193,68,14,.035) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 64%, rgba(46,49,146,.03) 0 2px, transparent 3px);
+  background-size: auto, auto, 61px 61px, 83px 83px;
+}
+.slub { position: absolute; background: rgba(107,85,70,.10); height: 1px; }
+
+/* ── 2. Ink bleed on a plate edge ─────────────────────────────────────── */
+.plate { position: relative; background: #fff; padding: 18px 20px; width: 100%; max-width: 320px; }
+.plate.bleed::before {
+  content: ""; position: absolute; inset: -1.5px; z-index: -1;
+  background: rgba(43,29,20,.20); filter: blur(2.5px);
+}
+.plate-wrap { position: relative; z-index: 0; }
+
+/* ── 3. Deckled / torn paper edge ─────────────────────────────────────── */
+.deckle {
+  background: #fff; padding: 20px; max-width: 320px;
+  -webkit-mask-image: var(--deckle); mask-image: var(--deckle);
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  --deckle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none' viewBox='0 0 100 100'%3E%3Cpath fill='%23fff' d='M0,2 C12,0.4 26,3.1 39,1.2 C55,-0.4 72,2.8 86,1 L100,2.4 L99.1,26 L100,52 L98.8,74 L99.6,98 C86,99.6 70,96.9 55,98.8 C40,100.4 22,97.4 9,99.2 L0.4,97.8 L1.2,72 L0,49 L1,24 Z'/%3E%3C/svg%3E");
+}
+
+/* ── 4. Dye-lot variance ──────────────────────────────────────────────── */
+.lot { display: grid; grid-template-columns: repeat(auto-fit,minmax(84px,1fr)); gap: 8px; }
+.lot i { display: block; height: 66px; border-radius: 2px; }
+.lot.flat i { background: var(--terracotta); }
+/* Seeded per index: hue ±4deg, lightness ±3%. Same seeding idea as rough.ts, so
+   it is stable across re-renders and never reshuffles on paint. */
+.lot.varied i:nth-child(1) { background: hsl(18 87% 41%); }
+.lot.varied i:nth-child(2) { background: hsl(14 82% 40%); }
+.lot.varied i:nth-child(3) { background: hsl(21 90% 43%); }
+.lot.varied i:nth-child(4) { background: hsl(16 84% 38%); }
+.lot.varied i:nth-child(5) { background: hsl(20 88% 42%); }
+.lot.varied i:nth-child(6) { background: hsl(15 85% 40%); }
+.lot.varied i:nth-child(7) { background: hsl(19 86% 43%); }
+.lot.varied i:nth-child(8) { background: hsl(17 89% 39%); }
+
+/* ── 5. Letterpress ───────────────────────────────────────────────────── */
+.press-demo { font-size: 40px; font-weight: 800; letter-spacing: -.02em; }
+.press-demo.on { color: #34241a; text-shadow: 0 1px 0 rgba(255,255,255,.85), 0 -1px 0 rgba(43,29,20,.16); }
+
+/* ── 6. Selvedge strip ────────────────────────────────────────────────── */
+.selv { height: 12px; width: 100%;
+  background:
+    repeating-linear-gradient(90deg, var(--terracotta) 0 3px, transparent 3px 7px),
+    linear-gradient(var(--haldi), var(--haldi));
+  clip-path: polygon(0 0,100% 0,100% 62%,96% 100%,92% 62%,88% 100%,84% 62%,80% 100%,76% 62%,72% 100%,68% 62%,64% 100%,60% 62%,56% 100%,52% 62%,48% 100%,44% 62%,40% 100%,36% 62%,32% 100%,28% 62%,24% 100%,20% 62%,16% 100%,12% 62%,8% 100%,4% 62%,0 100%);
+}
+</style>
+</head>
+<body>
+
+<nav class="labbar">
+  <span class="mark">Kai<span>vannam</span> · UI Lab</span>
+  <a href="index.html">Overview</a>
+  <a href="01-surface.html" aria-current="page">Surface</a>
+  <a href="02-type.html">Type</a>
+  <a href="03-motion.html">Motion</a>
+  <a href="04-components.html">Components</a>
+</nav>
+
+<div class="wrap">
+  <p class="eyebrow" style="margin-top:44px">Study 01</p>
+  <h1>Surface &amp; material</h1>
+  <p class="lede">
+    The single biggest gap between the current build and the reference is that our surfaces are
+    perfectly flat. Handloom, block print and kalamkari have no flat surfaces anywhere. This is
+    also the cheapest category to fix — most of it is one pseudo-element.
+  </p>
+
+  <!-- 1 -->
+  <h2 id="paper">1 · Khadi paper grain</h2>
+  <p>
+    <code>body::before</code> currently paints a 22px dot grid at 5% indigo. It reads as graph
+    paper. Cloth has two thread axes at different periods, and the warp is warmer than the weft.
+  </p>
+  <div class="spec">
+    <header><h3>Base texture</h3><span class="tag t-cheap">~0.4KB, one element</span></header>
+    <div class="ab">
+      <div style="padding:0"><div class="grain-old"><div style="padding:14px"><span class="lbl">Now — dot grid</span></div></div></div>
+      <div style="padding:0"><div class="grain-new">
+        <div style="padding:14px;position:relative"><span class="lbl">Proposed — warp/weft + slubs</span></div>
+        <span class="slub" style="left:8%;top:52%;width:64px"></span>
+        <span class="slub" style="left:47%;top:74%;width:38px"></span>
+        <span class="slub" style="left:66%;top:31%;width:52px"></span>
+      </div></div>
+    </div>
+    <pre><span class="c">/* globals.css — replaces the dot-grid background-image */</span>
+body::before {
+  background-image:
+    repeating-linear-gradient(90deg, rgba(107,85,70,.055) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(0deg,  rgba(107,85,70,.038) 0 1px, transparent 1px 9px);
+}</pre>
+    <footer>
+      7px and 9px are coprime, so the two axes never align into a visible grid. The slubs
+      (those three short thicker threads) are absolutely-positioned 1px spans placed by a seeded
+      index — the same trick as <code>rough.ts</code>. Three per viewport is plenty; more reads as dirt.
+      <p class="verdict yes">Costs one repaint on a fixed element that never scrolls.</p>
+    </footer>
+  </div>
+
+  <!-- 2 -->
+  <h2 id="bleed">2 · Ink bleed at plate edges</h2>
+  <p>
+    Block-printed ink wicks into the fibre a fraction of a millimetre past the block. We already
+    rotate rough clip paths; this adds the capillary spread underneath them.
+  </p>
+  <div class="spec">
+    <header><h3>Edge bleed</h3><span class="tag t-cheap">1 pseudo-element</span></header>
+    <div class="stage on-cream" style="display:flex;gap:28px;flex-wrap:wrap">
+      <div class="plate-wrap"><div class="plate"><span class="lbl">Now</span><strong>Kanchipuram silk saree</strong><br><span style="color:var(--muted)">Meenakshi · Kanchipuram, TN</span></div></div>
+      <div class="plate-wrap"><div class="plate bleed"><span class="lbl">With bleed</span><strong>Kanchipuram silk saree</strong><br><span style="color:var(--muted)">Meenakshi · Kanchipuram, TN</span></div></div>
+    </div>
+    <footer>
+      <strong>Caveat that matters:</strong> <code>filter: blur()</code> is the expensive property the
+      motion spec warns about. It is acceptable here <em>only</em> because it is static — it paints
+      once and never animates. Never put this on something that moves.
+      <p class="verdict maybe">Ship on Tier A plates only. Skip on lists.</p>
+    </footer>
+  </div>
+
+  <!-- 3 -->
+  <h2 id="deckle">3 · Deckled paper edge</h2>
+  <div class="spec">
+    <header><h3>Torn edge via mask, not clip</h3><span class="tag t-cheap">data URI</span></header>
+    <div class="stage on-cream" style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+      <div class="deckle"><strong>The maker's story</strong><p style="margin:6px 0 0;color:var(--muted);font-size:15px">"My grandmother taught me this border. It takes four days."</p></div>
+      <p style="max-width:34ch;color:var(--muted);font-size:15px">
+        A <em>mask</em> rather than a <code>clip-path</code>, because a mask can be soft at the
+        boundary while a clip is always a hard cut. Handmade paper edges are fibrous, not sharp.
+      </p>
+    </div>
+    <footer>
+      Best reserved for the story card, where the paper metaphor is doing narrative work. Applied
+      everywhere it becomes a gimmick within one screen.
+      <p class="verdict maybe">One placement only.</p>
+    </footer>
+  </div>
+
+  <!-- 4 -->
+  <h2 id="dyelot">4 · Dye-lot variance</h2>
+  <p>
+    Natural dye lots never match. Eight identical terracotta swatches read as machine output; eight
+    swatches drifting ±4° hue and ±3% lightness read as dyed. This is the roughness argument
+    applied to colour instead of shape.
+  </p>
+  <div class="spec">
+    <header><h3>Repeated fills</h3><span class="tag t-mid">seeded helper</span></header>
+    <div class="ab">
+      <div class="on-cream"><span class="lbl">Flat — one hex</span><div class="lot flat"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="on-cream"><span class="lbl">Dye-lot — seeded drift</span><div class="lot varied"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+    </div>
+    <pre><span class="c">// lib/dyelot.ts — reuses the hash from rough.ts</span>
+export function dyeLot(index: number, seed = 0) {
+  const h = hash(index, seed);
+  const hue = 17 + ((h % 9) - 4);        <span class="c">// ±4°</span>
+  const lig = 41 + (((h &gt;&gt; 8) % 7) - 3); <span class="c">// ±3%</span>
+  return `hsl(${hue} 86% ${lig}%)`;
+}</pre>
+    <footer>
+      <strong>Contrast is the catch.</strong> Drifting lightness drifts contrast. Clamp the range so
+      the <em>darkest</em> lot still clears 4.5:1 against white text — ±3% is safe against
+      terracotta, ±6% is not.
+      <p class="verdict maybe">Verify outdoors on a cheap LCD before committing.</p>
+    </footer>
+  </div>
+
+  <!-- 5 -->
+  <h2 id="letterpress">5 · Letterpress headings</h2>
+  <div class="spec">
+    <header><h3>Debossed type on cream</h3><span class="tag t-cheap">1 declaration</span></header>
+    <div class="ab">
+      <div class="on-cream"><span class="lbl">Flat</span><div class="press-demo">Proof of the hand</div></div>
+      <div class="on-cream"><span class="lbl">Letterpress</span><div class="press-demo on">Proof of the hand</div></div>
+    </div>
+    <footer>
+      Two 1px shadows, no blur, no filter. Works only on the cream — on white it disappears, on
+      indigo it inverts wrongly. And only on display sizes: at 16px the highlight fringe starts
+      eating the glyph and body text gets measurably harder to read.
+      <p class="verdict maybe">Display type on cream grounds. Never body copy.</p>
+    </footer>
+  </div>
+
+  <!-- 6 -->
+  <h2 id="selvedge">6 · Selvedge strip</h2>
+  <div class="spec">
+    <header><h3>Woven edge as a section rule</h3><span class="tag t-cheap">CSS only</span></header>
+    <div class="stage on-cream"><div class="selv"></div></div>
+    <footer>
+      A denser, more literal cousin of the sawtooth thread already used on the tab underline.
+      Useful as the top edge of the footer or a Tier A section break — somewhere it can be
+      large enough to read as weave rather than as noise.
+      <p class="verdict yes">Cheap, on-vocabulary, no JS.</p>
+    </footer>
+  </div>
+
+  <div class="note">
+    <strong>The one I'd skip.</strong> Paper <em>curl</em> shadows on cards — the corner-lift effect.
+    It needs a blurred, animated box-shadow, which the motion spec forbids outright, and it reads
+    as 2011 skeuomorphism rather than as craft. The texture ideas above get you the same warmth
+    without the baggage.
+  </div>
+
+</div>
+</body>
+</html>
