@@ -216,16 +216,16 @@ model Product {
   storyVoiceUrl String?
   category    String // craft cluster
 
-  // Indicative price in whole rupees. Nullable on purpose: this is a provenance
-  // record first and a shop second, and plenty of documented pieces are not for
-  // sale (museum loans, commissions, an artisan's own archive). A card with no
-  // price renders "Price on request" rather than a zero.
-  priceInr    Int?
-
   status      ProductStatus @default(DRAFT)
 
   // ── Storefront listing (consumer sales) ──
   // Shoppable when: status=SEALED && listedForSale && stock > 0 && priceInPaise != null.
+  //
+  // MERGE NOTE: the UI branch briefly carried a parallel `priceInr` field in
+  // whole rupees. It has been removed in favour of this one — integer paise is
+  // the correct representation for money and having two price columns on one
+  // row is a data bug waiting to happen. A null price here means "documented
+  // but not for sale", which the collection renders as "Price on request".
   priceInPaise  Int? // price in paise (₹1 = 100 paise), integer to avoid float money
   stock         Int     @default(0)
   listedForSale Boolean @default(false)
