@@ -289,7 +289,7 @@ async function main() {
   const seq = 1;
   const entryHash = sha256(`${seq}|${product.id}|${contentHash}|${prevHash}`);
   await db.ledgerEntry.create({
-    data: { seq, productId: product.id, contentHash, prevHash, entryHash, backend: "local", isTestnet: true },
+    data: { seq, subjectType: "PRODUCT", subjectId: product.id, productId: product.id, contentHash, prevHash, entryHash, backend: "local", isTestnet: true },
   });
   // KEY 1 — sign the dynamic QR payload with Lakshmi's private key.
   const signature = signPayload(product.id, now.toISOString(), lakshmiKeys.privateKeyPem);
@@ -380,7 +380,7 @@ async function main() {
     const prev = last?.entryHash ?? "0".repeat(64);
     const eHash = sha256(`${seqN}|${opts.id}|${cHash}|${prev}`);
     await db.ledgerEntry.create({
-      data: { seq: seqN, productId: opts.id, contentHash: cHash, prevHash: prev, entryHash: eHash, backend: "local", isTestnet: true },
+      data: { seq: seqN, subjectType: "PRODUCT", subjectId: opts.id, productId: opts.id, contentHash: cHash, prevHash: prev, entryHash: eHash, backend: "local", isTestnet: true },
     });
     // A maker without a keypair still gets a sealed record and a ledger entry;
     // they simply have no signed QR to issue.

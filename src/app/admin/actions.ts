@@ -68,6 +68,42 @@ export async function decideVerification(formData: FormData): Promise<void> {
 }
 
 /**
+ * Review a processed ID document (the signing/anchoring pipeline record).
+ * Sets the DOCUMENT status only — VERIFIED means "Kaivannam reviewed the
+ * processed document", NOT "government-verified". Independent of decideVerification
+ * above (which drives the artisan tier).
+ */
+export async function decideIdDocument(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  const requestId = String(formData.get("requestId"));
+  const decision = String(formData.get("decision")); // "verify" | "reject"
+  const reason = String(formData.get("reason") ?? "").trim();
+
+  const request = await db.verificationRequest.findUnique({ where: { id: requestId } });
+  if (!request) return;
+
+  const verify = decision === "verify";
+  await db.verificationRequest.update({
+    where: { id: requestId },
+    data: {
+      idDocStatus: verify ? "VERIFIED" : "REJECTED",
+      idDocError: verify ? null : reason || "Reviewed as not a valid document image",
+      reviewedBy: admin.id,
+      reviewedAt: new Date(),
+    },
+  });
+  await db.auditLog.create({
+    data: {
+      actorId: admin.id,
+      action: verify ? "ID_DOCUMENT_VERIFIED" : "ID_DOCUMENT_REJECTED",
+      target: request.artisanId,
+      detail: JSON.stringify({ requestId, reason }),
+    },
+  });
+  revalidatePath("/admin");
+}
+
+/**
  * Monthly GI ingest. Admin pastes the register rows (pipe-separated):
  *   gi_number | gi_name | craft_category | region | authorised_user
  * Creates a NEW dataset version and its entries, stamping the sync date.

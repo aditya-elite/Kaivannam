@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getArtisanIdDocument, type IdDocView } from "@/lib/id-document";
 import { MyItemsView } from "@/components/views/MyItemsView";
 
 // "My items" — resumable drafts (from the device) + published items (from the
@@ -17,15 +18,18 @@ export default async function MyItemsPage() {
     listedForSale: boolean;
   }[] = [];
   let verificationTier: string | null = null;
+  let idDoc: IdDocView | null = null;
 
   if (user?.artisanId) {
-    const [products, artisan] = await Promise.all([
+    const [products, artisan, doc] = await Promise.all([
       db.product.findMany({
         where: { artisanId: user.artisanId, status: "SEALED" },
         orderBy: { sealedAt: "desc" },
       }),
       db.artisan.findUnique({ where: { id: user.artisanId }, select: { tier: true } }),
+      getArtisanIdDocument(user.artisanId),
     ]);
+    idDoc = doc;
     published = products.map((p) => ({
       id: p.id,
       title: p.title,
@@ -44,6 +48,7 @@ export default async function MyItemsPage() {
       artisanName={user?.displayName ?? null}
       verificationTier={verificationTier}
       published={published}
+      idDoc={idDoc}
     />
   );
 }

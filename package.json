@@ -12,7 +12,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "test:provenance": "tsx tests/provenance.test.mts"
+    "test:provenance": "tsx tests/provenance.test.mts",
+    "test:id-document": "tsx tests/id-document.test.mts"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",

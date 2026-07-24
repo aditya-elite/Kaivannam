@@ -403,6 +403,57 @@ Android phone.
 
 ---
 
+## 🪪 ID-document verification (signing key + private storage)
+
+When an artisan uploads a Pehchan-card photo, `POST /api/id-document` runs the
+pipeline: **hash → OCR → sign → store privately → anchor the hash**. The raw
+image, extracted fields and signed certificate go to a **private Supabase
+bucket**; **only the SHA-256 image hash** is anchored on the local tamper-evident
+ledger (same hash-then-anchor pattern as craft items) — never the raw image or
+PII. The artisan sees the status + a "Kaivannam verified" badge + a link to the
+signed certificate on their own portal (`/my-items`); an admin reviews it at
+`/admin`.
+
+> **What this attests:** Kaivannam processed and reviewed the document and it has
+> not been altered since upload. It is **NOT** a claim that the government ID is
+> genuine — there is no public Pehchan verification API. UI copy therefore says
+> "Kaivannam verified" / "document reviewed", never "government-verified".
+
+### Required environment variables
+
+```bash
+# The backend's OWN signing key (ECDSA P-256, PKCS8 PEM). Sign it once and keep
+# the private key out of git. Generate:
+#   openssl ecparam -name prime256v1 -genkey -noout -out server-key.pem
+#   openssl pkcs8 -topk8 -nocrypt -in server-key.pem -out server-pkcs8.pem
+#   base64 -w0 server-pkcs8.pem            # paste the one-line result below
+KAIVANNAM_SIGNING_KEY="<base64 of the PKCS8 PEM, or the raw PEM>"
+
+# Private Supabase Storage (server-side, service role — NEVER expose to the browser)
+NEXT_PUBLIC_SUPABASE_URL="https://<project>.supabase.co"   # already used for auth
+SUPABASE_SERVICE_ROLE_KEY="<service-role key from the Supabase dashboard>"
+
+# Optional: point tesseract.js at locally-cached trained data for offline OCR
+# TESSERACT_LANG_PATH="/absolute/path/to/tessdata"
+```
+
+- **Signing key** — read only from the environment (`src/lib/server-signing.ts`),
+  never hardcoded or committed. If it is unset, the server logs a warning and
+  uses an **ephemeral per-process key** so local dev still works; set the env var
+  in production (signatures must survive restarts and key rotation is tracked via
+  the recorded `signingKeyId`).
+- **Private bucket** — the `id-documents` bucket is created automatically on
+  first upload (`public: false`). Objects are reachable only through short-lived
+  (~60s) signed URLs minted server-side after an owner-or-admin check
+  (`/api/id-document/[id]/view`). If `SUPABASE_SERVICE_ROLE_KEY` is not set the
+  route returns `503 storage_not_configured` rather than writing a half-record.
+- **OCR** — `tesseract.js` (no external API/keys). A blurry photo, wrong document
+  or unreadable image is marked `REJECTED` with a reason, never silently dropped.
+
+Run `npm run test:id-document` to verify the signing roundtrip + ledger anchor.
+
+---
+
 ## 🧪 Testing & Performance
 
 ### Verified end-to-end (smoke tests against a running build)

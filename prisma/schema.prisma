@@ -127,6 +127,23 @@ model VerificationRequest {
   idNumber  String?
   claimedGi String? // GI cluster the artisan claims, cross-checked against GiEntry
 
+  // ── Document-processing pipeline (upload → OCR → hash → sign → anchor) ──
+  // The raw image and signed certificate live in a PRIVATE Supabase bucket
+  // (see lib/supabase/storage.ts). Only the hash is anchored on the ledger; no
+  // raw image or PII goes on-chain. `idDocStatus` is the document-review state
+  // and is independent of the admin `status` above (which drives the tier).
+  imageSha256    String? // SHA-256 of the uploaded image bytes (also the ledger subject)
+  imageBucket    String? // private Supabase bucket name
+  imagePath      String? // object path of the raw image within the bucket
+  certPath       String? // object path of the signed certificate JSON
+  serverSignature String? // base64 ECDSA signature over the signed payload
+  signedPayload  String? // canonical JSON of { extracted_data, image_hash, timestamp }
+  signingKeyId   String? // fingerprint of the server key that signed (key rotation)
+  anchorSeq      Int? // ledger sequence the image hash was anchored at
+  idDocStatus    DocStatus @default(PENDING)
+  idDocError     String? // reason when idDocStatus = REJECTED (e.g. unreadable image)
+  processedAt    DateTime?
+
   status     ReviewStatus @default(PENDING)
   reviewNote String?
   reviewedBy String?
@@ -134,12 +151,24 @@ model VerificationRequest {
   createdAt  DateTime     @default(now())
 
   @@index([status])
+  @@index([idDocStatus])
 }
 
 enum ReviewStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+// Document-review state for the ID processing pipeline. Deliberately separate
+// from ReviewStatus: a document can be successfully PROCESSED (hashed, signed,
+// anchored) yet still awaiting admin confirmation. REJECTED here means the image
+// could not be read/processed (e.g. blurry, wrong document) — never "the ID is
+// fake", which this system cannot determine (no public Pehchan API).
+enum DocStatus {
+  PENDING // uploaded + processed, awaiting Kaivannam review
+  VERIFIED // Kaivannam-reviewed (NOT "government-verified")
+  REJECTED // could not be processed / reviewed as not a valid document image
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -459,18 +488,30 @@ enum TransferStatus {
 // Tamper-evident ledger (abstracted behind LedgerService interface)
 // ─────────────────────────────────────────────────────────────
 model LedgerEntry {
-  id        String  @id @default(cuid())
-  seq       Int     @unique // position in the chain
-  productId String  @unique
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id  String @id @default(cuid())
+  seq Int    @unique // position in the ONE global chain
 
-  contentHash String // hash of the product record content
+  // The chain now anchors more than products. `subjectType` says what this
+  // entry is for; `subjectId` is the stable key mixed into the entry hash.
+  //   PRODUCT     → subjectId = productId (hash formula unchanged, so every
+  //                 already-sealed product still verifies bit-for-bit)
+  //   ID_DOCUMENT → subjectId = the verification request id; productId is null.
+  // No raw image or PII is ever stored here — only the content hash.
+  subjectType String  @default("PRODUCT")
+  subjectId   String // productId for products, request id for ID documents
+
+  productId String?  @unique // set only for PRODUCT entries
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  contentHash String // hash of the anchored content (product record / image bytes)
   prevHash    String // previous ledger entry hash — links the chain
-  entryHash   String // SHA-256(seq + productId + contentHash + prevHash)
+  entryHash   String // SHA-256(seq + subjectId + contentHash + prevHash)
   backend     String // "local" | future: "fabric"/"eth"
   isTestnet   Boolean @default(true) // labelled clearly in UI when true
 
   createdAt DateTime @default(now())
+
+  @@index([subjectType, subjectId])
 }
 
 // ─────────────────────────────────────────────────────────────

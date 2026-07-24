@@ -13,6 +13,8 @@ import { listDrafts, deleteDraft, stagesDone, type Draft } from "@/lib/client/dr
 import { WeaveProgress } from "@/components/craft/WeaveProgress";
 import { SyncStatus } from "@/components/craft/Charkha";
 import { EmptyMotif } from "@/components/craft/EmptyMotif";
+import { IdVerificationCard } from "@/components/views/IdVerificationCard";
+import type { IdDocView } from "@/lib/id-document";
 import { IconCamera, IconArrowRight, IconShield, IconClose } from "@/components/icons";
 
 const CURRENT_KEY = "ks_current_draft";
@@ -22,6 +24,7 @@ export function MyItemsView({
   artisanName,
   verificationTier,
   published,
+  idDoc,
 }: {
   authed: boolean;
   artisanName: string | null;
@@ -35,6 +38,7 @@ export function MyItemsView({
     stock: number;
     listedForSale: boolean;
   }[];
+  idDoc: IdDocView | null;
 }) {
   const t = useT();
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -77,6 +81,9 @@ export function MyItemsView({
           </ButtonLink>
         </Card>
       ) : null}
+
+      {/* ID document — upload, signed certificate, review status. Owner-only. */}
+      {authed && idDoc ? <IdVerificationCard idDoc={idDoc} /> : null}
 
       {/* Drafts in progress (device-local, resumable). */}
       <section aria-labelledby="drafts-heading">

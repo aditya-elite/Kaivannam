@@ -22,6 +22,24 @@ export default async function AdminPage() {
   ]);
 
   // Pre-compute the GI cross-check result for each pending request.
+  // ID-document pipeline queue: processed docs awaiting Kaivannam review.
+  const idDocRows = await db.verificationRequest.findMany({
+    where: { idDocStatus: "PENDING", imageSha256: { not: null } },
+    orderBy: { processedAt: "asc" },
+    include: { artisan: { select: { fullName: true } } },
+  });
+  const idDocs = idDocRows.map((r) => ({
+    id: r.id,
+    artisanName: r.artisan.fullName,
+    idNumber: r.ocrIdNumber,
+    craft: r.ocrCraft,
+    region: r.ocrRegion,
+    imageHashShort: r.imageSha256 ? r.imageSha256.slice(0, 16) : null,
+    anchorSeq: r.anchorSeq,
+    signaturePresent: !!r.serverSignature,
+    processedAt: r.processedAt ? r.processedAt.toISOString() : null,
+  }));
+
   const queue = await Promise.all(
     pending.map(async (r) => {
       const gi = await crossCheckGi(r.ocrName ?? r.artisan.fullName, r.claimedGi);
@@ -74,6 +92,7 @@ export default async function AdminPage() {
         target: a.target,
         createdAt: a.createdAt.toISOString(),
       }))}
+      idDocs={idDocs}
     />
   );
 }

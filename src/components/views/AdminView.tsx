@@ -3,10 +3,23 @@
 import { useT } from "@/lib/i18n/provider";
 import { Card, SectionHeading } from "@/components/ui";
 import { formatDate } from "@/lib/format";
-import { decideVerification, ingestGiDataset, ingestPehchanDataset } from "@/app/admin/actions";
+import { decideVerification, decideIdDocument, ingestGiDataset, ingestPehchanDataset } from "@/app/admin/actions";
+import { CertificateViewButton } from "@/components/views/CertificateViewButton";
 import { IconShield, IconCheck, IconClose, IconAlert, IconThread, IconUpload, IconUser } from "@/components/icons";
 
 type Dataset = { version: number; entries: number; lastSyncedAt: string; sourceNote: string | null };
+
+type IdDoc = {
+  id: string;
+  artisanName: string;
+  idNumber: string | null;
+  craft: string | null;
+  region: string | null;
+  imageHashShort: string | null;
+  anchorSeq: number | null;
+  signaturePresent: boolean;
+  processedAt: string | null;
+};
 
 type QueueItem = {
   id: string;
@@ -32,17 +45,88 @@ export function AdminView({
   dataset,
   pehchanDataset,
   audit,
+  idDocs = [],
 }: {
   queue: QueueItem[];
   dataset: Dataset | null;
   pehchanDataset: Dataset | null;
   audit: { action: string; target: string; createdAt: string }[];
+  idDocs?: IdDoc[];
 }) {
   const t = useT();
 
   return (
     <div className="space-y-10">
       <SectionHeading>{t("nav.admin")}</SectionHeading>
+
+      {/* ID-document review — processed docs (hashed, signed, anchored) awaiting
+          Kaivannam confirmation. "Verify" is a Kaivannam review, NOT a claim the
+          government ID is genuine. */}
+      <section aria-labelledby="iddoc-heading">
+        <h2 id="iddoc-heading" className="mb-3 flex items-center gap-2 text-xl font-bold">
+          <IconShield width={22} height={22} className="text-teal" /> {t("idadmin.title")}
+        </h2>
+        {idDocs.length === 0 ? (
+          <Card>
+            <p className="text-base text-muted">{t("idadmin.empty")}</p>
+          </Card>
+        ) : (
+          <ul className="space-y-4">
+            {idDocs.map((d) => (
+              <li key={d.id}>
+                <Card>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-bold">{d.artisanName}</p>
+                      <dl className="mt-1 space-y-0.5 text-sm text-muted">
+                        {d.idNumber ? <div>{t("idadmin.id")}: <span className="product-id text-ink">{d.idNumber}</span></div> : null}
+                        {d.craft ? <div>{t("idadmin.craft")}: <span className="text-ink">{d.craft}</span></div> : null}
+                        {d.region ? <div>{t("idadmin.region")}: <span className="text-ink">{d.region}</span></div> : null}
+                        <div>
+                          {t("idadmin.fingerprint")}: <span className="product-id font-mono text-ink">{d.imageHashShort}…</span>
+                          {d.anchorSeq ? <> · {t("idadmin.anchor")} #{d.anchorSeq}</> : null}
+                          {d.signaturePresent ? <> · <span className="text-teal-700">{t("idadmin.signed")}</span></> : null}
+                        </div>
+                      </dl>
+                    </div>
+                    <CertificateViewButton requestId={d.id} label={t("idadmin.view")} />
+                  </div>
+
+                  <p className="mt-3 text-sm text-muted">{t("idadmin.note")}</p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <form action={decideIdDocument}>
+                      <input type="hidden" name="requestId" value={d.id} />
+                      <input type="hidden" name="decision" value="verify" />
+                      <button
+                        type="submit"
+                        className="press inline-flex min-h-tap items-center gap-2 rounded-lg bg-teal px-4 py-2.5 font-semibold text-white"
+                      >
+                        <IconCheck width={18} height={18} /> {t("idadmin.verify")}
+                      </button>
+                    </form>
+                    <form action={decideIdDocument} className="flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="requestId" value={d.id} />
+                      <input type="hidden" name="decision" value="reject" />
+                      <input
+                        name="reason"
+                        placeholder={t("idadmin.reason")}
+                        className="min-h-tap border-0 border-b-2 border-ink/25 bg-transparent px-1 text-base focus:border-terracotta"
+                      />
+                      <button
+                        type="submit"
+                        className="press inline-flex min-h-tap items-center gap-2 rounded-lg border-2 border-ink/20 px-4 py-2.5 font-semibold text-ink"
+                      >
+                        <IconClose width={18} height={18} /> {t("idadmin.reject")}
+                      </button>
+                    </form>
+                  </div>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* Pehchan register ingest (Gate 1 whitelist) */}
       <section aria-labelledby="pehchan-heading">
