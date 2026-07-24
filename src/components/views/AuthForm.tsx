@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useT } from "@/lib/i18n/provider";
 import { Button, Card } from "@/components/ui";
 import { signInAction, signUpAction, type AuthState } from "@/app/login/actions";
-import { IconShield, IconUser, IconGoogle } from "@/components/icons";
+import { IconShield, IconUser, IconGoogle, IconAlert } from "@/components/icons";
 import { createClient } from "@/lib/supabase/client";
 
 export function AuthForm({
@@ -20,6 +20,7 @@ export function AuthForm({
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [accountType, setAccountType] = useState<"artisan" | "shopper">(initialAccountType);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
   const shopper = initialAccountType === "shopper";
   const action = mode === "signin" ? signInAction : signUpAction;
   const [state, formAction, pending] = useActionState<AuthState, FormData>(action, {});
@@ -27,6 +28,7 @@ export function AuthForm({
   async function handleGoogleSignIn() {
     try {
       setGoogleLoading(true);
+      setGoogleError(null);
       const supabase = createClient();
       const origin = window.location.origin;
       const redirectTo = `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`;
@@ -43,11 +45,20 @@ export function AuthForm({
       });
 
       if (error) {
-        console.error("Google sign in error:", error.message);
+        console.error("Google sign in error:", error);
+        if (error.message.includes("not enabled") || error.message.includes("provider is not enabled")) {
+          setGoogleError(
+            "Google Login needs to be enabled in your Supabase Dashboard under Authentication -> Providers -> Google."
+          );
+        } else {
+          setGoogleError(error.message);
+        }
         setGoogleLoading(false);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Google login failed:", err);
+      const msg = err instanceof Error ? err.message : "Failed to sign in with Google";
+      setGoogleError(msg);
       setGoogleLoading(false);
     }
   }
@@ -73,7 +84,7 @@ export function AuthForm({
             type="button"
             role="tab"
             aria-selected={mode === "signin"}
-            onClick={() => setMode("signin")}
+            onClick={() => { setMode("signin"); setGoogleError(null); }}
             className={`min-h-tap flex-1 rounded-lg px-4 py-2 text-base font-semibold transition-colors ${
               mode === "signin" ? "bg-surface text-indigo shadow-card" : "text-muted hover:text-ink"
             }`}
@@ -84,7 +95,7 @@ export function AuthForm({
             type="button"
             role="tab"
             aria-selected={mode === "signup"}
-            onClick={() => setMode("signup")}
+            onClick={() => { setMode("signup"); setGoogleError(null); }}
             className={`min-h-tap flex-1 rounded-lg px-4 py-2 text-base font-semibold transition-colors ${
               mode === "signup" ? "bg-surface text-indigo shadow-card" : "text-muted hover:text-ink"
             }`}
@@ -104,6 +115,13 @@ export function AuthForm({
             <IconGoogle />
             <span>{googleLoading ? t("common.loading") : mode === "signin" ? "Sign in with Google" : "Sign up with Google"}</span>
           </button>
+
+          {googleError ? (
+            <div className="flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-sm font-medium text-warning">
+              <IconAlert width={18} height={18} className="mt-0.5 shrink-0" />
+              <p>{googleError}</p>
+            </div>
+          ) : null}
 
           <div className="relative flex items-center justify-center">
             <div className="w-full border-t border-ink/15" />
