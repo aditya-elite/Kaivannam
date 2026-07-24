@@ -1,8 +1,8 @@
 {
-  "name": "kalasutra",
+  "name": "kaivannam",
   "version": "0.1.0",
   "private": true,
-  "description": "Kalāsūtra — Artisan Craft Provenance Platform. Links physical handcrafted items to tamper-evident digital records of origin and authenticity.",
+  "description": "Kaivannam — Artisan Craft Provenance Platform. Links physical handcrafted items to tamper-evident digital records of origin and authenticity.",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",

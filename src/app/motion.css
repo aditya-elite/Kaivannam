@@ -1,0 +1,798 @@
+/* ============================================================
+   Kaivannam — animation, geometry and transition layer.
+   Implements the motion spec (rev 2). Loaded after globals.css.
+
+   Rules held throughout:
+     · Only transform / opacity animate. clip-path and stroke-dashoffset
+       are permitted where the spec names them; both composite on mobile.
+     · No libraries. CSS + inline SVG only.
+     · Motion is never load-bearing — every state reads with CSS disabled.
+     · Reduced motion gets a *designed* variant, never a blanket kill.
+       The globals.css guard uses !important, so overrides here do too.
+   ============================================================ */
+
+/* ── Motion tokens ─────────────────────────────────────────── */
+:root {
+  --dur-instant: 120ms;
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 600ms;
+  --dur-feature: 1200ms;
+
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-stamp: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-settle: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-heavy: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+
+  --shear: -4deg;
+  --shear-strong: -7deg;
+}
+
+/* ============================================================
+   §2 GEOMETRY AND SURFACE VOCABULARY
+   Static properties. These survive reduced motion untouched —
+   reduced motion suppresses motion, not geometry.
+   ============================================================ */
+
+/* §2.1 Sheared row (the party-panel shape). Asymmetric by design.
+   Alternate .row-shear / .row-shear-alt down a list so rows never
+   read as identical stamped units. */
+.row-shear {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%);
+}
+.row-shear-alt {
+  clip-path: polygon(22px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* §2.1 Sheared bar. Parallelogram, never a rectangle.
+   The inner counter-skew keeps glyphs upright — skewed Tamil and
+   Devanagari degrade far worse than Latin, so this is not optional. */
+.shear-bar {
+  transform: skewX(var(--shear));
+}
+.shear-bar > * {
+  transform: skewX(calc(var(--shear) * -1));
+}
+/* Counter-skew utility for any label sitting inside a sheared container. */
+.unshear {
+  transform: skewX(calc(var(--shear) * -1));
+}
+
+/* §2.2 The diagonal spine. Slanted alignment axis, horizontal baselines.
+   A diagonal colour split *under* text is forbidden (unpredictable
+   contrast across the glyph run); a diagonal *alignment axis* is safe
+   because every glyph sits on a uniform ground. */
+.spine {
+  --spine-step: 9px;
+}
+.spine-item {
+  transform: translateX(calc(var(--i, 0) * var(--spine-step)));
+}
+.spine-reverse .spine-item {
+  transform: translateX(calc(var(--i, 0) * var(--spine-step) * -1));
+}
+/* Drift cap: at 360px the container is ~328px, so 20% ≈ 65px ≈ 7 steps.
+   Past that the step collapses so nothing escapes the viewport. */
+@media (max-width: 480px) {
+  .spine {
+    --spine-step: 5px;
+  }
+}
+
+/* §2.3 Roughness. Variants are assigned per instance from a seeded
+   rotation (see lib/rough.ts) — if every hand-drawn edge is identical
+   the eye clocks it as machine-made within about three interactions. */
+.rough-1 { clip-path: url(#rough-1); }
+.rough-2 { clip-path: url(#rough-2); }
+.rough-3 { clip-path: url(#rough-3); }
+.rough-4 { clip-path: url(#rough-4); }
+
+.torn-1 { clip-path: url(#torn-1); }
+.torn-2 { clip-path: url(#torn-2); }
+.torn-3 { clip-path: url(#torn-3); }
+.torn-4 { clip-path: url(#torn-4); }
+
+/* §2.4 Hairlines over boxes. A hand-ruled line drifts; a border-bottom
+   reads as a spreadsheet. Rendered as a 2px block with an uneven clip. */
+.rule-hand {
+  height: 2px;
+  border: 0;
+  background: currentColor;
+  opacity: 0.16;
+  clip-path: polygon(
+    0 12%, 18% 4%, 37% 30%, 55% 10%, 74% 34%, 91% 8%, 100% 22%,
+    100% 78%, 88% 96%, 68% 66%, 49% 92%, 31% 62%, 14% 90%, 0 70%
+  );
+}
+
+/* §2.6 Scale contrast. Two extremes, little in between.
+   Body copy is never touched by this — 16px floor holds everywhere. */
+.type-display {
+  font-size: clamp(48px, 18vw, 132px);
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  text-wrap: balance;
+}
+.type-label {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   §3 LANDING PAGE (Tier A)
+   ============================================================ */
+
+/* §3.1 Warp-and-weft hero reveal. Once per session only. */
+.warp line,
+.weft line {
+  stroke-dasharray: var(--len, 400);
+  stroke-dashoffset: var(--len, 400);
+}
+.hero-weave.is-playing .warp line,
+.hero-weave.is-playing .weft line {
+  animation: draw-thread 500ms var(--ease-out) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+/* Not the first visit: threads are simply there. */
+.hero-weave.is-static .warp line,
+.hero-weave.is-static .weft line {
+  stroke-dashoffset: 0;
+}
+@keyframes draw-thread {
+  to { stroke-dashoffset: 0; }
+}
+
+.hero-weave.is-playing .hero-line {
+  opacity: 0;
+  animation: hero-rise var(--dur-slow) var(--ease-stamp) forwards;
+  animation-delay: var(--delay, 850ms);
+}
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* §3.2 Cropped display type. The full string always exists in the
+   accessible tree — the visible node is aria-hidden and paired with a
+   visually-hidden <h1>. A screen reader never announces a truncated word. */
+.hero-weave.is-playing .type-crop {
+  animation: crop-in 500ms var(--ease-out) forwards;
+}
+@keyframes crop-in {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: none; }
+}
+/* Distressed glyph texture via an SVG alpha mask, not a CSS filter — filters
+   are expensive to composite on the low-end Android devices this targets.
+   Inlined as a data URI (~0.6KB, no request) rather than a fragment reference,
+   which Chrome does not resolve reliably for HTML elements.
+   Speck coverage is ~3% of glyph area, so measured contrast barely moves. */
+@supports (mask-image: url("data:image/svg+xml,%3Csvg/%3E")) or
+  (-webkit-mask-image: url("data:image/svg+xml,%3Csvg/%3E")) {
+  .type-distress {
+    --ink-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34'%3E%3Cpath fill='%23fff' fill-rule='evenodd' d='M0 0h34v34H0z M3 5h1.6v1.3H3z M9 2h1.1v1.6H9z M14 7h1.4v1.1H14z M20 3h1.2v1.4H20z M26 6h1.5v1.2H26z M31 2h1.1v1.5H31z M5 12h1.3v1.5H5z M12 15h1.5v1.1H12z M18 11h1.1v1.4H18z M24 14h1.4v1.2H24z M30 12h1.2v1.6H30z M2 20h1.5v1.2H2z M8 23h1.2v1.5H8z M15 21h1.4v1.3H15z M21 24h1.1v1.2H21z M27 20h1.5v1.4H27z M4 28h1.2v1.3H4z M11 30h1.5v1.2H11z M17 27h1.1v1.5H17z M23 31h1.4v1.1H23z M29 28h1.2v1.4H29z'/%3E%3C/svg%3E");
+    -webkit-mask-image: var(--ink-grain);
+    mask-image: var(--ink-grain);
+    -webkit-mask-size: 34px 34px;
+    mask-size: 34px 34px;
+  }
+}
+
+/* §3.3 Block-print stamp entrance. Default scroll reveal.
+   The overshoot in --ease-stamp is what reads as a stamp landing.
+
+   The hidden start state is scoped to `.js` (set by a one-line inline script in
+   the root layout). Without JS the observer never fires, so an unscoped
+   `opacity: 0` here would leave the page permanently blank — the reveal must
+   degrade to "already visible", never to "invisible". Same reasoning applies to
+   .check-land, .spine-item and .kolam below. */
+.js .stamp-in {
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+}
+.stamp-in.is-visible {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-stamp);
+  transition-delay: var(--stagger, 0ms);
+}
+
+/* Optional ink-bleed refinement — a ghost of the same shape offset 2px.
+   Applied selectively; skipped on lists over 6 items. */
+.ink-bleed {
+  position: relative;
+}
+.ink-bleed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translate(2px, 2px) scale(1.02);
+  background: currentColor;
+  opacity: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.ink-bleed.is-visible::after {
+  animation: bleed var(--dur-base) var(--ease-out) forwards;
+  animation-delay: var(--stagger, 0ms);
+}
+@keyframes bleed {
+  from { opacity: 0.08; transform: translate(2px, 2px) scale(1.02); }
+  to { opacity: 0; transform: translate(2px, 2px) scale(1); }
+}
+
+/* §3.4 Diagonal spine reveal. Entry offset runs *along* the diagonal,
+   so the column assembles as if drawn on its slanted axis. */
+.js .spine-item:not(.is-revealing) {
+  opacity: 0;
+}
+.spine-item.is-revealing {
+  opacity: 0;
+  animation: spine-in var(--dur-base) var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes spine-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--i, 0) * var(--spine-step) + 18px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(calc(var(--i, 0) * var(--spine-step)));
+  }
+}
+
+/* §3.5 Kolam divider draw-on. Kolam is traditionally drawn unbroken,
+   so a single continuous path reads correctly. */
+.js .kolam path {
+  stroke-dasharray: var(--len, 600);
+  stroke-dashoffset: var(--len, 600);
+}
+.kolam.is-visible path {
+  animation: draw-thread var(--kolam-dur, 700ms) var(--ease-out) forwards;
+}
+
+/* §3.6 Parallax border ornament. Scroll-driven only where supported;
+   a JS scroll listener costs more than the effect is worth here. */
+@supports (animation-timeline: scroll()) {
+  .border-ornament {
+    animation: drift linear;
+    animation-timeline: scroll();
+  }
+  @keyframes drift {
+    to { transform: translateY(-30%); }
+  }
+}
+
+/* ============================================================
+   §4 NAVIGATION AND TRANSITIONS
+   ============================================================ */
+
+/* §4.1 Selvedge panel slide. Woven edge leads, content settles behind.
+   No backdrop blur — unreliable and expensive on low-end GPUs. */
+.selvedge-backdrop {
+  opacity: 0;
+  animation: backdrop-in 240ms var(--ease-out) forwards;
+}
+@keyframes backdrop-in {
+  to { opacity: 0.5; }
+}
+.selvedge-edge {
+  animation: slide-in 240ms var(--ease-out) forwards;
+}
+.selvedge-body {
+  animation: slide-in 280ms var(--ease-out) 60ms forwards;
+  transform: translateX(100%);
+}
+@keyframes slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.is-closing .selvedge-edge,
+.is-closing .selvedge-body {
+  animation: slide-out 200ms var(--ease-out) forwards;
+}
+@keyframes slide-out {
+  to { transform: translateX(100%); }
+}
+
+/* Top-anchored variant for the mobile nav drawer. Same principle: the woven
+   selvedge draws first and the list settles in behind it. */
+.selvedge-lead {
+  transform-origin: left center;
+  animation: selvedge-draw 240ms var(--ease-out) forwards;
+}
+@keyframes selvedge-draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.selvedge-follow {
+  opacity: 0;
+  animation: slide-down 280ms var(--ease-out) 60ms forwards;
+}
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* §4.2 Thread underline. One element that travels, not a bar that jumps.
+   3px tall with a sawtooth edge, never a plain rect. */
+.thread-underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 1px;
+  transform-origin: left center;
+  background: currentColor;
+  clip-path: polygon(
+    0 0, 8% 60%, 16% 0, 24% 60%, 32% 0, 40% 60%, 48% 0, 56% 60%,
+    64% 0, 72% 60%, 80% 0, 88% 60%, 96% 0, 100% 40%, 100% 100%, 0 100%
+  );
+  transition: transform 260ms var(--ease-settle);
+  /* Deliberately no `will-change`: this moves only on a route change, and a
+     permanent compositing hint costs memory on every page for the whole
+     session. Hints are added at animation start and dropped at the end
+     (see craft/motion.ts) — never left on. */
+}
+
+/* §4.3 Sheared pattern-wipe page transition. Leading edge is diagonal.
+   Never gates content — the wipe-out fires on first paint with a hard
+   600ms timeout, and the page beneath is interactive from frame one. */
+.pattern-wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 7vh) 100%, 0 100%);
+  transform: translateX(-100%);
+}
+.pattern-wipe.is-in {
+  animation: wipe-in 280ms var(--ease-out) forwards;
+}
+.pattern-wipe.is-out {
+  animation: wipe-out 280ms var(--ease-out) forwards;
+}
+@keyframes wipe-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes wipe-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+/* ============================================================
+   §5 THE VERIFICATION MOMENT (Tier A)
+   ============================================================ */
+
+/* §5.1 Success — draw, fill, settle. Then STOP.
+   A permanently animating success state reads as pending, not resolved. */
+.seal-ring {
+  stroke-dasharray: 640;
+  stroke-dashoffset: 640;
+  animation: draw-seal 700ms var(--ease-stamp) forwards;
+}
+.seal-fill {
+  opacity: 0;
+  animation: seal-fadein 320ms var(--ease-out) 620ms forwards;
+}
+.seal-mark {
+  opacity: 0;
+  transform-origin: center;
+  animation: seal-stamp 320ms var(--ease-stamp) 820ms forwards;
+}
+.seal-group {
+  transform-origin: center;
+  animation: seal-pulse 300ms var(--ease-out) 1140ms;
+}
+@keyframes draw-seal {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes seal-fadein {
+  to { opacity: 1; }
+}
+@keyframes seal-stamp {
+  from { opacity: 0; transform: scale(1.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+/* One pulse. Not a loop, not a shimmer, not a glow. */
+@keyframes seal-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* §5.2 Sequential check landing. The stagger does real semantic work —
+   it makes the system look like it is *checking* rather than asserting.
+   Sequence completes ~1680ms; that is the maximum. */
+.check-land {
+  opacity: 0;
+  animation: check-land var(--dur-base) var(--ease-stamp) forwards;
+  animation-delay: calc(1000ms + var(--n, 0) * 120ms);
+}
+@keyframes check-land {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* §5.3 Failure — a different motion language.
+   No flash, no shake, no rapid pulse, nothing under 300ms. Someone
+   receiving a counterfeit warning already has a bad outcome; do not
+   add panic on top. Heavy in, heavy out. */
+.fail-seal {
+  animation: fail-desaturate var(--dur-slow) var(--ease-heavy) forwards;
+}
+@keyframes fail-desaturate {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0.55; transform: translateY(4px); }
+}
+.fail-panel {
+  opacity: 0;
+  animation: fail-settle 500ms var(--ease-heavy) forwards;
+}
+@keyframes fail-settle {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+/* The checks arrive together here. A stagger on a failure builds dread —
+   the wrong emotional shape entirely. */
+.fail-checks {
+  opacity: 0;
+  animation: fail-settle 500ms var(--ease-heavy) 200ms forwards;
+}
+/* Geometry softens on this screen. Confident angularity reads as hostile
+   against a warning; this is the one place the vocabulary calms down. */
+.calm-geometry .row-shear,
+.calm-geometry .row-shear-alt,
+.calm-geometry [class*="rough-"],
+.calm-geometry [class*="torn-"] {
+  clip-path: none;
+}
+.calm-geometry .shear-bar,
+.calm-geometry .shear-bar > *,
+.calm-geometry .spine-item {
+  transform: none;
+}
+/* The warning text itself never animates. It must be readable on arrival. */
+
+/* ============================================================
+   §6 STAGED PRODUCTION TIMELINE (Tier B)
+   ============================================================ */
+
+/* §6.1 Weave progress. Stages complete as a weaving pattern, not a bar. */
+.weave-thread {
+  stroke-dasharray: var(--len, 60);
+  stroke-dashoffset: var(--len, 60);
+}
+.weave-thread.is-done {
+  animation: draw-thread 400ms var(--ease-out) forwards;
+  animation-delay: calc(var(--n, 0) * 60ms);
+}
+/* The artisan's payoff for weeks of documentation — this one earns
+   feature length. Gold sweeps across the resolved motif. */
+.weave-complete .weave-sweep {
+  opacity: 0;
+  transform-origin: left center;
+  animation: weave-sweep 500ms var(--ease-settle) 240ms forwards;
+}
+@keyframes weave-sweep {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+/* §6.2 Photo settle. Uploads drop and settle as if physically placed.
+   The rotation correction is what sells it — keep it under 2deg. */
+.photo-settle {
+  animation: settle 380ms var(--ease-settle) forwards;
+}
+@keyframes settle {
+  from { opacity: 0; transform: translateY(-8px) rotate(-1.5deg) scale(1.02); }
+  to { opacity: 1; transform: none; }
+}
+
+/* §6.3 Stage-complete stamp. Always paired with a text status change —
+   animation never carries completion on its own. */
+.stage-stamp {
+  animation: stage-stamp 280ms var(--ease-stamp) forwards;
+  transform-origin: center;
+}
+@keyframes stage-stamp {
+  from { opacity: 0; transform: scale(1.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================================
+   §7 MICRO-INTERACTIONS
+   ============================================================ */
+
+/* §7.1 Buttons press *into* the surface. No ripple — ripple is Material's
+   signature and reads as generic. */
+.press {
+  transition: transform var(--dur-fast) var(--ease-stamp);
+}
+.press:active {
+  transform: scale(0.98);
+}
+.press:active:not(:disabled) {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+/* §7.2 Torn-edge selection highlight. A brush being drawn, not a box
+   appearing — hence the left-to-right wipe. Direction matters. */
+.torn-highlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  clip-path: inset(0 100% 0 0);
+}
+.torn-highlight.is-on {
+  transition: clip-path 220ms var(--ease-out);
+  clip-path: inset(0 0 0 0);
+}
+/* Spatter is geometry, not motion — it renders under reduced motion too.
+   It must never fall under text. */
+.spatter {
+  opacity: 0;
+}
+.torn-highlight.is-on .spatter {
+  animation: spatter-in 120ms var(--ease-out) 260ms forwards;
+}
+@keyframes spatter-in {
+  to { opacity: 0.6; }
+}
+
+/* §7.3 Sheared bar fill. scaleX from the left origin — never width. */
+.bar-fill {
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 400ms var(--ease-settle);
+}
+/* The numeric label sits outside the scaling element so it neither
+   stretches with the fill nor inherits the shear. */
+
+/* §7.5 Input focus. Immediate and unmissable. No glow, no scale. */
+.focus-craft:focus-visible {
+  outline: 3px solid #1f6f78;
+  outline-offset: 3px;
+  transition: outline-color 60ms linear;
+}
+
+/* ============================================================
+   §8 LOADING AND EMPTY STATES
+   ============================================================ */
+
+/* §8.1 Charkha loader. Always paired with a text label — never bare. */
+.charkha {
+  transform-origin: center;
+  animation: spin 1.6s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+/* Shuttle variant for short, known-duration operations. */
+.shuttle {
+  animation: shuttle 1.2s var(--ease-settle) infinite alternate;
+}
+@keyframes shuttle {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--throw, 64px)); }
+}
+
+/* §8.2 Skeletons are flat. No shimmer sweep — a large-area luminance
+   animation is expensive and mildly nauseating at scale. */
+.skeleton {
+  background: rgba(43, 29, 20, 0.07);
+  border-radius: 12px;
+}
+
+/* §8.3 Empty states. An uncarved motif that completes when content lands. */
+.motif-empty path {
+  stroke-dasharray: var(--len, 400);
+  stroke-dashoffset: var(--len, 400);
+  opacity: 0.35;
+}
+.motif-empty.is-filled path {
+  opacity: 1;
+  animation: draw-thread 500ms var(--ease-out) forwards;
+}
+
+/* ============================================================
+   §9 OFFLINE AND SYNC MOTION
+   Every state below is readable as text, not just icon state.
+   ============================================================ */
+
+/* Queued: no motion. Motion implies activity; queued is not active. */
+/* Syncing: deliberately slower than the page loader, to read as
+   background rather than foreground work. */
+.sync-spin {
+  transform-origin: center;
+  animation: spin 2s linear infinite;
+}
+.sync-stamp {
+  animation: stage-stamp 280ms var(--ease-stamp) forwards;
+}
+/* Failed: static icon plus text. Failures are never animated — see §5.3. */
+
+/* ============================================================
+   REDUCED MOTION — designed variants, not a blanket kill.
+   Elements land in final state; staggers collapse to simultaneous;
+   travel goes to zero while short fades remain (a fade under 200ms is
+   safe here and prevents jarring pop-in).
+   Geometry — shear, roughness, notches, torn edges — stays intact.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  /* §3.1 threads render drawn, headline fades with no travel. */
+  .hero-weave .warp line,
+  .hero-weave .weft line {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    opacity: 0.4;
+  }
+  .hero-weave.is-playing .hero-line {
+    animation: rm-fade 150ms linear forwards !important;
+    animation-delay: 0ms !important;
+  }
+
+  /* §3.2 no translation. */
+  .hero-weave.is-playing .type-crop {
+    animation: rm-fade 150ms linear forwards !important;
+  }
+
+  /* §3.3 opacity only, no transform, no stagger. */
+  .js .stamp-in {
+    transform: none;
+  }
+  .stamp-in.is-visible {
+    transition: opacity 150ms linear !important;
+    transition-delay: 0ms !important;
+    transform: none;
+  }
+  .ink-bleed::after {
+    display: none;
+  }
+
+  /* §3.4 items appear at their final spine offset. */
+  .spine-item.is-revealing {
+    animation: rm-fade 150ms linear forwards !important;
+    animation-delay: 0ms !important;
+    transform: translateX(calc(var(--i, 0) * var(--spine-step)));
+  }
+
+  /* §3.5 path renders complete. §3.6 ornament static. */
+  .kolam path {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+  .border-ornament {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* §4.1 panel and ornament fade together, no travel. Backdrop still fades. */
+  .selvedge-edge,
+  .selvedge-body,
+  .selvedge-lead,
+  .selvedge-follow {
+    animation: rm-fade 150ms linear forwards !important;
+    animation-delay: 0ms !important;
+    transform: none !important;
+  }
+  .selvedge-backdrop {
+    animation: backdrop-in 150ms linear forwards !important;
+  }
+
+  /* §4.2 indicator jumps. */
+  .thread-underline {
+    transition: none !important;
+  }
+
+  /* §4.3 cross-fade only. */
+  .pattern-wipe.is-in,
+  .pattern-wipe.is-out {
+    animation: rm-fade 120ms linear forwards !important;
+    transform: none !important;
+    clip-path: none;
+  }
+  .pattern-wipe.is-out {
+    animation-direction: reverse !important;
+  }
+
+  /* §5.1 seal renders complete and filled, one fade on the group. */
+  .seal-ring {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+  .seal-fill,
+  .seal-mark {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .seal-group {
+    animation: rm-fade 150ms linear forwards !important;
+  }
+
+  /* §5.2 all four appear at once. */
+  .check-land {
+    animation: rm-fade 150ms linear forwards !important;
+    animation-delay: 0ms !important;
+    transform: none !important;
+  }
+
+  /* §5.3 final state with a single 200ms fade. Keep the fade — an instant
+     hard cut to a counterfeit warning is jarring. */
+  .fail-seal {
+    animation: none !important;
+    opacity: 0.55;
+    transform: translateY(4px);
+  }
+  .fail-panel,
+  .fail-checks {
+    animation: rm-fade 200ms linear forwards !important;
+    animation-delay: 0ms !important;
+    transform: none !important;
+  }
+
+  /* §6 segments complete; finished motif gets one 200ms fade. */
+  .weave-thread,
+  .weave-thread.is-done {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+  .weave-complete .weave-sweep {
+    animation: rm-fade 200ms linear forwards !important;
+    transform: none !important;
+  }
+  .photo-settle {
+    animation: rm-fade 150ms linear forwards !important;
+    transform: none !important;
+  }
+  .stage-stamp,
+  .sync-stamp {
+    animation: none !important;
+    opacity: 1;
+    transform: none !important;
+  }
+
+  /* §7 press still registers as state, just without travel. */
+  .press:active {
+    transform: none;
+  }
+  /* Highlight appears instantly; spatter still renders — it is geometry. */
+  .torn-highlight.is-on {
+    transition: none !important;
+  }
+  .torn-highlight.is-on .spatter {
+    animation: none !important;
+    opacity: 0.6;
+  }
+  .bar-fill {
+    transition: none !important;
+  }
+
+  /* §8 static charkha; the text label carries the state. */
+  .charkha,
+  .shuttle,
+  .sync-spin {
+    animation: none !important;
+    transform: none !important;
+  }
+  .motif-empty path,
+  .motif-empty.is-filled path {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+
+  @keyframes rm-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}

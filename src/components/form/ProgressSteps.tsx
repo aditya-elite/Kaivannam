@@ -33,7 +33,13 @@ export function ProgressSteps({
                         : "bg-ink/10 text-muted"
                   }`}
                 >
-                  {done ? <IconCheck width={18} height={18} title="Done" /> : i + 1}
+                  {/* §6.3 — the check stamps down. The step's text state below
+                      changes with it; the animation never carries completion. */}
+                  {done ? (
+                    <IconCheck className="stage-stamp" width={18} height={18} title="Done" />
+                  ) : (
+                    i + 1
+                  )}
                 </span>
                 <span
                   className={`hidden text-center text-xs sm:block ${
@@ -43,8 +49,15 @@ export function ProgressSteps({
                   {label}
                 </span>
               </div>
+              {/* §2.1 / §7.3 — the connector is a parallelogram, and it fills
+                  by scaleX from the left origin. Never a width animation. */}
               {i < steps.length - 1 ? (
-                <span className={`h-1 flex-1 rounded ${done ? "bg-success" : "bg-ink/10"}`} />
+                <span className="shear-bar h-1.5 flex-1 overflow-hidden bg-ink/10">
+                  <span
+                    className="bar-fill block h-full bg-success"
+                    style={{ transform: `scaleX(${done ? 1 : 0})` }}
+                  />
+                </span>
               ) : null}
             </li>
           );

@@ -8,6 +8,7 @@ import { Button, Card, SectionHeading } from "@/components/ui";
 import { ProgressSteps } from "@/components/form/ProgressSteps";
 import { TextField, TextAreaField } from "@/components/form/fields";
 import { PhotoCapture } from "@/components/form/PhotoCapture";
+import { Charkha } from "@/components/craft/Charkha";
 import {
   IconArrowRight,
   IconArrowLeft,
@@ -147,7 +148,9 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
     }
   }, [draft, authed, router]);
 
-  if (!draft) return <p className="text-muted">{t("common.loading")}</p>;
+  // §8.1 — never a bare spinner, and never a shimmer skeleton. Charkha plus a
+  // text label that says what is happening.
+  if (!draft) return <Charkha label={t("common.loading")} />;
   if (doneId) return <DoneCard id={doneId} />;
 
   const stepLabels = [t("reg.step.details"), t("reg.step.story"), t("reg.step.stages"), t("reg.step.review")];

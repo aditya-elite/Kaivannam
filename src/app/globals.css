@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ============================================================
-   Kalāsūtra design system base.
+   Kaivannam design system base.
    Warm khadi-cream base. WCAG 2.1 AA is a build constraint, not polish.
    Contrast (verified against #FDF8F0 cream and #FFFFFF surface):
      ink #2B1D14 on cream      → 13.6:1  (AAA)
@@ -51,11 +51,15 @@
     text-wrap: balance;
   }
 
-  /* Visible focus for keyboard users on every interactive element. */
+  /* Visible focus for keyboard users on every interactive element.
+     Per motion spec §7.1/§7.5: 3px, offset 3px, never animated, never removed.
+     Only the colour transitions, and only for 60ms — indication must be
+     immediate. No glow, no scale. */
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
     outline: 3px solid #1F6F78; /* teal */
-    outline-offset: 2px;
+    outline-offset: 3px;
     border-radius: 4px;
+    transition: outline-color 60ms linear;
   }
 
   /* Print: strip site chrome so a QR tag prints clean. */
@@ -66,12 +70,16 @@
     main { padding: 0 !important; max-width: none !important; }
   }
 
-  /* Honor users who prefer less motion — disables the splash + decorative anims. */
+  /* Reduced motion: this is the safety net only. Every animation in motion.css
+     overrides it with a *designed* reduced variant — elements land in final
+     state, staggers collapse, travel goes to zero, short fades remain.
+     Geometry (shear, roughness, notches) is untouched by any of it. */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
-      animation-duration: 0.001ms !important;
+      animation-duration: 1ms !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }

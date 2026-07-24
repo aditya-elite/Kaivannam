@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🧵 Kaivanam — Artisan Craft Provenance Platform
+# 🧵 Kaivannam — Artisan Craft Provenance Platform
 
-**कलासूत्र · கலாசூத்ரா · "the thread of art"**
+**कैवण्णम् · கைவண்ணம் · "the colour of the hand"**
 
 *Linking every handcrafted item to a secure, tamper-evident record of the hand that made it.*
 
@@ -42,7 +42,7 @@ theirs. The result: falling artisan income, erosion of cultural heritage, and de
 of traditional craftsmanship.
 
 ### The solution
-**Kalāsūtra** links a physical craft object to a **tamper-evident digital record** of
+**Kaivannam** links a physical craft object to a **tamper-evident digital record** of
 its origin and authenticity, using low-cost tags (QR now, NFC-ready later):
 
 - Artisans document their work **photo-by-photo at each stage of creation** — not
@@ -348,7 +348,7 @@ content hashes + metadata.
 
 ## 🤖 AI/ML Workflow (OCR)
 
-Kalāsūtra uses **on-device OCR** — chosen deliberately for the rural context: it works
+Kaivannam uses **on-device OCR** — chosen deliberately for the rural context: it works
 **offline**, needs **no API key**, and **no personal ID data leaves the phone**.
 
 ```mermaid
@@ -375,7 +375,7 @@ flowchart LR
 
 ## 🔌 Hardware Components, Circuit / Wiring Diagrams
 
-**Not applicable** — Kalāsūtra is a software platform. The only physical component is the
+**Not applicable** — Kaivannam is a software platform. The only physical component is the
 **low-cost printed QR tag** attached to each item (NFC-ready as a future upgrade). No
 microcontrollers, sensors, or wiring are involved; it runs on the artisan's existing
 Android phone.
@@ -482,6 +482,6 @@ _Local demo entry points:_ `/` · `/artisans` · `/product/KS-4F7Q-9XB2-M3KP` ·
 
 _This is a demonstration build. Records shown are on a clearly-labelled test system._
 
-**Kalāsūtra — proof of the hand that made it.**
+**Kaivannam — proof of the hand that made it.**
 
 </div>

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useT } from "@/lib/i18n/provider";
 import { compressImage } from "@/lib/client/image";
+import { Charkha } from "@/components/craft/Charkha";
 import { IconCamera, IconClose } from "@/components/icons";
 
 // Capture/add photos for a stage. Opens the rear camera on phones (capture
@@ -39,7 +40,10 @@ export function PhotoCapture({
       {photos.length > 0 ? (
         <ul className="flex flex-wrap gap-3">
           {photos.map((src, i) => (
-            <li key={i} className="relative">
+            /* §6.2 — uploads do not fade in. They drop and settle as if
+               physically placed; the sub-2deg rotation correction is what sells
+               it. Under reduced motion this is a 150ms fade with no transform. */
+            <li key={src.slice(0, 48) + i} className="photo-settle relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
@@ -74,11 +78,15 @@ export function PhotoCapture({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        className="inline-flex min-h-tap items-center gap-2 rounded-xl border-2 border-dashed border-indigo/40 bg-indigo/5 px-5 py-3 text-base font-semibold text-indigo hover:border-indigo disabled:opacity-60"
+        className="press inline-flex min-h-tap items-center gap-2 rounded-xl border-2 border-dashed border-indigo/40 bg-indigo/5 px-5 py-3 text-base font-semibold text-indigo hover:border-indigo disabled:opacity-60"
       >
         <IconCamera width={22} height={22} />
-        {busy ? t("common.loading") : photos.length ? t("common.addPhoto") : t("reg.addStagePhoto")}
+        {photos.length ? t("common.addPhoto") : t("reg.addStagePhoto")}
       </button>
+
+      {/* §8.1 — never a bare spinner. The label says what is happening, and it
+          lives in a live region so it is announced, not just shown. */}
+      {busy ? <Charkha label={t("common.loading")} size={28} /> : null}
     </div>
   );
 }

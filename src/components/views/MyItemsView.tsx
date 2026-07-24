@@ -8,6 +8,9 @@ import { TierBadge, type Tier } from "@/components/TierBadge";
 import { formatDate } from "@/lib/format";
 import { signOutAction } from "@/app/login/actions";
 import { listDrafts, deleteDraft, stagesDone, type Draft } from "@/lib/client/draft";
+import { WeaveProgress } from "@/components/craft/WeaveProgress";
+import { SyncStatus } from "@/components/craft/Charkha";
+import { EmptyMotif } from "@/components/craft/EmptyMotif";
 import { IconCamera, IconArrowRight, IconShield, IconClose } from "@/components/icons";
 
 const CURRENT_KEY = "ks_current_draft";
@@ -84,11 +87,17 @@ export function MyItemsView({
               return (
                 <li key={d.id}>
                   <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
+                    <div className="min-w-0 space-y-2">
                       <p className="text-lg font-bold">{d.title || t("reg.itemTitle")}</p>
                       <p className="text-sm text-muted">
                         {t("reg.stageProgress", { done, left: 4 - done })}
                       </p>
+                      {/* §6.1 — documented stages as a weave completing. */}
+                      <WeaveProgress done={done} label={`${done}/4`} />
+                      {/* §9 — a draft lives only on this device, so it is
+                          queued, and queued is deliberately static: motion
+                          implies activity. The text says so either way. */}
+                      <SyncStatus state="queued" label={t("sync.queued")} />
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <Link
@@ -122,9 +131,7 @@ export function MyItemsView({
             {t("profile.items")}
           </h2>
           {published.length === 0 ? (
-            <Card>
-              <p className="text-base text-muted">{t("profile.noItems")}</p>
-            </Card>
+            <EmptyMotif title={t("empty.title")} body={t("profile.noItems")} />
           ) : (
             <ul className="grid gap-3 sm:grid-cols-2">
               {published.map((p) => (
@@ -144,6 +151,10 @@ export function MyItemsView({
                       ) : null}
                     </div>
                   </Link>
+                  {/* Sealed on the server — a single check stamp, then static.
+                      Never a persistent animation on a resolved state. Outside
+                      the link so the live region is not read as part of it. */}
+                  <SyncStatus state="synced" label={t("sync.synced")} />
                 </li>
               ))}
             </ul>

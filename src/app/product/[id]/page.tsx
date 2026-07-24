@@ -9,7 +9,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  return { title: `Verify ${id} — Kalāsūtra` };
+  return { title: `Verify ${id} — Kaivannam` };
 }
 
 export default async function ProductVerifyPage({

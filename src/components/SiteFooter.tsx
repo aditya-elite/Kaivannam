@@ -14,7 +14,7 @@ export function SiteFooter() {
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15">
               <IconThread width={22} height={22} />
             </span>
-            <span className="text-xl font-extrabold">Kalāsūtra</span>
+            <span className="text-xl font-extrabold">Kaivannam</span>
           </div>
           <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-base">
             <Link href="/artisans" className="text-white/90 hover:text-white hover:underline">

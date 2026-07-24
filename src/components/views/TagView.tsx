@@ -29,7 +29,7 @@ export function TagView({
         <div className="flex items-center justify-center gap-2">
           <IconThread width={20} height={20} />
           <span className="text-lg font-extrabold">
-            Kalā<span className="text-terracotta">sūtra</span>
+            Kai<span className="text-terracotta">vannam</span>
           </span>
         </div>
         <p className="mt-1 text-xs uppercase tracking-widest text-muted">{t("app.tagline")}</p>

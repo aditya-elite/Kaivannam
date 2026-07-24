@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 
 /**
  * Craft splash — mechanics adapted from the provided animation.css (float +
- * thread shimmer + staggered reveal), re-skinned to the Kalāsūtra palette and
+ * thread shimmer + staggered reveal), re-skinned to the Kaivannam palette and
  * wordmark. Shows once per browser session, auto-dismisses, and is fully
  * disabled for users who prefer reduced motion (handled in globals.css).
  */
-const WORD = "कलासूत्र";
+const WORD = "कैवण्णम्";
 
 export function Splash() {
   const [show, setShow] = useState(false);
@@ -25,7 +25,7 @@ export function Splash() {
   if (!show) return null;
 
   return (
-    <div className="splash" role="status" aria-label="Kalāsūtra is loading">
+    <div className="splash" role="status" aria-label="Kaivannam is loading">
       <div className="splash__word" aria-hidden="true">
         {WORD.split("").map((ch, i) => (
           <span
@@ -37,7 +37,7 @@ export function Splash() {
           </span>
         ))}
       </div>
-      <div className="splash__tagline">Kalāsūtra · कलासूत्र · கலாசூத்ரா</div>
+      <div className="splash__tagline">Kaivannam · कैवण्णम् · கைவண்ணம்</div>
     </div>
   );
 }

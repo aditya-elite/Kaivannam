@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useI18n } from "@/lib/i18n/provider";
 import { LOCALES, type LocaleCode } from "@/lib/i18n/config";
+import { TornHighlight } from "./craft/TornHighlight";
 import { IconGlobe, IconCheck } from "./icons";
 
 /**
@@ -44,15 +45,19 @@ export function LanguageSwitcher() {
           aria-label={t("nav.language")}
           className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-ink/10 bg-surface shadow-lift"
         >
-          {ready.map((l) => {
+          {ready.map((l, i) => {
             const active = l.code === locale;
             return (
-              <li key={l.code} role="option" aria-selected={active}>
+              <li key={l.code} role="option" aria-selected={active} className="relative">
+                {/* §7.2 — the selected row is a torn paint stroke, not a tinted
+                    rectangle. Behind the text, so contrast is measured against
+                    the stroke; aria-selected above carries the actual state. */}
+                {active ? <TornHighlight index={i} /> : null}
                 <button
                   type="button"
                   onClick={() => setLocale(l.code as LocaleCode)}
-                  className={`flex min-h-tap w-full items-center justify-between gap-2 px-4 py-3 text-left text-base hover:bg-cream ${
-                    active ? "font-bold text-indigo" : "text-ink"
+                  className={`relative z-10 flex min-h-tap w-full items-center justify-between gap-2 px-4 py-3 text-left text-base hover:bg-cream/60 ${
+                    active ? "font-bold text-ink" : "text-ink"
                   }`}
                   lang={l.code}
                 >

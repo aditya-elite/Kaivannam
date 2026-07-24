@@ -1,4 +1,4 @@
-// Kalāsūtra data model.
+// Kaivannam data model.
 // IMPORTANT: no image binaries are stored here — only URLs, hashes, and metadata.
 // Files live in object storage (src/lib/storage.ts). Swap `provider` to postgresql
 // in production; the app code does not depend on the DB engine.

@@ -7,7 +7,7 @@ import type { LocaleCode } from "./config";
 export type Dict = Record<string, string>;
 
 const en: Dict = {
-  "app.name": "Kalāsūtra",
+  "app.name": "Kaivannam",
   "app.tagline": "Proof of the hand that made it",
 
   "nav.home": "Home",
@@ -45,7 +45,7 @@ const en: Dict = {
 
   "home.heroTitle": "Every craft carries the story of its maker",
   "home.heroSub":
-    "Kalāsūtra links a handmade item to a secure record of who made it, where, and how — stage by stage. Scan the tag on a product to see its full story.",
+    "Kaivannam links a handmade item to a secure record of who made it, where, and how — stage by stage. Scan the tag on a product to see its full story.",
   "home.ctaCheck": "Check a product",
   "home.ctaBrowse": "Meet the artisans",
   "home.ctaRegister": "Register your craft",
@@ -64,7 +64,7 @@ const en: Dict = {
 
   "artisans.title": "Artisan register",
   "artisans.subtitle":
-    "Browse the makers on Kalāsūtra. Every profile shows how their identity has been checked.",
+    "Browse the makers on Kaivannam. Every profile shows how their identity has been checked.",
   "artisans.searchPlaceholder": "Search by name, craft, or region",
   "artisans.filterCraft": "Craft",
   "artisans.filterState": "State",
@@ -129,6 +129,46 @@ const en: Dict = {
     "This is a demonstration record on a test system. It is not yet a permanent public record.",
   "verify.fingerprint": "Secure fingerprint (digital)",
   "verify.ledgerSeq": "Record position",
+
+  // Announced by the live region the moment data arrives — never tied to
+  // animation timing, so a screen reader gets the verdict immediately.
+  "verify.announce.authentic":
+    "Verification complete. Authentic — the record matches this tag.",
+  "verify.announce.caution":
+    "Verification complete. A record exists, but the maker's identity is not yet verified.",
+  "verify.announce.tampered":
+    "Verification complete. Warning: this record does not match its tag.",
+  "verify.announce.notFound": "Verification complete. No record was found for this tag.",
+  "verify.checksTitle": "What we checked",
+  "verify.checkPassed": "Verified",
+  "verify.checkFailed": "Not verified",
+  "verify.productNumber": "Product number",
+  "verify.checkAnother": "Check another product",
+  "verify.viewMaker": "View maker profile",
+
+  // Failure state: never strand someone with a warning and no path forward.
+  "verify.nextTitle": "What you can do now",
+  "verify.next.report": "Report this item",
+  "verify.next.reportBody":
+    "Send the product number below to the Kaivannam team. Reporting is free and helps protect the maker whose work may have been copied.",
+  "verify.next.contact": "Contact the maker's cooperative",
+  "verify.next.contactBody":
+    "Cooperatives keep their own paper records. They can often confirm or rule out an item that fails a digital check.",
+  "verify.next.physical": "What physical verification means",
+  "verify.next.physicalBody":
+    "A digital record is one signal, not proof on its own. Check the weave, the selvedge, the dye edges and the maker's mark against the cooperative's reference before you buy.",
+  "verify.unverifiedClaim": "Unverified claim",
+  "verify.claimNote":
+    "The details below are what the tag claims. Because the record did not verify, treat them as unconfirmed.",
+  "verify.confirmBody": "This record failed verification. Open the maker's profile anyway?",
+  "verify.confirmYes": "Yes, open anyway",
+
+  "sync.queued": "Waiting to send",
+  "sync.syncing": "Sending…",
+  "sync.synced": "Sent",
+  "sync.failed": "Not sent — will retry",
+  "loading.checking": "Checking the record…",
+  "empty.title": "Nothing here yet",
 
   "stage.RAW_MATERIALS": "Raw materials",
   "stage.CRAFTING": "Crafting",
@@ -244,12 +284,12 @@ const hi: Dict = {
   "common.takePhoto": "फ़ोटो लें",
   "home.heroTitle": "हर शिल्प अपने कारीगर की कहानी कहता है",
   "home.heroSub":
-    "कलासूत्र एक हस्तनिर्मित वस्तु को इस सुरक्षित रिकॉर्ड से जोड़ता है कि इसे किसने, कहाँ और कैसे बनाया — चरण दर चरण। पूरी कहानी देखने के लिए उत्पाद पर लगे टैग को स्कैन करें।",
+    "कैवण्णम् एक हस्तनिर्मित वस्तु को इस सुरक्षित रिकॉर्ड से जोड़ता है कि इसे किसने, कहाँ और कैसे बनाया — चरण दर चरण। पूरी कहानी देखने के लिए उत्पाद पर लगे टैग को स्कैन करें।",
   "home.ctaCheck": "उत्पाद जाँचें",
   "home.ctaBrowse": "कारीगरों से मिलें",
   "home.ctaRegister": "अपना शिल्प पंजीकृत करें",
   "artisans.title": "कारीगर सूची",
-  "artisans.subtitle": "कलासूत्र के कारीगरों को देखें। हर प्रोफ़ाइल दिखाती है कि उनकी पहचान कैसे जाँची गई।",
+  "artisans.subtitle": "कैवण्णम् के कारीगरों को देखें। हर प्रोफ़ाइल दिखाती है कि उनकी पहचान कैसे जाँची गई।",
   "artisans.searchPlaceholder": "नाम, शिल्प या क्षेत्र से खोजें",
   "artisans.viewProfile": "प्रोफ़ाइल देखें",
   "tier.SELF_DECLARED.label": "स्व-घोषित कारीगर",
@@ -264,6 +304,39 @@ const hi: Dict = {
   "verify.madeBy": "निर्माता",
   "verify.materials": "सामग्री",
   "verify.timeline": "इसे कैसे बनाया गया",
+  "verify.tampered": "चेतावनी: यह रिकॉर्ड मेल नहीं खाता",
+  "verify.notFound": "इस टैग के लिए कोई रिकॉर्ड नहीं मिला।",
+  "verify.checksTitle": "हमने क्या जाँचा",
+  "verify.checkPassed": "सत्यापित",
+  "verify.checkFailed": "सत्यापित नहीं",
+  "verify.productNumber": "उत्पाद नंबर",
+  "verify.checkAnother": "दूसरा उत्पाद जाँचें",
+  "verify.announce.authentic": "जाँच पूरी हुई। प्रामाणिक — रिकॉर्ड इस टैग से मेल खाता है।",
+  "verify.announce.caution":
+    "जाँच पूरी हुई। रिकॉर्ड मौजूद है, लेकिन निर्माता की पहचान अभी सत्यापित नहीं है।",
+  "verify.announce.tampered": "जाँच पूरी हुई। चेतावनी: यह रिकॉर्ड अपने टैग से मेल नहीं खाता।",
+  "verify.announce.notFound": "जाँच पूरी हुई। इस टैग के लिए कोई रिकॉर्ड नहीं मिला।",
+  "verify.nextTitle": "अब आप क्या कर सकते हैं",
+  "verify.next.report": "इस वस्तु की शिकायत करें",
+  "verify.next.reportBody":
+    "नीचे दिया गया उत्पाद नंबर कैवण्णम् टीम को भेजें। शिकायत निःशुल्क है और उस कारीगर की रक्षा करती है जिसकी कारीगरी की नकल हुई हो सकती है।",
+  "verify.next.contact": "कारीगर की सहकारी समिति से संपर्क करें",
+  "verify.next.contactBody":
+    "सहकारी समितियाँ अपने कागज़ी रिकॉर्ड रखती हैं। डिजिटल जाँच में विफल वस्तु की पुष्टि या खंडन वे प्रायः कर सकती हैं।",
+  "verify.next.physical": "भौतिक सत्यापन का क्या अर्थ है",
+  "verify.next.physicalBody":
+    "डिजिटल रिकॉर्ड एक संकेत है, अपने आप में प्रमाण नहीं। खरीदने से पहले बुनाई, किनारा, रंगाई के किनारे और कारीगर का चिह्न सहकारी समिति के नमूने से मिलाकर देखें।",
+  "verify.unverifiedClaim": "असत्यापित दावा",
+  "verify.claimNote":
+    "नीचे दिए गए विवरण वही हैं जो टैग दावा करता है। रिकॉर्ड सत्यापित न होने के कारण इन्हें अपुष्ट मानें।",
+  "verify.confirmBody": "यह रिकॉर्ड सत्यापन में विफल रहा। फिर भी निर्माता का प्रोफ़ाइल खोलें?",
+  "verify.confirmYes": "हाँ, फिर भी खोलें",
+  "sync.queued": "भेजने की प्रतीक्षा में",
+  "sync.syncing": "भेजा जा रहा है…",
+  "sync.synced": "भेज दिया गया",
+  "sync.failed": "नहीं भेजा गया — फिर कोशिश होगी",
+  "loading.checking": "रिकॉर्ड जाँचा जा रहा है…",
+  "empty.title": "यहाँ अभी कुछ नहीं है",
   "stage.RAW_MATERIALS": "कच्चा माल",
   "stage.CRAFTING": "निर्माण",
   "stage.FINISHING": "परिष्करण",
@@ -309,12 +382,12 @@ const ta: Dict = {
   "common.takePhoto": "படம் எடு",
   "home.heroTitle": "ஒவ்வொரு கைவினையும் அதை செய்தவரின் கதையை சுமக்கிறது",
   "home.heroSub":
-    "கலாசூத்ரா ஒரு கைவினைப் பொருளை, யார், எங்கு, எப்படி செய்தார்கள் என்ற பாதுகாப்பான பதிவுடன் — படிப்படியாக இணைக்கிறது. முழு கதையையும் பார்க்க பொருளின் குறியை ஸ்கேன் செய்யுங்கள்.",
+    "கைவண்ணம் ஒரு கைவினைப் பொருளை, யார், எங்கு, எப்படி செய்தார்கள் என்ற பாதுகாப்பான பதிவுடன் — படிப்படியாக இணைக்கிறது. முழு கதையையும் பார்க்க பொருளின் குறியை ஸ்கேன் செய்யுங்கள்.",
   "home.ctaCheck": "பொருளை சரிபார்க்கவும்",
   "home.ctaBrowse": "கைவினைஞர்களை சந்திக்கவும்",
   "home.ctaRegister": "உங்கள் கைவினையை பதிவு செய்யவும்",
   "artisans.title": "கைவினைஞர் பட்டியல்",
-  "artisans.subtitle": "கலாசூத்ராவின் கைவினைஞர்களை பாருங்கள். ஒவ்வொரு சுயவிவரமும் அவர்களின் அடையாளம் எப்படி சரிபார்க்கப்பட்டது என்பதைக் காட்டுகிறது.",
+  "artisans.subtitle": "கைவண்ணத்தின் கைவினைஞர்களை பாருங்கள். ஒவ்வொரு சுயவிவரமும் அவர்களின் அடையாளம் எப்படி சரிபார்க்கப்பட்டது என்பதைக் காட்டுகிறது.",
   "artisans.searchPlaceholder": "பெயர், கைவினை அல்லது பகுதி மூலம் தேடுங்கள்",
   "artisans.viewProfile": "சுயவிவரம் பார்க்க",
   "tier.SELF_DECLARED.label": "சுய-அறிவிப்பு கைவினைஞர்",
@@ -329,6 +402,42 @@ const ta: Dict = {
   "verify.madeBy": "செய்தவர்",
   "verify.materials": "பொருட்கள்",
   "verify.timeline": "இது எப்படி செய்யப்பட்டது",
+  "verify.tampered": "எச்சரிக்கை: இந்தப் பதிவு பொருந்தவில்லை",
+  "verify.notFound": "இந்த டேக்குக்கு எந்தப் பதிவும் கிடைக்கவில்லை.",
+  "verify.checksTitle": "நாங்கள் சரிபார்த்தவை",
+  "verify.checkPassed": "சரிபார்க்கப்பட்டது",
+  "verify.checkFailed": "சரிபார்க்கப்படவில்லை",
+  "verify.productNumber": "பொருள் எண்",
+  "verify.checkAnother": "வேறு பொருளைச் சரிபார்",
+  "verify.announce.authentic":
+    "சரிபார்ப்பு முடிந்தது. உண்மையானது — பதிவு இந்த டேக்குடன் பொருந்துகிறது.",
+  "verify.announce.caution":
+    "சரிபார்ப்பு முடிந்தது. பதிவு உள்ளது, ஆனால் செய்தவரின் அடையாளம் இன்னும் சரிபார்க்கப்படவில்லை.",
+  "verify.announce.tampered":
+    "சரிபார்ப்பு முடிந்தது. எச்சரிக்கை: இந்தப் பதிவு அதன் டேக்குடன் பொருந்தவில்லை.",
+  "verify.announce.notFound": "சரிபார்ப்பு முடிந்தது. இந்த டேக்குக்கு எந்தப் பதிவும் கிடைக்கவில்லை.",
+  "verify.nextTitle": "இப்போது நீங்கள் என்ன செய்யலாம்",
+  "verify.next.report": "இந்தப் பொருளைப் புகாரளி",
+  "verify.next.reportBody":
+    "கீழே உள்ள பொருள் எண்ணை கைவண்ணம் குழுவுக்கு அனுப்புங்கள். புகாரளிப்பது இலவசம்; நகலெடுக்கப்பட்டிருக்கக்கூடிய கைவினைஞரைப் பாதுகாக்க இது உதவும்.",
+  "verify.next.contact": "கைவினைஞரின் கூட்டுறவு சங்கத்தைத் தொடர்புகொள்",
+  "verify.next.contactBody":
+    "கூட்டுறவு சங்கங்கள் தங்கள் சொந்த காகிதப் பதிவுகளை வைத்திருக்கின்றன. டிஜிட்டல் சரிபார்ப்பில் தோல்வியடைந்த பொருளை அவர்களால் பெரும்பாலும் உறுதிப்படுத்தவோ நிராகரிக்கவோ முடியும்.",
+  "verify.next.physical": "நேரடிச் சரிபார்ப்பு என்றால் என்ன",
+  "verify.next.physicalBody":
+    "டிஜிட்டல் பதிவு ஒரு அறிகுறியே, தனியாக ஆதாரம் அல்ல. வாங்கும் முன் நெசவு, விளிம்பு, சாய விளிம்புகள், கைவினைஞரின் அடையாளம் ஆகியவற்றை கூட்டுறவு சங்கத்தின் மாதிரியுடன் ஒப்பிட்டுப் பாருங்கள்.",
+  "verify.unverifiedClaim": "சரிபார்க்கப்படாத கூற்று",
+  "verify.claimNote":
+    "கீழே உள்ள விவரங்கள் டேக் கூறுபவை மட்டுமே. பதிவு சரிபார்க்கப்படாததால் அவற்றை உறுதிப்படுத்தப்படாதவை எனக் கொள்ளுங்கள்.",
+  "verify.confirmBody":
+    "இந்தப் பதிவு சரிபார்ப்பில் தோல்வியடைந்தது. இருப்பினும் செய்தவரின் சுயவிவரத்தைத் திறக்கவா?",
+  "verify.confirmYes": "ஆம், இருப்பினும் திற",
+  "sync.queued": "அனுப்பக் காத்திருக்கிறது",
+  "sync.syncing": "அனுப்பப்படுகிறது…",
+  "sync.synced": "அனுப்பப்பட்டது",
+  "sync.failed": "அனுப்பப்படவில்லை — மீண்டும் முயற்சிக்கும்",
+  "loading.checking": "பதிவு சரிபார்க்கப்படுகிறது…",
+  "empty.title": "இங்கே இன்னும் எதுவும் இல்லை",
   "stage.RAW_MATERIALS": "மூலப்பொருட்கள்",
   "stage.CRAFTING": "செய்தல்",
   "stage.FINISHING": "முடித்தல்",

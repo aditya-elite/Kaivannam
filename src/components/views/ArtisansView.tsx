@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useT } from "@/lib/i18n/provider";
 import { SectionHeading } from "@/components/ui";
 import { TierBadge, type Tier } from "@/components/TierBadge";
+import { EmptyMotif } from "@/components/craft/EmptyMotif";
 import { IconSearch, IconArrowRight } from "@/components/icons";
 
 type Artisan = {
@@ -115,9 +116,7 @@ export function ArtisansView({ artisans }: { artisans: Artisan[] }) {
       </p>
 
       {filtered.length === 0 ? (
-        <p className="rounded-xl bg-surface p-6 text-base text-muted shadow-card">
-          {t("artisans.empty")}
-        </p>
+        <EmptyMotif title={t("empty.title")} body={t("artisans.empty")} />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((a) => (
