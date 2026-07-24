@@ -70,7 +70,7 @@ export function AdminView({
               name="rows"
               rows={5}
               placeholder={"2341 7658 9012 | Lakshmi Devi | Kanchipuram silk weaving | Kanchipuram"}
-              className="w-full rounded-xl border-2 border-ink/15 bg-surface px-4 py-3 font-mono text-sm focus:border-teal"
+              className="w-full rounded-xl border-2 border-ink/15 bg-surface px-4 py-3 product-id font-mono text-sm focus:border-teal"
             />
             <input
               name="note"
@@ -113,7 +113,7 @@ export function AdminView({
               name="rows"
               rows={5}
               placeholder={"GI-0146 | Kanchipuram Silk | Handloom | Kanchipuram, Tamil Nadu | Lakshmi Devi"}
-              className="w-full rounded-xl border-2 border-ink/15 bg-surface px-4 py-3 font-mono text-sm focus:border-teal"
+              className="w-full rounded-xl border-2 border-ink/15 bg-surface px-4 py-3 product-id font-mono text-sm focus:border-teal"
             />
             <input
               name="note"

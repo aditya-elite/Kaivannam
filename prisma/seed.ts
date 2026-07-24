@@ -206,94 +206,220 @@ async function main() {
     },
   });
 
-  // ── One fully sealed product with a 4-stage timeline + ledger entry ──
-  const productId = "KS-4F7Q-9XB2-M3KP";
+  // ── Sealed products with 4-stage timelines + an append-only ledger ──
+  //
+  // The collection page needs enough stock to read as a showroom rather than a
+  // near-empty shelf, so this seeds a catalogue rather than a single item.
+  // Every one of them goes through the *real* seal path — canonical record,
+  // content hash, ledger append, ECDSA signature — so each is genuinely
+  // verifiable and the QR endpoint serves a real signed payload. Nothing here
+  // is a display-only stub.
   const now = new Date();
   const dayMs = 864e5;
-  const stagesInput = [
-    { stage: "RAW_MATERIALS", url: "/samples/silk-raw.svg", note: "Mulberry silk yarn dyed with natural indigo and madder.", daysAgo: 21 },
-    { stage: "CRAFTING", url: "/samples/silk-crafting.svg", note: "Weaving the body on the pit loom.", daysAgo: 14 },
-    { stage: "FINISHING", url: "/samples/silk-finishing.svg", note: "Adding the zari temple border.", daysAgo: 4 },
-    { stage: "COMPLETED", url: "/samples/silk-completed.svg", note: "Finished six-yard saree, washed and pressed.", daysAgo: 1 },
-  ] as const;
+  let ledgerSeq = 0;
+  let prevHash = "0".repeat(64);
 
-  const product = await db.product.create({
-    data: {
-      id: productId,
-      artisanId: lakshmi.id,
-      title: "Kanchipuram temple-border silk saree",
-      materials: "Pure mulberry silk, natural indigo & madder dyes, pure zari",
-      storyText:
-        "This saree took three weeks on my pit loom. The temple border is a pattern my grandmother taught me. The peacock in the pallu is my family's mark.",
-      category: "Kanchipuram silk weaving",
-      status: "SEALED",
-      giNumber: "GI-0146",
-      giCertUrl: "/samples/silk-completed.svg",
-      giVerified: true,
-      giEntryId: lakshmiGi?.id ?? null,
-      sealedAt: now,
-    },
-  });
+  type Maker = {
+    id: string;
+    fullName: string;
+    craft: string;
+    region: string;
+    hiddenSignatureHash: string | null;
+    privateKeyPem: string | null;
+  };
 
-  const stageRecords = [];
-  for (const s of stagesInput) {
-    const capturedAt = new Date(now.getTime() - s.daysAgo * dayMs);
-    await db.stageEntry.create({
+  async function sealProduct(opts: {
+    id: string;
+    maker: Maker;
+    title: string;
+    materials: string;
+    storyText: string;
+    category: string;
+    priceInr: number | null;
+    giNumber?: string | null;
+    giEntryId?: string | null;
+    /** Photo per stage, oldest first. */
+    photos: readonly [string, string, string, string];
+    notes: readonly [string, string, string, string];
+    /** Days before "now" the piece was completed — drives "recently verified". */
+    completedDaysAgo: number;
+  }) {
+    const base = opts.completedDaysAgo;
+    const sealedAt = new Date(now.getTime() - base * dayMs);
+    const product = await db.product.create({
       data: {
-        productId: product.id,
-        stage: s.stage,
-        version: 1,
-        photoUrls: JSON.stringify([s.url]),
-        note: s.note,
-        capturedAt,
+        id: opts.id,
+        artisanId: opts.maker.id,
+        title: opts.title,
+        materials: opts.materials,
+        storyText: opts.storyText,
+        category: opts.category,
+        priceInr: opts.priceInr,
+        status: "SEALED",
+        giNumber: opts.giNumber ?? null,
+        giCertUrl: opts.giNumber ? opts.photos[3] : null,
+        giVerified: !!opts.giNumber,
+        giEntryId: opts.giEntryId ?? null,
+        sealedAt,
+        createdAt: new Date(now.getTime() - (base + 24) * dayMs),
       },
     });
-    stageRecords.push({
-      stage: s.stage,
-      version: 1,
-      capturedAt: capturedAt.toISOString(),
-      photoContentHashes: [sha256(s.url)],
-      note: s.note,
+
+    const STAGES = ["RAW_MATERIALS", "CRAFTING", "FINISHING", "COMPLETED"] as const;
+    // Stages run 20, 13, 4 and 1 days before completion.
+    const offsets = [20, 13, 4, 1];
+    const stageRecords = [];
+    for (let i = 0; i < STAGES.length; i++) {
+      const capturedAt = new Date(sealedAt.getTime() - offsets[i] * dayMs);
+      await db.stageEntry.create({
+        data: {
+          productId: product.id,
+          stage: STAGES[i],
+          version: 1,
+          photoUrls: JSON.stringify([opts.photos[i]]),
+          note: opts.notes[i],
+          capturedAt,
+        },
+      });
+      stageRecords.push({
+        stage: STAGES[i],
+        version: 1,
+        capturedAt: capturedAt.toISOString(),
+        photoContentHashes: [sha256(opts.photos[i])],
+        note: opts.notes[i],
+      });
+    }
+
+    // Canonical record + content hash (same shape as lib/product-record.ts).
+    const record = {
+      productId: product.id,
+      title: product.title,
+      materials: product.materials,
+      category: product.category,
+      storyText: product.storyText,
+      artisan: {
+        id: opts.maker.id,
+        fullName: opts.maker.fullName,
+        craft: opts.maker.craft,
+        region: opts.maker.region,
+      },
+      hiddenSignatureHash: opts.maker.hiddenSignatureHash,
+      stages: stageRecords,
+    };
+    const contentHash = sha256(canonical(record));
+
+    ledgerSeq += 1;
+    const entryHash = sha256(`${ledgerSeq}|${product.id}|${contentHash}|${prevHash}`);
+    await db.ledgerEntry.create({
+      data: {
+        seq: ledgerSeq,
+        productId: product.id,
+        contentHash,
+        prevHash,
+        entryHash,
+        backend: "local",
+        isTestnet: true,
+      },
     });
+    prevHash = entryHash;
+
+    // KEY 1 — sign the dynamic QR payload with the maker's private key. Makers
+    // without a keypair (lower tiers) still get a sealed record and a ledger
+    // entry; they simply have no signed QR, which the verify path handles.
+    const signature = opts.maker.privateKeyPem
+      ? signPayload(product.id, sealedAt.toISOString(), opts.maker.privateKeyPem)
+      : null;
+    await db.product.update({
+      where: { id: product.id },
+      data: {
+        contentHash,
+        signature,
+        qrIssuedAt: signature ? sealedAt : null,
+        qrPngUrl: signature ? `/api/products/${product.id}/qr` : null,
+      },
+    });
+    return product;
   }
 
-  // Build the canonical record + content hash (same shape as product-record.ts).
-  const record = {
-    productId: product.id,
-    title: product.title,
-    materials: product.materials,
-    category: product.category,
-    storyText: product.storyText,
-    artisan: { id: lakshmi.id, fullName: lakshmi.fullName, craft: lakshmi.craft, region: lakshmi.region },
-    hiddenSignatureHash: lakshmi.hiddenSignatureHash,
-    stages: stageRecords,
-  };
-  const contentHash = sha256(canonical(record));
+  const mLakshmi: Maker = { ...lakshmi, privateKeyPem: lakshmiKeys.privateKeyPem };
+  const mRama: Maker = { ...rama, privateKeyPem: ramaKeys.privateKeyPem };
+  const mMeena: Maker = { ...meena, privateKeyPem: null };
+  const mAnitha: Maker = { ...anitha, privateKeyPem: null };
 
-  // Genesis ledger append (seq 1).
-  const prevHash = "0".repeat(64);
-  const seq = 1;
-  const entryHash = sha256(`${seq}|${product.id}|${contentHash}|${prevHash}`);
-  await db.ledgerEntry.create({
-    data: { seq, productId: product.id, contentHash, prevHash, entryHash, backend: "local", isTestnet: true },
+  const SILK = ["/samples/silk-raw.svg", "/samples/silk-crafting.svg", "/samples/silk-finishing.svg", "/samples/silk-completed.svg"] as const;
+  const DOKRA = ["/samples/dokra.svg", "/samples/dokra.svg", "/samples/dokra.svg", "/samples/dokra.svg"] as const;
+  const TERRA = ["/samples/terracotta.svg", "/samples/terracotta.svg", "/samples/terracotta.svg", "/samples/terracotta.svg"] as const;
+  const KALAM = ["/samples/hero.svg", "/samples/hero.svg", "/samples/hero.svg", "/samples/hero.svg"] as const;
+
+  const silkNotes = [
+    "Mulberry silk yarn dyed with natural indigo and madder.",
+    "Weaving the body on the pit loom.",
+    "Adding the zari temple border.",
+    "Finished piece, washed and pressed.",
+  ] as const;
+  const dokraNotes = [
+    "Beeswax thread wound over the clay core.",
+    "Clay mould built up and dried in the sun.",
+    "Molten brass poured; the wax runs out.",
+    "Mould broken away, surface filed and polished.",
+  ] as const;
+  const terraNotes = [
+    "River clay from the Banas, wedged by foot.",
+    "Plaque shaped and the figure built up by hand.",
+    "Slip applied and left to leather-hard.",
+    "Fired in the wood kiln for eighteen hours.",
+  ] as const;
+  const kalamNotes = [
+    "Cotton treated with myrobalan and buffalo milk.",
+    "Outline drawn with the bamboo kalam pen.",
+    "Natural dyes filled in, washed between colours.",
+    "Final wash in running water and sun-dried.",
+  ] as const;
+
+  // The original demo product keeps its id — it is referenced in the README,
+  // the QR fixtures and any bookmark from an earlier run.
+  const productId = "KS-4F7Q-9XB2-M3KP";
+  await sealProduct({
+    id: productId, maker: mLakshmi,
+    title: "Kanchipuram temple-border silk saree",
+    materials: "Pure mulberry silk, natural indigo & madder dyes, pure zari",
+    storyText:
+      "This saree took three weeks on my pit loom. The temple border is a pattern my grandmother taught me. The peacock in the pallu is my family's mark.",
+    category: "Kanchipuram silk weaving", priceInr: 28500,
+    giNumber: "GI-0146", giEntryId: lakshmiGi?.id ?? null,
+    photos: SILK, notes: silkNotes, completedDaysAgo: 1,
   });
-  // KEY 1 — sign the dynamic QR payload with Lakshmi's private key.
-  const signature = signPayload(product.id, now.toISOString(), lakshmiKeys.privateKeyPem);
-  await db.product.update({
-    where: { id: product.id },
-    data: {
-      contentHash,
-      signature,
-      qrIssuedAt: now,
-      qrPngUrl: `/api/products/${product.id}/qr`,
-    },
-  });
+
+  const catalogue = [
+    { id: "KS-7H2M-4KP9-L6XR", maker: mLakshmi, title: "Korvai silk saree in madder red", materials: "Mulberry silk, madder root dye, pure zari", storyText: "The body and border are woven separately and joined by hand — the korvai join. You can feel the ridge where the two colours meet.", category: "Kanchipuram silk weaving", priceInr: 34000, giNumber: "GI-0146", photos: SILK, notes: silkNotes, completedDaysAgo: 6 },
+    { id: "KS-9B3T-2QW7-Z4NM", maker: mLakshmi, title: "Indigo silk dupatta with rudraksha border", materials: "Mulberry silk, natural indigo, silver zari", storyText: "A lighter piece for daily wear. The rudraksha border is the smallest motif I weave — one hundred and forty beads across.", category: "Kanchipuram silk weaving", priceInr: 9800, photos: SILK, notes: silkNotes, completedDaysAgo: 12 },
+    { id: "KS-5R8K-3JD2-V7YC", maker: mRama, title: "Dokra tribal horse figurine", materials: "Brass, beeswax, river clay, rice husk", storyText: "The horse is our village guardian. I cast it the way my father did — one mould, one pour, and the mould is broken to free it. No two are the same.", category: "Dokra metal art", priceInr: 4200, photos: DOKRA, notes: dokraNotes, completedDaysAgo: 3 },
+    { id: "KS-2N6P-8XF4-H9QL", maker: mRama, title: "Dokra oil lamp with peacock finial", materials: "Brass, beeswax, river clay", storyText: "A working lamp, not an ornament. Fill the well with oil and it will burn through the night. The peacock sits where the wick rests.", category: "Dokra metal art", priceInr: 6800, photos: DOKRA, notes: dokraNotes, completedDaysAgo: 9 },
+    { id: "KS-4W7L-6MB3-T2KJ", maker: mRama, title: "Dokra measuring bowl set of three", materials: "Brass, beeswax, river clay", storyText: "Grain measures. My grandmother used a set like these every day of her life. I make them in the old sizes, not in litres.", category: "Dokra metal art", priceInr: 5400, photos: DOKRA, notes: dokraNotes, completedDaysAgo: 18 },
+    { id: "KS-8C4V-9ZR5-N3HD", maker: mMeena, title: "Molela votive plaque — Dev Narayan", materials: "Banas river clay, natural slip, wood-fired", storyText: "The plaque is made flat, not thrown. I press the clay onto the board and raise the figure with my thumbs. It is fired once, in a wood kiln.", category: "Terracotta pottery", priceInr: 2400, photos: TERRA, notes: terraNotes, completedDaysAgo: 2 },
+    { id: "KS-6Y2Q-5TN8-B7WF", maker: mMeena, title: "Terracotta water pot with wheel-cut neck", materials: "Banas river clay, wood-fired", storyText: "Clay keeps water cool without electricity. This is the shape we have always made — narrow at the neck so nothing spills when it is carried on the head.", category: "Terracotta pottery", priceInr: 1650, photos: TERRA, notes: terraNotes, completedDaysAgo: 15 },
+    { id: "KS-3K9D-7VC2-M5RP", maker: mMeena, title: "Pair of terracotta lamp stands", materials: "Banas river clay, natural slip, wood-fired", storyText: "For Diwali. My mother made these every year and sold them at the roadside. I still make them to her measurements.", category: "Terracotta pottery", priceInr: 980, photos: TERRA, notes: terraNotes, completedDaysAgo: 25 },
+    { id: "KS-1L5X-4HG6-Q8ZT", maker: mAnitha, title: "Srikalahasti Kalamkari wall panel — Tree of Life", materials: "Handloom cotton, myrobalan, natural vegetable dyes", storyText: "Every line is drawn with a bamboo pen, not printed. The panel took forty days. The tree holds seventeen birds and each one is a different species.", category: "Kalamkari", priceInr: 12500, photos: KALAM, notes: kalamNotes, completedDaysAgo: 4 },
+    { id: "KS-9F3B-2SW7-K4LV", maker: mAnitha, title: "Kalamkari cotton yardage in pomegranate", materials: "Handloom cotton, pomegranate rind, iron acetate", storyText: "The red comes from madder and the black from iron and jaggery left to ferment for three weeks. No chemical colour touches this cloth.", category: "Kalamkari", priceInr: 3900, photos: KALAM, notes: kalamNotes, completedDaysAgo: 11 },
+    { id: "KS-7T6N-8PJ3-D2XQ", maker: mAnitha, title: "Kalamkari temple hanging, unlined", materials: "Handloom cotton, natural vegetable dyes", storyText: "This hung in our village temple for the festival. The story runs left to right, the way it is meant to be read aloud to children.", category: "Kalamkari", priceInr: null, photos: KALAM, notes: kalamNotes, completedDaysAgo: 30 },
+  ] as const;
+
+  for (const item of catalogue) {
+    await sealProduct({
+      id: item.id, maker: item.maker, title: item.title, materials: item.materials,
+      storyText: item.storyText, category: item.category, priceInr: item.priceInr,
+      giNumber: "giNumber" in item ? item.giNumber : null,
+      giEntryId: null, photos: item.photos, notes: item.notes,
+      completedDaysAgo: item.completedDaysAgo,
+    });
+  }
 
   console.log("Seeded:");
   console.log("  • 5 artisans across all verification tiers");
   console.log("  • GI dataset v1 with 5 entries · Pehchan register v1 with 2 entries");
   console.log("  • 1 pending verification (admin queue)");
-  console.log(`  • 1 sealed + signed product: ${productId} (ledger seq 1)`);
+  console.log(`  • ${ledgerSeq} sealed + signed products (ledger seq 1–${ledgerSeq})`);
+  console.log(`  • Original demo product preserved: ${productId}`);
   console.log(`  • Demo Pehchan → Lakshmi: ${lakshmiPehchan}  Rama: ${ramaPehchan}`);
   console.log("Login demo → artisan: 9840012345 / password   admin: admin / admin123");
 }

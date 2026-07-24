@@ -3,12 +3,19 @@
 import { useEffect, useState } from "react";
 
 /**
- * Craft splash — mechanics adapted from the provided animation.css (float +
- * thread shimmer + staggered reveal), re-skinned to the Kaivannam palette and
- * wordmark. Shows once per browser session, auto-dismisses, and is fully
- * disabled for users who prefer reduced motion (handled in globals.css).
+ * Craft splash — float + thread shimmer + staggered letter reveal, on the
+ * Kaivannam palette. Shows once per browser session, auto-dismisses, and is
+ * fully disabled for users who prefer reduced motion (handled in globals.css).
+ *
+ * The wordmark is Latin. It was previously set in Devanagari, which had two
+ * problems: it is the brand name in a script most visitors cannot read as a
+ * *name*, and `split("")` on Devanagari splits combining marks off their base
+ * consonant — the per-letter stagger was rendering broken clusters. Latin
+ * splits cleanly into one glyph per span. The three scripts still appear
+ * together in the tagline below, which is where the multilingual promise
+ * belongs.
  */
-const WORD = "कैवण्णम्";
+const WORD = "Kaivannam";
 
 export function Splash() {
   const [show, setShow] = useState(false);
@@ -27,17 +34,17 @@ export function Splash() {
   return (
     <div className="splash" role="status" aria-label="Kaivannam is loading">
       <div className="splash__word" aria-hidden="true">
-        {WORD.split("").map((ch, i) => (
+        {[...WORD].map((ch, i) => (
           <span
             key={i}
-            className="splash__thread font-deva"
-            style={{ animationDelay: `${0.15 + i * 0.09}s` }}
+            className="splash__thread"
+            style={{ animationDelay: `${0.15 + i * 0.07}s` }}
           >
             {ch}
           </span>
         ))}
       </div>
-      <div className="splash__tagline">Kaivannam · कैवण्णम् · கைவண்ணம்</div>
+      <div className="splash__tagline">कैवण्णम् · கைவண்ணம் · Proof of the hand</div>
     </div>
   );
 }

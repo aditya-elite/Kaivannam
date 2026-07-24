@@ -6,6 +6,9 @@ import { useT } from "@/lib/i18n/provider";
 import { SectionHeading } from "@/components/ui";
 import { TierBadge, type Tier } from "@/components/TierBadge";
 import { EmptyMotif } from "@/components/craft/EmptyMotif";
+import { Reveal } from "@/components/craft/Reveal";
+import { Rule } from "@/components/ui";
+import { dyeLotColor } from "@/lib/dyelot";
 import { IconSearch, IconArrowRight } from "@/components/icons";
 
 type Artisan = {
@@ -119,26 +122,46 @@ export function ArtisansView({ artisans }: { artisans: Artisan[] }) {
         <EmptyMotif title={t("empty.title")} body={t("artisans.empty")} />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((a) => (
-            <li key={a.id}>
+          {filtered.map((a, i) => (
+            /* cols=3 matches the widest breakpoint, so the reveal runs as a
+               wave along the diagonal rather than as a queue down the DOM. */
+            <Reveal as="li" key={a.id} index={i} cols={3}>
               <Link
                 href={`/artisans/${a.id}`}
-                className="group flex h-full flex-col rounded-2xl bg-surface shadow-card transition-shadow hover:shadow-lift"
+                /* §2.1 sheared corner instead of a uniform radius — the card
+                   stops reading as a stamped unit. */
+                className="group row-shear flex h-full flex-col bg-surface shadow-card transition-shadow hover:shadow-lift"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={a.photoUrl ?? "/samples/hero.svg"}
-                  alt={`Craft by ${a.fullName}, ${a.craft}`}
-                  className="aspect-[4/3] w-full rounded-t-2xl object-cover"
-                  width={480}
-                  height={360}
-                />
-                <div className="flex flex-1 flex-col gap-2 p-4">
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={a.photoUrl ?? "/samples/hero.svg"}
+                    alt={`Craft by ${a.fullName}, ${a.craft}`}
+                    className="aspect-[4/3] w-full object-cover"
+                    width={480}
+                    height={360}
+                  />
+                  {/* Craft objects are numbered. One span, and the grid stops
+                      looking like search results. */}
+                  <span className="product-id absolute bottom-2 right-2 bg-ink/75 px-1.5 py-1 font-mono text-[11px] font-bold text-cream">
+                    NO. {String(i + 1).padStart(3, "0")}
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col gap-1 p-4">
                   <h2 className="text-lg font-bold group-hover:text-indigo">{a.fullName}</h2>
+                  {/* Dye-lot accent: decorative only, no text sits on it, so
+                      the hue drift cannot affect any contrast ratio. */}
+                  <span
+                    aria-hidden="true"
+                    className="my-1 block h-[3px] w-10"
+                    style={{ background: dyeLotColor(i) }}
+                  />
+                  <p className="text-base text-muted">{a.craft}</p>
                   <p className="text-base text-muted">
-                    {a.craft} · {a.region}, {a.state}
+                    {a.region}, {a.state}
                   </p>
-                  <div className="mt-1">
+                  <Rule className="my-2" />
+                  <div>
                     <TierBadge tier={a.tier as Tier} size="sm" />
                   </div>
                   <p className="mt-1 text-sm text-muted">
@@ -149,7 +172,7 @@ export function ArtisansView({ artisans }: { artisans: Artisan[] }) {
                   </span>
                 </div>
               </Link>
-            </li>
+            </Reveal>
           ))}
         </ul>
       )}

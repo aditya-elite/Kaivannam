@@ -13,7 +13,9 @@ export const ROUGH_VARIANTS = 4;
 export type RoughVariant = 1 | 2 | 3 | 4;
 
 // Small integer hash — deterministic, no dependency, no Math.random.
-function hash(n: number, seed: number): number {
+// Exported because lib/dyelot.ts seeds colour variance from the same source,
+// so an element's edge variant and its dye lot are drawn from one stream.
+export function hash(n: number, seed: number): number {
   let h = Math.imul(n + 1, 2654435761) + Math.imul(seed + 1, 40503);
   h ^= h >>> 15;
   h = Math.imul(h, 2246822519);

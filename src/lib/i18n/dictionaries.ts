@@ -223,6 +223,83 @@ const en: Dict = {
   "reg.done.body": "Print this tag and attach it to your item. Buyers can scan it to see the full story.",
   "reg.done.print": "Print tag",
   "reg.done.view": "View public page",
+  "reg.done.sealed": "Sealed",
+
+  // Print furniture on the physical tag.
+  "tag.fold": "Fold",
+  "tag.signature": "Maker's mark",
+
+  // ── The Collection (showroom) ───────────────────────────────────────────
+  "nav.collection": "The collection",
+  "shop.eyebrow": "The collection",
+  "shop.heroTitle": "Every piece here has a name attached to it",
+  "shop.heroSub":
+    "Documented work from artisans whose identity has been checked. Each piece carries a sealed record of who made it, where, and how — stage by stage.",
+  "shop.ctaBrowse": "Walk the collection",
+  "shop.ctaVerify": "Check a piece you own",
+  "shop.statPieces": "Documented pieces",
+  "shop.statMakers": "Makers",
+  "shop.statLedger": "Record",
+  "shop.statLedgerValue": "Tamper-evident",
+
+  "shop.categoriesLabel": "Craft traditions",
+  "shop.categories": "Browse by craft",
+  "shop.categoriesSub": "Each tradition belongs to a place and a community of makers.",
+  "shop.allCrafts": "All crafts",
+  "shop.pieceCount": "{count} pieces",
+
+  "shop.featuredLabel": "Under the lamp",
+  "shop.featured": "Featured this week",
+  "shop.featuredSub":
+    "The strongest provenance in the room — GI-registered crafts made by artisans with confirmed identity.",
+
+  "shop.recentLabel": "Freshly sealed",
+  "shop.recent": "Recently verified",
+  "shop.recentSub": "Records sealed most recently. Nothing here is older than a month.",
+
+  "shop.newLabel": "Just arrived",
+  "shop.new": "New arrivals",
+  "shop.newSub": "The latest pieces added to the register by their makers.",
+
+  "shop.popularLabel": "Well represented",
+  "shop.popular": "Popular crafts",
+  "shop.popularSub": "The traditions with the most documented work on the register.",
+
+  "shop.recLabel": "For you",
+  "shop.rec": "Because you saved these crafts",
+  "shop.recSub": "More work in the traditions you have been saving.",
+  "shop.recEmptyTitle": "Nothing to go on yet",
+  "shop.recEmptySub": "",
+  "shop.recEmptyBody":
+    "We do not track you, so there is nothing to base a recommendation on until you save something. Tap the heart on any piece and this shelf will fill with more work from that tradition. Saved pieces stay on this device.",
+
+  "shop.nearbyLabel": "Close to home",
+  "shop.nearby": "Crafts near you",
+  "shop.nearbySub": "Traditions from your part of the country.",
+  "shop.yourState": "Which state are you in?",
+  "shop.chooseState": "Choose a state",
+  "shop.stateNote":
+    "We ask instead of reading your location. Your choice stays on this device.",
+  "shop.nearbyEmpty": "No documented pieces from this state yet. Try another, or browse everything below.",
+
+  "shop.allLabel": "The floor",
+  "shop.all": "Everything on the register",
+  "shop.allSub": "Every sealed piece, newest first.",
+  "shop.showing": "{count} pieces on show",
+  "shop.clearFilter": "Show all crafts",
+  "shop.noneInCraft": "No pieces in this craft yet.",
+
+  "shop.price": "Price",
+  "shop.priceOnRequest": "Price on request",
+  "shop.giBacked": "GI verified",
+  "shop.save": "Save",
+  "shop.saved": "Saved",
+
+  "shop.closingLabel": "Why this is not a marketplace",
+  "shop.closingTitle": "We do not sell these pieces. We prove who made them.",
+  "shop.closingBody":
+    "Prices are what the artisan asks. Kaivannam takes no commission and holds no stock — buy from the maker or their cooperative directly.",
+  "shop.closingNote": "Demonstration platform · records are on a test ledger",
 
   "ocr.title": "Verify your artisan identity",
   "ocr.intro":
@@ -413,6 +490,79 @@ const hi: Dict = {
   "auth.password": "पासवर्ड",
   "reg.title": "उत्पाद पंजीकृत करें",
   "reg.step": "चरण {n} / {total}",
+  "reg.done.sealed": "मुहरबंद",
+  "tag.fold": "मोड़ें",
+  "tag.signature": "कारीगर का चिह्न",
+
+  "nav.collection": "संग्रह",
+  "shop.eyebrow": "संग्रह",
+  "shop.heroTitle": "यहाँ हर वस्तु के साथ बनाने वाले का नाम जुड़ा है",
+  "shop.heroSub":
+    "उन कारीगरों का प्रलेखित काम जिनकी पहचान जाँची गई है। हर वस्तु के साथ एक सुरक्षित रिकॉर्ड है — किसने बनाया, कहाँ, और कैसे।",
+  "shop.ctaBrowse": "संग्रह देखें",
+  "shop.ctaVerify": "अपनी वस्तु जाँचें",
+  "shop.statPieces": "प्रलेखित वस्तुएँ",
+  "shop.statMakers": "कारीगर",
+  "shop.statLedger": "रिकॉर्ड",
+  "shop.statLedgerValue": "छेड़छाड़ स्पष्ट",
+
+  "shop.categoriesLabel": "शिल्प परंपराएँ",
+  "shop.categories": "शिल्प से देखें",
+  "shop.categoriesSub": "हर परंपरा किसी स्थान और कारीगर समुदाय से जुड़ी है।",
+  "shop.allCrafts": "सभी शिल्प",
+  "shop.pieceCount": "{count} वस्तुएँ",
+
+  "shop.featuredLabel": "विशेष",
+  "shop.featured": "इस सप्ताह विशेष",
+  "shop.featuredSub": "सबसे मज़बूत प्रमाण — जीआई पंजीकृत शिल्प, पुष्ट पहचान वाले कारीगरों द्वारा।",
+
+  "shop.recentLabel": "नई मुहर",
+  "shop.recent": "हाल ही में सत्यापित",
+  "shop.recentSub": "सबसे हाल में मुहरबंद किए गए रिकॉर्ड।",
+
+  "shop.newLabel": "अभी आया",
+  "shop.new": "नई वस्तुएँ",
+  "shop.newSub": "कारीगरों द्वारा हाल ही में जोड़ी गई वस्तुएँ।",
+
+  "shop.popularLabel": "प्रमुख",
+  "shop.popular": "लोकप्रिय शिल्प",
+  "shop.popularSub": "रजिस्टर पर सबसे अधिक प्रलेखित परंपराएँ।",
+
+  "shop.recLabel": "आपके लिए",
+  "shop.rec": "आपके सहेजे शिल्पों के आधार पर",
+  "shop.recSub": "जिन परंपराओं को आप सहेज रहे हैं, उनका और काम।",
+  "shop.recEmptyTitle": "अभी कुछ आधार नहीं है",
+  "shop.recEmptySub": "",
+  "shop.recEmptyBody":
+    "हम आपको ट्रैक नहीं करते, इसलिए जब तक आप कुछ सहेजते नहीं, सुझाव का कोई आधार नहीं है। किसी भी वस्तु पर दिल दबाएँ। सहेजी गई वस्तुएँ इसी डिवाइस पर रहती हैं।",
+
+  "shop.nearbyLabel": "आपके पास",
+  "shop.nearby": "आपके पास के शिल्प",
+  "shop.nearbySub": "आपके क्षेत्र की परंपराएँ।",
+  "shop.yourState": "आप किस राज्य में हैं?",
+  "shop.chooseState": "राज्य चुनें",
+  "shop.stateNote": "हम आपकी लोकेशन नहीं पढ़ते, पूछते हैं। आपकी पसंद इसी डिवाइस पर रहती है।",
+  "shop.nearbyEmpty": "इस राज्य से अभी कोई प्रलेखित वस्तु नहीं है।",
+
+  "shop.allLabel": "पूरा संग्रह",
+  "shop.all": "रजिस्टर पर सब कुछ",
+  "shop.allSub": "हर मुहरबंद वस्तु, नई पहले।",
+  "shop.showing": "{count} वस्तुएँ दिख रही हैं",
+  "shop.clearFilter": "सभी शिल्प दिखाएँ",
+  "shop.noneInCraft": "इस शिल्प में अभी कोई वस्तु नहीं है।",
+
+  "shop.price": "मूल्य",
+  "shop.priceOnRequest": "मूल्य पूछें",
+  "shop.giBacked": "जीआई सत्यापित",
+  "shop.save": "सहेजें",
+  "shop.saved": "सहेजा गया",
+
+  "shop.closingLabel": "यह बाज़ार क्यों नहीं है",
+  "shop.closingTitle": "हम ये वस्तुएँ नहीं बेचते। हम बताते हैं कि इन्हें किसने बनाया।",
+  "shop.closingBody":
+    "मूल्य वही है जो कारीगर माँगता है। कैवण्णम् कोई कमीशन नहीं लेता और कोई स्टॉक नहीं रखता — सीधे कारीगर या उसकी सहकारी समिति से खरीदें।",
+  "shop.closingNote": "प्रदर्शन मंच · रिकॉर्ड परीक्षण लेजर पर हैं",
+
   "footer.rights": "शिल्प उद्गम के लिए एक प्रदर्शन मंच।",
 };
 
@@ -514,6 +664,79 @@ const ta: Dict = {
   "auth.password": "கடவுச்சொல்",
   "reg.title": "பொருளை பதிவு செய்யவும்",
   "reg.step": "படி {n} / {total}",
+  "reg.done.sealed": "முத்திரையிடப்பட்டது",
+  "tag.fold": "மடியுங்கள்",
+  "tag.signature": "கைவினைஞர் கையொப்பம்",
+
+  "nav.collection": "தொகுப்பு",
+  "shop.eyebrow": "தொகுப்பு",
+  "shop.heroTitle": "இங்குள்ள ஒவ்வொரு பொருளுடனும் செய்தவரின் பெயர் இணைந்துள்ளது",
+  "shop.heroSub":
+    "அடையாளம் சரிபார்க்கப்பட்ட கைவினைஞர்களின் ஆவணப்படுத்தப்பட்ட வேலை. ஒவ்வொரு பொருளுக்கும் — யார், எங்கே, எப்படி செய்தார் என்ற பாதுகாப்பான பதிவு உண்டு.",
+  "shop.ctaBrowse": "தொகுப்பைப் பாருங்கள்",
+  "shop.ctaVerify": "உங்கள் பொருளை சரிபார்க்கவும்",
+  "shop.statPieces": "ஆவணப் பொருட்கள்",
+  "shop.statMakers": "கைவினைஞர்கள்",
+  "shop.statLedger": "பதிவு",
+  "shop.statLedgerValue": "மாற்றம் தெரியும்",
+
+  "shop.categoriesLabel": "கைவினை மரபுகள்",
+  "shop.categories": "கைவினை வாரியாக",
+  "shop.categoriesSub": "ஒவ்வொரு மரபும் ஒரு இடத்துடனும் சமூகத்துடனும் இணைந்தது.",
+  "shop.allCrafts": "அனைத்து கைவினைகள்",
+  "shop.pieceCount": "{count} பொருட்கள்",
+
+  "shop.featuredLabel": "சிறப்பு",
+  "shop.featured": "இந்த வாரச் சிறப்பு",
+  "shop.featuredSub": "வலுவான சான்று — GI பதிவு பெற்ற கைவினைகள், உறுதிசெய்யப்பட்ட கைவினைஞர்களால்.",
+
+  "shop.recentLabel": "புதிய முத்திரை",
+  "shop.recent": "சமீபத்தில் சரிபார்க்கப்பட்டவை",
+  "shop.recentSub": "மிக அண்மையில் முத்திரையிடப்பட்ட பதிவுகள்.",
+
+  "shop.newLabel": "புதிதாக வந்தவை",
+  "shop.new": "புதிய வரவுகள்",
+  "shop.newSub": "கைவினைஞர்களால் சமீபத்தில் சேர்க்கப்பட்டவை.",
+
+  "shop.popularLabel": "முதன்மை",
+  "shop.popular": "பிரபல கைவினைகள்",
+  "shop.popularSub": "பதிவேட்டில் அதிக ஆவணப்பணி கொண்ட மரபுகள்.",
+
+  "shop.recLabel": "உங்களுக்காக",
+  "shop.rec": "நீங்கள் சேமித்த கைவினைகளின் அடிப்படையில்",
+  "shop.recSub": "நீங்கள் சேமித்து வரும் மரபுகளின் மேலும் வேலை.",
+  "shop.recEmptyTitle": "இன்னும் அடிப்படை எதுவும் இல்லை",
+  "shop.recEmptySub": "",
+  "shop.recEmptyBody":
+    "நாங்கள் உங்களைக் கண்காணிப்பதில்லை, எனவே நீங்கள் ஏதேனும் சேமிக்கும் வரை பரிந்துரைக்கு அடிப்படை இல்லை. எந்தப் பொருளிலும் இதயத்தைத் தட்டுங்கள். சேமித்தவை இந்தச் சாதனத்திலேயே இருக்கும்.",
+
+  "shop.nearbyLabel": "அருகில்",
+  "shop.nearby": "உங்கள் அருகிலுள்ள கைவினைகள்",
+  "shop.nearbySub": "உங்கள் பகுதியின் மரபுகள்.",
+  "shop.yourState": "நீங்கள் எந்த மாநிலத்தில் உள்ளீர்கள்?",
+  "shop.chooseState": "மாநிலத்தைத் தேர்ந்தெடுக்கவும்",
+  "shop.stateNote": "உங்கள் இருப்பிடத்தைப் படிக்காமல் கேட்கிறோம். உங்கள் தேர்வு இந்தச் சாதனத்திலேயே இருக்கும்.",
+  "shop.nearbyEmpty": "இந்த மாநிலத்திலிருந்து இன்னும் ஆவணப் பொருட்கள் இல்லை.",
+
+  "shop.allLabel": "முழுத் தொகுப்பு",
+  "shop.all": "பதிவேட்டில் உள்ள அனைத்தும்",
+  "shop.allSub": "ஒவ்வொரு முத்திரையிட்ட பொருளும், புதியது முதலில்.",
+  "shop.showing": "{count} பொருட்கள் காட்டப்படுகின்றன",
+  "shop.clearFilter": "அனைத்து கைவினைகளையும் காட்டு",
+  "shop.noneInCraft": "இந்தக் கைவினையில் இன்னும் பொருட்கள் இல்லை.",
+
+  "shop.price": "விலை",
+  "shop.priceOnRequest": "விலை கேட்கவும்",
+  "shop.giBacked": "GI சரிபார்க்கப்பட்டது",
+  "shop.save": "சேமி",
+  "shop.saved": "சேமிக்கப்பட்டது",
+
+  "shop.closingLabel": "இது சந்தை அல்ல",
+  "shop.closingTitle": "நாங்கள் இவற்றை விற்பதில்லை. யார் செய்தார் என்பதை நிரூபிக்கிறோம்.",
+  "shop.closingBody":
+    "விலை கைவினைஞர் கேட்பதுதான். கைவண்ணம் கமிஷன் எடுப்பதில்லை, சரக்கு வைப்பதில்லை — கைவினைஞரிடமோ அவர்தம் கூட்டுறவிடமோ நேரடியாக வாங்குங்கள்.",
+  "shop.closingNote": "காட்சி தளம் · பதிவுகள் சோதனை லெட்ஜரில் உள்ளன",
+
   "footer.rights": "கைவினை மூலத்திற்கான ஒரு காட்சி தளம்.",
 };
 

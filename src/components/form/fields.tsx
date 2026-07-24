@@ -15,6 +15,32 @@ function RequiredMark({ show }: { show?: boolean }) {
   ) : null;
 }
 
+/**
+ * §2.4 — a rule under the field, not a box around it. The reference uses rules
+ * almost everywhere and boxes almost nowhere, and that is a large part of why
+ * it reads as editorial rather than as an app.
+ *
+ * The one thing deliberately NOT traded away: a boxed field advertises "you can
+ * type here" more loudly than a ruled one, which matters for users with low
+ * digital literacy. So the rule is 2px rather than a hairline, it darkens on
+ * hover, and it goes terracotta on focus — the affordance is carried by weight
+ * and colour change instead of by an enclosing outline.
+ *
+ * The focus ring itself is untouched (globals.css: 3px teal, offset, never
+ * animated). Nothing here weakens the accessibility contract.
+ */
+// Note: no `focus:outline-none` anywhere here. Tailwind's variant would win on
+// specificity over the zero-specificity :where() focus rule in globals.css and
+// silently delete the keyboard focus ring.
+const fieldBase =
+  "min-h-tap w-full border-0 border-b-2 bg-transparent px-1 text-base transition-colors";
+
+function fieldClasses(error?: string | null) {
+  return `${fieldBase} ${
+    error ? "border-warning" : "border-ink/25 hover:border-ink/45 focus:border-terracotta"
+  }`;
+}
+
 type Common = {
   label: string;
   value: string;
@@ -62,9 +88,7 @@ export function TextField({
           aria-required={required}
           aria-invalid={!!error}
           aria-describedby={`${hint ? hintId : ""} ${error ? errId : ""}`.trim() || undefined}
-          className={`min-h-tap w-full rounded-xl border-2 bg-surface px-4 text-base focus:border-teal ${
-            error ? "border-warning" : "border-ink/15"
-          }`}
+          className={fieldClasses(error)}
         />
         <VoiceButton onText={(txt) => onChange(value ? `${value} ${txt}` : txt)} />
       </div>
@@ -114,9 +138,7 @@ export function TextAreaField({
           aria-required={required}
           aria-invalid={!!error}
           aria-describedby={`${hint ? hintId : ""} ${error ? errId : ""}`.trim() || undefined}
-          className={`min-h-tap w-full rounded-xl border-2 bg-surface px-4 py-3 text-base focus:border-teal ${
-            error ? "border-warning" : "border-ink/15"
-          }`}
+          className={`${fieldClasses(error)} py-3`}
         />
         <VoiceButton onText={(txt) => onChange(value ? `${value} ${txt}` : txt)} />
       </div>

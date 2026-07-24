@@ -58,7 +58,14 @@ export function ArtisanProfileView({ artisan, gi, products }: Props) {
             {artisan.craft} · {artisan.region}, {artisan.state}
           </p>
           <TierBadge tier={artisan.tier as Tier} />
-          {artisan.bio ? <p className="max-w-2xl text-base">{artisan.bio}</p> : null}
+          {/* Hanging punctuation: where the bio opens with a quotation mark,
+              the mark sits in the margin so the optical left edge stays true
+              against the heading above it. Safari honours the property; the
+              text-indent carries it elsewhere. Both degrade to an ordinary
+              paragraph, so there is nothing to detect and nothing to break. */}
+          {artisan.bio ? (
+            <p className="hang-punct max-w-2xl text-base">{artisan.bio}</p>
+          ) : null}
         </div>
       </header>
 
@@ -74,7 +81,7 @@ export function ArtisanProfileView({ artisan, gi, products }: Props) {
               <IconShield width={22} height={22} className="mt-1 text-teal-700" />
               <div>
                 <p className="font-semibold">
-                  {t("profile.pehchan")}: <span className="font-mono">{artisan.pehchan.masked}</span>
+                  {t("profile.pehchan")}: <span className="product-id font-mono">{artisan.pehchan.masked}</span>
                 </p>
                 <p className="mt-1 flex items-center gap-1 text-sm text-teal-700">
                   <IconCheck width={15} height={15} /> {t("profile.pehchanVerified")}

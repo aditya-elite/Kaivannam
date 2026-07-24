@@ -10,6 +10,7 @@ import { TextField, TextAreaField } from "@/components/form/fields";
 import { PhotoCapture } from "@/components/form/PhotoCapture";
 import { compressImage } from "@/lib/client/image";
 import { Charkha } from "@/components/craft/Charkha";
+import { ThreadSnap } from "@/components/craft/ThreadSnap";
 import {
   IconArrowRight,
   IconArrowLeft,
@@ -501,6 +502,14 @@ function DoneCard({ id }: { id: string }) {
         <h1 className="text-2xl font-extrabold">{t("reg.done.title")}</h1>
         <p className="text-base opacity-95">{t("reg.done.body")}</p>
       </div>
+
+      {/* §6.4 — the thread pulls taut and knots. This is the artisan's payoff
+          for weeks of documentation, and it is the counterpart to the seal on
+          the verification screen: same vocabulary, other end of the journey.
+          Runs once, ~940ms, then stops. Everything that actually matters —
+          the heading above, the ID and the QR below — is already in the DOM
+          and announced regardless of whether this plays. */}
+      <ThreadSnap className="mb-2" />
       <Card className="flex flex-col items-center gap-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -510,7 +519,7 @@ function DoneCard({ id }: { id: string }) {
           width={224}
           height={224}
         />
-        <p className="font-mono text-lg font-bold tracking-wide">{id}</p>
+        <p className="product-id font-mono text-lg font-bold">{id}</p>
         <div className="flex w-full flex-col gap-2">
           <a
             href={`/product/${id}/tag`}

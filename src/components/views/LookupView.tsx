@@ -144,7 +144,7 @@ export function LookupView() {
                   onChange={(e) => setValue(e.target.value)}
                   placeholder={t("lookup.placeholder")}
                   autoCapitalize="characters"
-                  className="min-h-tap w-full rounded-xl border-2 border-ink/15 bg-cream pl-11 pr-4 font-mono text-base tracking-wide focus:border-teal"
+                  className="min-h-tap w-full rounded-xl border-2 border-ink/15 bg-cream pl-11 pr-4 product-id font-mono text-base focus:border-teal"
                 />
               </div>
               <Button type="submit" className="w-full" disabled={!value.trim()}>

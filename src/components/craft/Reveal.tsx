@@ -16,13 +16,19 @@ import { markAnimating } from "./motion";
 export function Reveal({
   as: Tag = "div",
   index = 0,
+  cols = 1,
   bleed = false,
   className = "",
   children,
 }: {
   as?: ElementType;
-  /** Sibling position — drives the 70ms stagger. */
+  /** Sibling position — drives the stagger. */
   index?: number;
+  /**
+   * Columns in the containing grid. With `cols > 1` the stagger runs along
+   * the diagonal instead of down the DOM order — see below.
+   */
+  cols?: number;
   /** Optional ink-bleed ghost (§3.3). Skip on lists over 6 items. */
   bleed?: boolean;
   className?: string;
@@ -55,9 +61,19 @@ export function Reveal({
     return () => io.disconnect();
   }, []);
 
+  // Stagger by *position*, not DOM order.
+  //
+  // A flat `index * 70ms` down a grid reads as a queue being processed — item
+  // 1, then 2, then 3 — because the eye follows the source order across each
+  // row. Delaying on `row + col` instead sends a wave along the diagonal, and
+  // that diagonal is the same axis as the §2.2 spine, so the two devices agree
+  // with each other rather than pulling in different directions.
+  //
+  // Costs exactly the same as the flat version: one number, no extra elements.
+  const step = cols > 1 ? Math.floor(index / cols) + (index % cols) : index;
   // Capped so a long list never grows an absurd delay and never puts more than
   // a handful of elements in flight at once (perf budget: max 8 simultaneous).
-  const stagger = Math.min(index, 6) * 70;
+  const stagger = Math.min(step, 6) * 70;
 
   return (
     <Tag

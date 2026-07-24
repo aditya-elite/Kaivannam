@@ -222,7 +222,7 @@ export function VerifyIdentityView({
                 value={pehchan}
                 onChange={(e) => setPehchan(e.target.value)}
                 placeholder="XXXX XXXX XXXX"
-                className="min-h-tap w-full rounded-xl border-2 border-ink/15 bg-surface px-3 font-mono text-lg tracking-wider focus:border-teal"
+                className="min-h-tap w-full rounded-xl border-2 border-ink/15 bg-surface px-3 product-id font-mono text-lg focus:border-teal"
               />
               <PehchanStatus
                 fmt={fmt}

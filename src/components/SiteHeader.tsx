@@ -18,6 +18,7 @@ export function SiteHeader({ user }: Props) {
   // only triggers when actually starting registration.
   const links = [
     { href: "/", label: t("nav.home") },
+    { href: "/collection", label: t("nav.collection") },
     { href: "/artisans", label: t("nav.artisans") },
     { href: "/lookup", label: t("nav.lookup") },
     { href: "/how-it-works", label: t("nav.how") },
@@ -69,13 +70,13 @@ export function SiteHeader({ user }: Props) {
           </span>
         </Link>
 
-        <nav ref={navRef} aria-label="Primary" className="relative hidden items-center gap-1 md:flex">
+        <nav ref={navRef} aria-label="Primary" className="relative hidden items-center gap-1 lg:flex">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               aria-current={isActive(l.href) ? "page" : undefined}
-              className={`min-h-tap rounded-lg px-3 py-2 text-base font-semibold ${
+              className={`min-h-tap whitespace-nowrap rounded-lg px-3 py-2 text-base font-semibold ${
                 isActive(l.href) ? "text-indigo" : "text-ink hover:bg-ink/5"
               }`}
             >
@@ -90,14 +91,14 @@ export function SiteHeader({ user }: Props) {
           <LanguageSwitcher />
           <Link
             href="/register"
-            className="hidden min-h-tap items-center gap-2 rounded-xl bg-terracotta px-4 py-2 text-base font-semibold text-white hover:bg-terracotta-600 sm:inline-flex"
+            className="hidden min-h-tap items-center gap-2 rounded-xl bg-terracotta px-4 py-2 text-base font-semibold text-white hover:bg-terracotta-600 sm:inline-flex whitespace-nowrap"
           >
             {t("nav.register")}
           </Link>
           {user ? (
             <Link
               href="/my-items"
-              className="hidden min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 px-3 text-ink md:inline-flex"
+              className="hidden min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 px-3 text-ink lg:inline-flex"
               aria-label={user.displayName}
               title={user.displayName}
             >
@@ -106,7 +107,7 @@ export function SiteHeader({ user }: Props) {
           ) : null}
           <button
             type="button"
-            className="inline-flex min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 md:hidden"
+            className="inline-flex min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 lg:hidden"
             aria-label={open ? t("common.close") : t("nav.menu")}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
@@ -120,7 +121,7 @@ export function SiteHeader({ user }: Props) {
         /* §4.1 — selvedge panel. The decorative woven edge leads and the panel
            body settles in behind it. No backdrop blur: expensive and unreliable
            on low-end GPUs, and it buys nothing here. */
-        <nav aria-label="Primary mobile" className="border-t border-ink/10 bg-cream md:hidden">
+        <nav aria-label="Primary mobile" className="border-t border-ink/10 bg-cream lg:hidden">
           <span
             aria-hidden="true"
             className="selvedge-lead block h-1.5 w-full bg-terracotta"

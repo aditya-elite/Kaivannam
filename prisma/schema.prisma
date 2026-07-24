@@ -214,6 +214,12 @@ model Product {
   storyVoiceUrl String?
   category    String // craft cluster
 
+  // Indicative price in whole rupees. Nullable on purpose: this is a provenance
+  // record first and a shop second, and plenty of documented pieces are not for
+  // sale (museum loans, commissions, an artisan's own archive). A card with no
+  // price renders "Price on request" rather than a zero.
+  priceInr    Int?
+
   status      ProductStatus @default(DRAFT)
 
   // Gate 2 — product authenticity. A GI (Geographical Indication) certificate is

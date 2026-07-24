@@ -184,7 +184,7 @@ export function ThreeKeyScanView() {
             value={productId}
             onChange={(e) => setProductId(e.target.value.toUpperCase())}
             placeholder="KS-XXXX-XXXX-XXXX"
-            className="min-h-tap w-full rounded-xl border-2 border-ink/15 bg-surface px-3 font-mono text-base focus:border-teal"
+            className="min-h-tap w-full rounded-xl border-2 border-ink/15 bg-surface px-3 product-id font-mono text-base focus:border-teal"
           />
 
           {!payload.s ? (
@@ -303,7 +303,7 @@ function JuryPanel({
           <p className="mt-1 text-base text-muted">
             {t("verify.madeBy")}: {result.product.artisanName}
           </p>
-          <p className="mt-1 font-mono text-sm text-muted">{result.product.id}</p>
+          <p className="mt-1 product-id font-mono text-sm text-muted">{result.product.id}</p>
           {authentic ? (
             <a
               href={`/product/${result.product.id}`}
