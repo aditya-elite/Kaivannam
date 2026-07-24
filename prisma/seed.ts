@@ -231,6 +231,9 @@ async function main() {
       giCertUrl: "/samples/silk-completed.svg",
       giVerified: true,
       giEntryId: lakshmiGi?.id ?? null,
+      priceInPaise: 1_245_000, // ₹12,450
+      stock: 2,
+      listedForSale: true,
       sealedAt: now,
     },
   });
@@ -289,11 +292,133 @@ async function main() {
     },
   });
 
+  // ── More listed products so the shop has a real grid ──
+  // Reusable sealer: creates 4 stages, chains the ledger, signs the QR, and lists.
+  const ramaGiEntry = await db.giEntry.findFirst({ where: { giName: "Bastar Dhokra" } });
+  async function sealListed(opts: {
+    id: string;
+    artisan: { id: string; fullName: string; craft: string; region: string; hiddenSignatureHash: string | null };
+    keys: { privateKeyPem: string };
+    title: string;
+    materials: string;
+    story: string;
+    category: string;
+    giNumber: string;
+    giEntryId: string | null;
+    photo: string;
+    priceInPaise: number;
+    stock: number;
+    daysAgo: number;
+  }) {
+    const sealedAt = new Date(now.getTime() - opts.daysAgo * dayMs);
+    await db.product.create({
+      data: {
+        id: opts.id,
+        artisanId: opts.artisan.id,
+        title: opts.title,
+        materials: opts.materials,
+        storyText: opts.story,
+        category: opts.category,
+        status: "SEALED",
+        giNumber: opts.giNumber,
+        giCertUrl: opts.photo,
+        giVerified: true,
+        giEntryId: opts.giEntryId,
+        priceInPaise: opts.priceInPaise,
+        stock: opts.stock,
+        listedForSale: true,
+        sealedAt,
+      },
+    });
+    const recs = [];
+    for (const stage of ["RAW_MATERIALS", "CRAFTING", "FINISHING", "COMPLETED"] as const) {
+      const capturedAt = new Date(sealedAt.getTime() - dayMs);
+      await db.stageEntry.create({
+        data: { productId: opts.id, stage, version: 1, photoUrls: JSON.stringify([opts.photo]), note: null, capturedAt },
+      });
+      recs.push({ stage, version: 1, capturedAt: capturedAt.toISOString(), photoContentHashes: [sha256(opts.photo)], note: null });
+    }
+    const cHash = sha256(
+      canonical({
+        productId: opts.id,
+        title: opts.title,
+        materials: opts.materials,
+        category: opts.category,
+        storyText: opts.story,
+        artisan: { id: opts.artisan.id, fullName: opts.artisan.fullName, craft: opts.artisan.craft, region: opts.artisan.region },
+        hiddenSignatureHash: opts.artisan.hiddenSignatureHash,
+        stages: recs,
+      }),
+    );
+    const last = await db.ledgerEntry.findFirst({ orderBy: { seq: "desc" } });
+    const seqN = (last?.seq ?? 0) + 1;
+    const prev = last?.entryHash ?? "0".repeat(64);
+    const eHash = sha256(`${seqN}|${opts.id}|${cHash}|${prev}`);
+    await db.ledgerEntry.create({
+      data: { seq: seqN, productId: opts.id, contentHash: cHash, prevHash: prev, entryHash: eHash, backend: "local", isTestnet: true },
+    });
+    await db.product.update({
+      where: { id: opts.id },
+      data: {
+        contentHash: cHash,
+        signature: signPayload(opts.id, sealedAt.toISOString(), opts.keys.privateKeyPem),
+        qrIssuedAt: sealedAt,
+        qrPngUrl: `/api/products/${opts.id}/qr`,
+      },
+    });
+  }
+
+  await sealListed({
+    id: "KS-7H2M-4KP9-Q1XR",
+    artisan: lakshmi,
+    keys: lakshmiKeys,
+    title: "Kanchipuram silk dupatta, mango motif",
+    materials: "Pure mulberry silk, natural dyes, half-fine zari",
+    story: "A lighter piece — the mango-bud border is my everyday pattern.",
+    category: "Kanchipuram silk weaving",
+    giNumber: "GI-0146",
+    giEntryId: lakshmiGi?.id ?? null,
+    photo: "/samples/silk-finishing.svg",
+    priceInPaise: 385_000,
+    stock: 5,
+    daysAgo: 8,
+  });
+  await sealListed({
+    id: "KS-9J3N-6LT2-B8WK",
+    artisan: rama,
+    keys: ramaKeys,
+    title: "Dokra tribal elephant figurine",
+    materials: "Bell metal, lost-wax cast, hand-finished",
+    story: "Cast in one pour using the coiled-wax method my father taught me.",
+    category: "Dokra metal art",
+    giNumber: "GI-0021",
+    giEntryId: ramaGiEntry?.id ?? null,
+    photo: "/samples/hero.svg",
+    priceInPaise: 265_000,
+    stock: 4,
+    daysAgo: 5,
+  });
+  await sealListed({
+    id: "KS-2C5V-8MD4-R3YP",
+    artisan: rama,
+    keys: ramaKeys,
+    title: "Dokra oil lamp with peacock finial",
+    materials: "Bell metal, lost-wax cast",
+    story: "A working diya — the peacock sits above the flame.",
+    category: "Dokra metal art",
+    giNumber: "GI-0021",
+    giEntryId: ramaGiEntry?.id ?? null,
+    photo: "/samples/hero.svg",
+    priceInPaise: 172_500,
+    stock: 6,
+    daysAgo: 3,
+  });
+
   console.log("Seeded:");
   console.log("  • 5 artisans across all verification tiers");
   console.log("  • GI dataset v1 with 5 entries · Pehchan register v1 with 2 entries");
   console.log("  • 1 pending verification (admin queue)");
-  console.log(`  • 1 sealed + signed product: ${productId} (ledger seq 1)`);
+  console.log("  • 4 sealed + signed products, all listed in the shop");
   console.log(`  • Demo Pehchan → Lakshmi: ${lakshmiPehchan}  Rama: ${ramaPehchan}`);
   console.log("Login demo → artisan: 9840012345 / password   admin: admin / admin123");
 }

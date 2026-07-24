@@ -16,6 +16,7 @@ import {
   IconCamera,
   IconArrowRight,
   IconThread,
+  IconBag,
 } from "@/components/icons";
 
 type Featured = {
@@ -99,7 +100,10 @@ export function LandingView({
           {/* §2.2 — the spine. Baselines stay horizontal; only the alignment
               axis slants. Drift is capped so nothing escapes at 360px. */}
           <Spine className="mt-8 space-y-3">
-            <ButtonLink href="/lookup" variant="primary">
+            <ButtonLink href="/shop" variant="primary">
+              <IconBag width={20} height={20} /> {t("home.ctaShop")}
+            </ButtonLink>
+            <ButtonLink href="/lookup" variant="secondary">
               <IconQr width={20} height={20} /> {t("home.ctaCheck")}
             </ButtonLink>
             <ButtonLink

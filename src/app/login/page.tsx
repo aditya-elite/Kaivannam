@@ -7,12 +7,18 @@ import { AuthForm } from "@/components/views/AuthForm";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; mode?: string }>;
+  searchParams: Promise<{ next?: string; mode?: string; type?: string }>;
 }) {
-  const { next, mode } = await searchParams;
+  const { next, mode, type } = await searchParams;
   const user = await getCurrentUser();
   const dest = next && next.startsWith("/") ? next : "/register";
   if (user) redirect(dest);
 
-  return <AuthForm next={dest} initialMode={mode === "signup" ? "signup" : "signin"} />;
+  return (
+    <AuthForm
+      next={dest}
+      initialMode={mode === "signup" ? "signup" : "signin"}
+      initialAccountType={type === "shopper" ? "shopper" : "artisan"}
+    />
+  );
 }

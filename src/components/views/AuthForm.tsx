@@ -6,9 +6,19 @@ import { Button, Card } from "@/components/ui";
 import { signInAction, signUpAction, type AuthState } from "@/app/login/actions";
 import { IconShield, IconUser } from "@/components/icons";
 
-export function AuthForm({ next, initialMode }: { next: string; initialMode: "signin" | "signup" }) {
+export function AuthForm({
+  next,
+  initialMode,
+  initialAccountType = "artisan",
+}: {
+  next: string;
+  initialMode: "signin" | "signup";
+  initialAccountType?: "artisan" | "shopper";
+}) {
   const t = useT();
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
+  const [accountType, setAccountType] = useState<"artisan" | "shopper">(initialAccountType);
+  const shopper = initialAccountType === "shopper";
   const action = mode === "signin" ? signInAction : signUpAction;
   const [state, formAction, pending] = useActionState<AuthState, FormData>(action, {});
 
@@ -19,8 +29,8 @@ export function AuthForm({ next, initialMode }: { next: string; initialMode: "si
         <div className="flex items-start gap-3">
           <IconShield width={24} height={24} className="mt-0.5 shrink-0 text-teal" />
           <div>
-            <h1 className="text-lg font-bold">{t("auth.whyTitle")}</h1>
-            <p className="mt-1 text-base text-muted">{t("auth.whyBody")}</p>
+            <h1 className="text-lg font-bold">{shopper ? t("auth.whyBuyTitle") : t("auth.whyTitle")}</h1>
+            <p className="mt-1 text-base text-muted">{shopper ? t("auth.whyBuyBody") : t("auth.whyBody")}</p>
             <p className="mt-2 text-sm font-semibold text-teal">{t("auth.returnNote")}</p>
           </div>
         </div>
@@ -54,9 +64,33 @@ export function AuthForm({ next, initialMode }: { next: string; initialMode: "si
 
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="next" value={next} />
+          <input type="hidden" name="accountType" value={accountType} />
 
           {mode === "signup" ? (
-            <Field id="displayName" name="displayName" label={t("auth.name")} required autoComplete="name" />
+            <>
+              <fieldset>
+                <legend className="mb-1 block text-base font-semibold">{t("auth.accountType")}</legend>
+                <div className="flex gap-2 rounded-xl bg-cream p-1">
+                  {(["artisan", "shopper"] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setAccountType(v)}
+                      aria-pressed={accountType === v}
+                      className={`min-h-tap flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${
+                        accountType === v ? "bg-surface text-indigo shadow-card" : "text-muted"
+                      }`}
+                    >
+                      {v === "artisan" ? t("auth.typeArtisan") : t("auth.typeShopper")}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1 text-sm text-muted">
+                  {accountType === "artisan" ? t("auth.typeArtisanHint") : t("auth.typeShopperHint")}
+                </p>
+              </fieldset>
+              <Field id="displayName" name="displayName" label={t("auth.name")} required autoComplete="name" />
+            </>
           ) : null}
           <Field
             id="handle"

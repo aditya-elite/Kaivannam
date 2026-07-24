@@ -8,6 +8,7 @@ import { sha256 } from "@/lib/hash";
 import { computeProductHash, STAGE_ORDER } from "@/lib/product-record";
 import { lookupGiByNumber } from "@/lib/gi";
 import { generateArtisanKeyPair, signScanPayload } from "@/lib/crypto-keys";
+import { rupeesToPaise } from "@/lib/money";
 import type { Stage } from "@prisma/client";
 
 type StageInput = { photos: string[]; note?: string };
@@ -23,6 +24,10 @@ type Body = {
   // GI number to match against the ingested register.
   giCertImage?: string;
   giNumber?: string;
+  // Optional storefront listing.
+  priceRupees?: string;
+  stock?: string;
+  listForSale?: boolean;
 };
 
 export async function POST(req: NextRequest) {
@@ -120,6 +125,11 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // Optional storefront listing.
+  const priceInPaise = body.listForSale ? rupeesToPaise(body.priceRupees ?? "") : null;
+  const stock = body.listForSale ? Math.max(0, Math.floor(Number(body.stock ?? "0")) || 0) : 0;
+  const listedForSale = !!body.listForSale && priceInPaise != null && priceInPaise > 0 && stock > 0;
+
   // Create product (DRAFT first), then its stage entries. Record the verified GI
   // certificate on the product (Gate 2).
   await db.product.create({
@@ -135,6 +145,9 @@ export async function POST(req: NextRequest) {
       giCertUrl: storedGiCert.url,
       giVerified: true,
       giEntryId: giLookup.entry.id,
+      priceInPaise,
+      stock,
+      listedForSale,
     },
   });
   for (const s of stagesForRecord) {

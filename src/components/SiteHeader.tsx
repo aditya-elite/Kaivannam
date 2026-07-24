@@ -5,9 +5,35 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n/provider";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { IconThread, IconMenu, IconClose, IconUser } from "./icons";
+import { signOutAction } from "@/app/login/actions";
+import { cartCount, onCartChanged } from "@/lib/client/cart";
+import { IconThread, IconMenu, IconClose, IconUser, IconBag, IconLogout } from "./icons";
 
 type Props = { user: { displayName: string; role: string } | null };
+
+/** Cart icon + live item-count badge, hydrated from localStorage. */
+function CartLink({ label }: { label: string }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const update = () => setCount(cartCount());
+    update();
+    return onCartChanged(update);
+  }, []);
+  return (
+    <Link
+      href="/cart"
+      aria-label={count > 0 ? `${label} (${count})` : label}
+      className="relative inline-flex min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 px-3 text-ink hover:border-ink/40"
+    >
+      <IconBag width={22} height={22} />
+      {count > 0 ? (
+        <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-terracotta px-1 text-xs font-bold text-white">
+          {count}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
 
 export function SiteHeader({ user }: Props) {
   const t = useT();
@@ -18,11 +44,12 @@ export function SiteHeader({ user }: Props) {
   // only triggers when actually starting registration.
   const links = [
     { href: "/", label: t("nav.home") },
+    { href: "/shop", label: t("nav.shop") },
     { href: "/artisans", label: t("nav.artisans") },
     { href: "/lookup", label: t("nav.lookup") },
     { href: "/how-it-works", label: t("nav.how") },
   ];
-  if (user) links.push({ href: "/my-items", label: t("nav.myitems") });
+  if (user && user.role !== "CONSUMER") links.push({ href: "/my-items", label: t("nav.myitems") });
   if (user?.role === "ADMIN") links.push({ href: "/admin", label: t("nav.admin") });
 
   const isActive = (href: string) =>
@@ -88,22 +115,36 @@ export function SiteHeader({ user }: Props) {
 
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
-          <Link
-            href="/register"
-            className="hidden min-h-tap items-center gap-2 rounded-xl bg-terracotta px-4 py-2 text-base font-semibold text-white hover:bg-terracotta-600 sm:inline-flex"
-          >
-            {t("nav.register")}
-          </Link>
+          <CartLink label={t("nav.cart")} />
           {user ? (
+            <>
+              <Link
+                href={user.role === "CONSUMER" ? "/shop" : "/my-items"}
+                className="hidden min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 px-3 text-ink md:inline-flex"
+                aria-label={user.displayName}
+                title={user.displayName}
+              >
+                <IconUser width={22} height={22} />
+              </Link>
+              {/* Sign out — always available (labelled) when signed in. */}
+              <form action={signOutAction} className="hidden md:block">
+                <button
+                  type="submit"
+                  className="inline-flex min-h-tap items-center gap-2 rounded-xl border-2 border-ink/15 px-3 py-2 text-base font-semibold text-ink hover:border-ink/40"
+                >
+                  <IconLogout width={18} height={18} /> {t("nav.signout")}
+                </button>
+              </form>
+            </>
+          ) : (
+            /* Sign in — clearly labelled and present at all times when logged out. */
             <Link
-              href="/my-items"
-              className="hidden min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 px-3 text-ink md:inline-flex"
-              aria-label={user.displayName}
-              title={user.displayName}
+              href="/login"
+              className="inline-flex min-h-tap items-center gap-2 rounded-xl bg-indigo px-4 py-2 text-base font-semibold text-white hover:bg-indigo-700"
             >
-              <IconUser width={22} height={22} />
+              <IconUser width={18} height={18} /> {t("nav.signin")}
             </Link>
-          ) : null}
+          )}
           <button
             type="button"
             className="inline-flex min-h-tap min-w-tap items-center justify-center rounded-xl border-2 border-ink/15 md:hidden"
@@ -126,7 +167,10 @@ export function SiteHeader({ user }: Props) {
             className="selvedge-lead block h-1.5 w-full bg-terracotta"
           />
           <ul className="selvedge-follow mx-auto max-w-6xl px-2 py-2">
-            {[...links, { href: "/register", label: t("nav.register") }].map((l) => (
+            {[
+              ...links,
+              ...(user && user.role !== "CONSUMER" ? [{ href: "/register", label: t("nav.register") }] : []),
+            ].map((l) => (
               <li key={l.href}>
                 <Link
                   href={l.href}
@@ -140,6 +184,26 @@ export function SiteHeader({ user }: Props) {
                 </Link>
               </li>
             ))}
+            <li className="border-t border-ink/10">
+              {user ? (
+                <form action={signOutAction}>
+                  <button
+                    type="submit"
+                    className="flex w-full min-h-tap items-center gap-2 rounded-lg px-4 py-3 text-lg font-semibold text-ink"
+                  >
+                    <IconLogout width={20} height={20} /> {t("nav.signout")} · {user.displayName}
+                  </button>
+                </form>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-tap items-center gap-2 rounded-lg px-4 py-3 text-lg font-semibold text-indigo"
+                >
+                  <IconUser width={20} height={20} /> {t("nav.signin")}
+                </Link>
+              )}
+            </li>
           </ul>
         </nav>
       ) : null}
