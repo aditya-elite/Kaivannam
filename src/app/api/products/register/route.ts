@@ -9,6 +9,7 @@ import { computeProductHash, STAGE_ORDER } from "@/lib/product-record";
 import { createInitialRecord } from "@/lib/authenticity/record";
 import { ensureGenesisOwner } from "@/lib/ownership";
 import { lookupGiByNumber } from "@/lib/gi";
+import { isDemoGiNumber } from "@/lib/gi-demo";
 import { generateArtisanKeyPair, signScanPayload } from "@/lib/crypto-keys";
 import { rupeesToPaise } from "@/lib/money";
 import type { Stage } from "@prisma/client";
@@ -66,16 +67,27 @@ export async function POST(req: NextRequest) {
 
   // ── GATE — product authenticity. The GI certificate number must match an
   // entry in the ingested GI register.
-  if (!body.giNumber?.trim() || !body.giCertImage) {
+  //
+  // The cert IMAGE is stored as evidence but is never OCR'd here — only the
+  // (typed, user-confirmed) number is matched against the register. For the
+  // GI-0635 sentinel the image requirement is waived entirely, so a listing can
+  // be created without a certificate image (see lib/gi-demo).
+  const giNumberInput = body.giNumber?.trim() ?? "";
+  const demoGi = isDemoGiNumber(giNumberInput);
+  if (!giNumberInput || (!body.giCertImage && !demoGi)) {
     return NextResponse.json({ error: "gi_required" }, { status: 400 });
   }
-  const giLookup = await lookupGiByNumber(body.giNumber.trim());
+  const giLookup = await lookupGiByNumber(giNumberInput);
   if (!giLookup.entry) {
-    return NextResponse.json({ error: "gi_unverified", giNumber: body.giNumber.trim() }, { status: 422 });
+    return NextResponse.json({ error: "gi_unverified", giNumber: giNumberInput }, { status: 422 });
   }
-  const giCert = decodeDataUrl(body.giCertImage);
-  if (!giCert) {
-    return NextResponse.json({ error: "bad_gi_image" }, { status: 400 });
+  // Decode the cert image only if one was provided (demo listings may omit it).
+  let giCert: { bytes: Buffer; ext: string } | null = null;
+  if (body.giCertImage) {
+    giCert = decodeDataUrl(body.giCertImage);
+    if (!giCert) {
+      return NextResponse.json({ error: "bad_gi_image" }, { status: 400 });
+    }
   }
 
   // Store the hidden signature HASHED on the artisan (never stored in the clear,
@@ -95,10 +107,10 @@ export async function POST(req: NextRequest) {
   const productId = newProductId();
 
   // Persist the GI certificate image (Gate 2 evidence, shown on the profile).
-  const storedGiCert = await storage.put(giCert.bytes, {
-    ext: giCert.ext,
-    prefix: `gi-certs/${artisan.id}`,
-  });
+  // Null for a demo listing that omitted the image.
+  const storedGiCert = giCert
+    ? await storage.put(giCert.bytes, { ext: giCert.ext, prefix: `gi-certs/${artisan.id}` })
+    : null;
 
   // Upload every stage photo, collecting stable URLs. Server stamps timestamps.
   const stagesForRecord: {
@@ -147,7 +159,7 @@ export async function POST(req: NextRequest) {
       category: body.category.trim(),
       status: "DRAFT",
       giNumber: giLookup.entry.giNumber,
-      giCertUrl: storedGiCert.url,
+      giCertUrl: storedGiCert?.url ?? null,
       giVerified: true,
       giEntryId: giLookup.entry.id,
       priceInPaise,

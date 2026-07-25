@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { maskPehchan } from "./pehchan-format";
-import { signedUrl } from "./supabase/storage";
+import { getPrivate } from "./private-store";
 import type { CurrentUser } from "./auth";
 
 /**
@@ -60,17 +60,19 @@ export async function getArtisanIdDocument(artisanId: string): Promise<IdDocView
 }
 
 /**
- * Short-lived signed URLs for the image + certificate — ONLY for the owning
- * artisan or an admin. Returns null when unauthorized or not found. The private
- * objects are never otherwise reachable.
+ * Fetch a privately-stored object (image or certificate) for a request, ONLY
+ * for the owning artisan or an admin. Returns null when unauthorized or not
+ * found. Used by the auth-gated streaming routes; the objects are never
+ * otherwise reachable (the public files route refuses the private prefix).
  */
-export async function signIdDocView(
+export async function getPrivateDocObject(
   requestId: string,
+  which: "image" | "certificate",
   user: CurrentUser,
-): Promise<{ imageUrl: string | null; certUrl: string | null } | null> {
+): Promise<{ bytes: Buffer; contentType: string } | null> {
   const r = await db.verificationRequest.findUnique({
     where: { id: requestId },
-    select: { artisanId: true, imagePath: true, certPath: true },
+    select: { artisanId: true, imageBucket: true, imagePath: true, certPath: true },
   });
   if (!r) return null;
 
@@ -78,8 +80,6 @@ export async function signIdDocView(
   const isAdmin = user.role === "ADMIN";
   if (!isOwner && !isAdmin) return null;
 
-  return {
-    imageUrl: r.imagePath ? await signedUrl(r.imagePath, 60) : null,
-    certUrl: r.certPath ? await signedUrl(r.certPath, 60) : null,
-  };
+  const path = which === "image" ? r.imagePath : r.certPath;
+  return getPrivate(r.imageBucket, path);
 }

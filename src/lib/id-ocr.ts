@@ -80,35 +80,53 @@ function findIdNumber(text: string): { value: string | null; checksumOk: boolean
   return { value: firstDigits, checksumOk: false };
 }
 
+/**
+ * Actually run tesseract. Kept separate so the caller can race it against a
+ * timeout — createWorker downloads trained data on first use and will HANG
+ * indefinitely on a network-less host, which must never block the upload.
+ */
+async function recognize(imageBytes: Buffer): Promise<{ text: string; meanWordConf: number }> {
+  // Dynamic import keeps tesseract out of the module graph until needed and off
+  // any edge runtime.
+  const { createWorker } = await import("tesseract.js");
+  const worker = await createWorker("eng", undefined, {
+    langPath: process.env.TESSERACT_LANG_PATH,
+    cachePath: process.env.TESSERACT_CACHE_PATH,
+  });
+  try {
+    const { data } = await worker.recognize(imageBytes);
+    const words = (data as { words?: Array<{ confidence: number }> }).words ?? [];
+    const meanWordConf = words.length
+      ? words.reduce((a, w) => a + (w.confidence ?? 0), 0) / words.length / 100
+      : (data.confidence ?? 0) / 100;
+    return { text: data.text ?? "", meanWordConf };
+  } finally {
+    // Fire-and-forget terminate so a hung worker can't keep the request alive.
+    worker.terminate().catch(() => {});
+  }
+}
+
 export async function runIdOcr(imageBytes: Buffer): Promise<OcrResult> {
+  const timeoutMs = Number(process.env.OCR_TIMEOUT_MS ?? 15000);
   let text = "";
   let meanWordConf = 0;
   try {
-    // Dynamic import keeps tesseract out of the module graph until needed and
-    // off any edge runtime.
-    const { createWorker } = await import("tesseract.js");
-    const worker = await createWorker("eng", undefined, {
-      // Allow an offline trained-data path in locked-down environments.
-      langPath: process.env.TESSERACT_LANG_PATH,
-      cachePath: process.env.TESSERACT_CACHE_PATH,
-    });
-    try {
-      const { data } = await worker.recognize(imageBytes);
-      text = data.text ?? "";
-      const words = (data as { words?: Array<{ confidence: number }> }).words ?? [];
-      meanWordConf = words.length
-        ? words.reduce((a, w) => a + (w.confidence ?? 0), 0) / words.length / 100
-        : (data.confidence ?? 0) / 100;
-    } finally {
-      await worker.terminate();
-    }
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`OCR timed out after ${timeoutMs}ms`)), timeoutMs),
+    );
+    const out = await Promise.race([recognize(imageBytes), timeout]);
+    text = out.text;
+    meanWordConf = out.meanWordConf;
   } catch (e) {
+    // Engine unavailable/timed out — an INFRASTRUCTURE issue, not a bad document.
+    // The caller still hashes + signs + anchors; only the auto-read fields are
+    // missing (left for manual review).
     return {
       ok: false,
       reason: "ocr_unavailable",
       detail:
-        "The OCR engine could not run (its trained data may be unavailable offline). " +
-        (e instanceof Error ? e.message : String(e)),
+        "The OCR engine could not run (its trained data may be unavailable offline, " +
+        "or it timed out). " + (e instanceof Error ? e.message : String(e)),
     };
   }
 

@@ -9,6 +9,7 @@ import { ProgressSteps } from "@/components/form/ProgressSteps";
 import { TextField, TextAreaField } from "@/components/form/fields";
 import { PhotoCapture } from "@/components/form/PhotoCapture";
 import { compressImage } from "@/lib/client/image";
+import { isDemoGiNumber } from "@/lib/gi-demo";
 import { Charkha } from "@/components/craft/Charkha";
 import { ThreadSnap } from "@/components/craft/ThreadSnap";
 import {
@@ -196,9 +197,13 @@ export function RegisterView({ authed, artisanName }: { authed: boolean; artisan
 
   const stepLabels = [t("reg.step.details"), t("reg.step.story"), t("reg.step.stages"), t("reg.step.review")];
   const done = stagesDone(draft);
-  const giValid = draft.giNumber.trim() && draft.giCertImage;
-  const detailsValid = draft.title.trim() && draft.category.trim() && giValid;
-  const storyValid = draft.materials.trim();
+  // Optional-chain the reads: a draft restored from localStorage before a field
+  // existed can still be missing it at runtime (see withDefaults in lib/client/draft).
+  // GI-0635 waives the cert-image requirement (see lib/gi-demo).
+  const giValid =
+    draft.giNumber?.trim() && (draft.giCertImage || isDemoGiNumber(draft.giNumber));
+  const detailsValid = draft.title?.trim() && draft.category?.trim() && giValid;
+  const storyValid = draft.materials?.trim();
   const allStagesDone = done === 4;
   const listingValid = !draft.listForSale || (Number(draft.priceRupees) > 0 && Number(draft.stock) >= 1);
   const canSeal = detailsValid && storyValid && allStagesDone && listingValid;

@@ -177,6 +177,7 @@ async function main() {
     { giNumber: "GI-0089", giName: "Molela Clay Work", craftCategory: "Terracotta", region: "Molela, Rajasthan", authorisedUser: "Molela Terracotta Cooperative" },
     { giNumber: "GI-0201", giName: "Blue Pottery of Jaipur", craftCategory: "Pottery", region: "Jaipur, Rajasthan", authorisedUser: null },
     { giNumber: "GI-0056", giName: "Srikalahasti Kalamkari", craftCategory: "Textile painting", region: "Srikalahasti, Andhra Pradesh", authorisedUser: "Anitha Reddy" },
+    { giNumber: "GI-0635", giName: "Channapatna Toys & Dolls", craftCategory: "Woodcraft", region: "Channapatna, Karnataka", authorisedUser: null },
   ];
   for (const row of giRows) {
     await db.giEntry.create({ data: { ...row, datasetId: dataset.id } });

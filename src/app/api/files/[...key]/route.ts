@@ -14,6 +14,9 @@ const CONTENT_TYPES: Record<string, string> = {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ key: string[] }> }) {
   const { key } = await params;
   const joined = key.join("/");
+  // Private objects (ID documents) live under a reserved prefix and must NEVER
+  // be served here — they are auth-gated behind /api/id-document/[id]/image etc.
+  if (joined.startsWith("__private/")) return new Response("Not found", { status: 404 });
   const bytes = await getStorage().getBytes(joined);
   if (!bytes) return new Response("Not found", { status: 404 });
   const ext = joined.split(".").pop()?.toLowerCase() ?? "bin";

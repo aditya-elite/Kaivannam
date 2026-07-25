@@ -442,13 +442,23 @@ SUPABASE_SERVICE_ROLE_KEY="<service-role key from the Supabase dashboard>"
   uses an **ephemeral per-process key** so local dev still works; set the env var
   in production (signatures must survive restarts and key rotation is tracked via
   the recorded `signingKeyId`).
-- **Private bucket** — the `id-documents` bucket is created automatically on
-  first upload (`public: false`). Objects are reachable only through short-lived
-  (~60s) signed URLs minted server-side after an owner-or-admin check
-  (`/api/id-document/[id]/view`). If `SUPABASE_SERVICE_ROLE_KEY` is not set the
-  route returns `503 storage_not_configured` rather than writing a half-record.
-- **OCR** — `tesseract.js` (no external API/keys). A blurry photo, wrong document
-  or unreadable image is marked `REJECTED` with a reason, never silently dropped.
+- **Private storage** — Supabase when configured (the `id-documents` bucket is
+  created automatically, `public: false`); otherwise it **falls back to the
+  local private store** under a reserved `__private/` prefix that the public
+  `/api/files` route refuses to serve. Either way the objects are reachable only
+  through the auth-gated streaming routes `/api/id-document/[id]/image` and
+  `/certificate` (owner or admin only) — never publicly. So the feature runs in
+  local dev with no Supabase set up; add the service-role key to move the private
+  objects into Supabase.
+- **OCR** — `tesseract.js` (no external API/keys), capped at `OCR_TIMEOUT_MS`
+  (default 15s). Three outcomes:
+  - readable → fields extracted, signed, anchored, `PENDING` for review;
+  - **engine unavailable/offline or timed out** → the document is still hashed,
+    **signed and anchored** (fields left for manual review) — an infrastructure
+    hiccup never blocks the digital signature;
+  - engine ran but the image is unreadable / not a valid document → `REJECTED`
+    with a reason, never silently dropped.
+  For fully-offline OCR, point `TESSERACT_LANG_PATH` at locally-cached tessdata.
 
 Run `npm run test:id-document` to verify the signing roundtrip + ledger anchor.
 

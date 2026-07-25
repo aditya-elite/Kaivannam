@@ -67,9 +67,39 @@ export function saveDraft(draft: Draft): void {
   if (!idx.includes(draft.id)) localStorage.setItem(INDEX, JSON.stringify([...idx, draft.id]));
 }
 
+/**
+ * Backfill any fields a draft is missing from the current defaults. Drafts live
+ * in localStorage and can outlive schema changes — a draft saved before the GI
+ * fields (giNumber/giCertImage), the listing fields, etc. were added would have
+ * them as `undefined` at runtime even though TypeScript trusts the stored JSON.
+ * Merging over `newDraft()` guarantees every field (and every stage sub-object)
+ * exists, so callers can `.trim()` freely.
+ */
+function withDefaults(raw: Partial<Draft>): Draft {
+  const base = newDraft();
+  const s = raw.stages ?? ({} as Partial<Draft["stages"]>);
+  return {
+    ...base,
+    ...raw,
+    id: raw.id ?? base.id,
+    stages: {
+      RAW_MATERIALS: { ...base.stages.RAW_MATERIALS, ...(s.RAW_MATERIALS ?? {}) },
+      CRAFTING: { ...base.stages.CRAFTING, ...(s.CRAFTING ?? {}) },
+      FINISHING: { ...base.stages.FINISHING, ...(s.FINISHING ?? {}) },
+      COMPLETED: { ...base.stages.COMPLETED, ...(s.COMPLETED ?? {}) },
+    },
+    updatedAt: raw.updatedAt ?? base.updatedAt,
+  };
+}
+
 export function loadDraft(id: string): Draft | null {
   const raw = localStorage.getItem(KEY(id));
-  return raw ? (JSON.parse(raw) as Draft) : null;
+  if (!raw) return null;
+  try {
+    return withDefaults(JSON.parse(raw) as Partial<Draft>);
+  } catch {
+    return null;
+  }
 }
 
 export function deleteDraft(id: string): void {
